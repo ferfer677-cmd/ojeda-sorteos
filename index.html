@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Ojeda Preparación | Sorteo Honda Tornado</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+
+
+<!-- MODAL COMPRA -->
+
+<div class="modal" id="purchaseModal">
+
+  <div class="modal-content">
+
+    <button class="close-modal" id="closeModal">
+      ×
+    </button>
+
+    <h2>DATOS PARA TRANSFERIR</h2>
+    <div class="selected-pack">
+
+  <p>PACK SELECCIONADO</p>
+
+  <h3 id="selectedPack">
+    -
+  </h3>
+
+</div>
+
+    <div class="bank-info">
+
+      <p><strong>Alias:</strong></p>
+
+<p id="aliasText">
+tienda.ojeda
+</p>
+
+<button
+type="button"
+class="copy-btn"
+id="copyAlias"
+>
+COPIAR ALIAS
+</button>
+
+<br><br>
+
+<p><strong>CVU:</strong></p>
+
+<p id="cvuText">
+0000168300000001294776
+</p>
+
+<button
+type="button"
+class="copy-btn"
+id="copyCvu"
+>
+COPIAR CVU
+</button>
+
+    </div>
+
+    <form class="purchase-form" id="purchaseForm">
+
+      <input type="text" id="nombre" placeholder="Nombre" required>
+
+<input type="text" id="apellido" placeholder="Apellido" required>
+
+<input type="text" id="dni" placeholder="DNI" required>
+
+<input type="tel" id="telefono" placeholder="Teléfono" required>
+
+<input type="text" id="instagram" placeholder="Instagram" required>
+
+    <label class="upload-label">
+  Adjuntar comprobante
+</label>
+
+<input
+  type="file"
+  id="comprobante"
+  accept="image/*,.pdf"
+  required
+>
+
+      <button type="submit">
+        ENVIAR COMPROBANTE
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+
+<!-- HERO -->
+
+<section class="hero">
+
+<img src="assets/logo.png" alt="Logo" class="logo">
+
+<div class="badge">
+🔥 SORTEO OFICIAL
+</div>
+
+<h1 class="hero-title">
+GANA ESTA
+<span>HONDA TORNADO</span>
+250CC
+</h1>
+
+<img
+src="assets/tornado-hero.png"
+alt="Honda Tornado"
+class="hero-bike"
+>
+
+<div class="countdown">
+
+<div class="time-box">
+<span id="days">00</span>
+<small>DÍAS</small>
+</div>
+
+<div class="time-box">
+<span id="hours">00</span>
+<small>HORAS</small>
+</div>
+
+<div class="time-box">
+<span id="minutes">00</span>
+<small>MIN</small>
+</div>
+
+<div class="time-box">
+<span id="seconds">00</span>
+<small>SEG</small>
+</div>
+
+</div>
+
+<p class="draw-date">
+📅 Sorteo en vivo · Viernes 10 de julio · 21:00 hs
+</p>
+
+<a href="#chances" class="cta-btn">
+PARTICIPAR AHORA
+</a>
+
+<a href="consultar.html" class="cta-btn">
+CONSULTAR MIS NÚMEROS
+</a>
+
+</section>
+
+<!-- CONFIANZA -->
+
+<section class="trust">
+
+<h2>
+🏆 MÁS DE 80 GANADORES EN 2025
+</h2>
+
+<p>
+Todos nuestros sorteos y ganadores
+están publicados y pueden verificarse
+en Instagram.
+</p>
+
+<a
+href="https://instagram.com/sorteo_ojeda_"
+target="_blank"
+class="ig-link"
+>
+@sorteo_ojeda_
+</a>
+
+</section>
+
+<!-- CHANCES -->
+
+<section id="chances" class="chances">
+
+<h2>ELEGÍ TUS CHANCES</h2>
+
+<div class="chance-card open-modal">
+<div>
+<h3>1 CHANCE</h3>
+</div>
+<strong>$5.000</strong>
+</div>
+
+<div class="chance-card open-modal">
+<div>
+<h3>2 CHANCES</h3>
+</div>
+<strong>$7.500</strong>
+</div>
+
+<div class="chance-card featured open-modal">
+<div>
+<h3>4 CHANCES</h3>
+<small>MAS ELEGIDO</small>
+</div>
+<strong>$12.500</strong>
+</div>
+
+<div class="chance-card open-modal">
+<div>
+<h3>6 CHANCES</h3>
+</div>
+<strong>$17.500</strong>
+</div>
+
+<div class="chance-card open-modal">
+<div>
+<h3>10 CHANCES</h3>
+</div>
+<strong>$22.500</strong>
+</div>
+
+<div class="chance-card open-modal">
+<div>
+<h3>15 CHANCES</h3>
+</div>
+<strong>$35.000</strong>
+</div>
+
+</section>
+<!-- QUE INCLUYE -->
+
+<section class="includes">
+
+  <h2>¿QUÉ INCLUYE?</h2>
+
+  <div class="includes-list">
+
+    <div class="include-item">
+      ✓ Honda Tornado 250cc
+    </div>
+
+    <div class="include-item">
+      ✓ Transferencia incluida
+    </div>
+
+    <div class="include-item">
+      ✓ Sorteo en vivo por Instagram
+    </div>
+
+    <div class="include-item">
+      ✓ Números asignados automáticamente
+    </div>
+
+    <div class="include-item">
+      ✓ Publicación del ganador
+    </div>
+
+  </div>
+
+</section>
+
+<!-- GALERIA -->
+
+<section class="gallery">
+
+  <h2>Fotos de la moto</h2>
+
+  <div class="carousel">
+
+    <img src="assets/foto1.jpeg" alt="">
+    <img src="assets/foto2.jpeg" alt="">
+    <img src="assets/foto3.jpeg" alt="">
+    <img src="assets/foto4.jpeg" alt="">
+
+  </div>
+
+</section>
+<section class="winner">
+
+  <h2>GANADORES REALES</h2>
+
+  <div class="winner-card">
+
+    <img src="assets/ganador.jpeg" alt="Ganador">
+
+    <div>
+
+      <h3>Más de 80 ganadores en 2025</h3>
+
+      <p>
+        Todos nuestros sorteos y ganadores
+        están publicados y pueden verificarse
+        en Instagram.
+      </p>
+
+      <a href="https://instagram.com/sorteo_ojeda_" target="_blank">
+        @sorteo_ojeda_
+      </a>
+
+    </div>
+
+  </div>
+
+</section>
+<section class="faq">
+
+  <h2>PREGUNTAS FRECUENTES</h2>
+
+  <div class="faq-item">
+    ¿Cómo recibo mis números?
+  </div>
+
+  <div class="faq-item">
+    Los números se asignan automáticamente
+    una vez confirmado el pago.
+  </div>
+
+  <div class="faq-item">
+    ¿Dónde se realiza el sorteo?
+  </div>
+
+  <div class="faq-item">
+    El sorteo se realiza en vivo por Instagram.
+  </div>
+
+  <div class="faq-item">
+    ¿Cómo sé quién ganó?
+  </div>
+
+  <div class="faq-item">
+    Todos los ganadores son publicados
+    en nuestras redes sociales.
+  </div>
+
+</section>
+<a
+href="https://wa.me/5492494527588"
+target="_blank"
+class="wp-float"
+>
+<i class="fa-brands fa-whatsapp"></i>
+</a>
+
+<script type="module" src="script.js"></script>
+<script type="module" src="firebase.js"></script>
+<script type="module" src="firestore.js"></script>
+
+</body>
+</html>
+<div class="form-group">
+  <label>Comprobante de pago</label>
+  <input
+    type="file"
+    id="comprobante"
+    accept="image/*,.pdf"
+    required
+  >
+</div>

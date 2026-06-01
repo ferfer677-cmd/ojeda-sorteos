@@ -1,0 +1,570 @@
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+html{
+scroll-behavior:smooth;
+}
+
+body{
+background:#050505;
+color:#fff;
+font-family:'Montserrat',sans-serif;
+overflow-x:hidden;
+}
+
+img{
+max-width:100%;
+display:block;
+}
+
+/* HERO */
+
+.hero{
+padding:30px 20px 60px;
+text-align:center;
+}
+
+.logo{
+width:180px;
+margin:0 auto 20px;
+}
+
+.badge{
+display:inline-block;
+padding:10px 18px;
+border:1px solid #ff5a00;
+border-radius:999px;
+color:#ff5a00;
+font-weight:700;
+font-size:14px;
+margin-bottom:25px;
+}
+
+.hero-title{
+font-family:'Oswald',sans-serif;
+font-size:58px;
+line-height:.9;
+margin-bottom:20px;
+}
+
+.hero-title span{
+display:block;
+color:#ff5a00;
+}
+
+.hero-bike{
+width:92%;
+max-width:550px;
+
+margin:10px auto 15px;
+
+filter:
+drop-shadow(
+0 0 35px rgba(255,90,0,.25)
+);
+}
+
+.countdown{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+max-width:500px;
+margin:20px auto;
+}
+
+.time-box{
+background:#111;
+border:1px solid #202020;
+border-radius:14px;
+padding:15px 10px;
+}
+
+.time-box span{
+display:block;
+font-size:32px;
+font-weight:800;
+color:#ff5a00;
+}
+
+.time-box small{
+font-size:12px;
+letter-spacing:1px;
+}
+
+.draw-date{
+color:#ccc;
+margin-bottom:25px;
+font-size:14px;
+}
+
+.cta-btn{
+display:inline-block;
+background:#ff5a00;
+color:white;
+text-decoration:none;
+padding:16px 30px;
+border-radius:14px;
+font-weight:800;
+font-size:15px;
+}
+
+/* TRUST */
+
+.trust{
+padding:40px 20px;
+}
+
+.trust h2{
+font-family:'Oswald',sans-serif;
+font-size:36px;
+text-align:center;
+margin-bottom:20px;
+}
+
+.trust p{
+max-width:600px;
+margin:auto;
+text-align:center;
+line-height:1.6;
+color:#ccc;
+}
+
+.ig-link{
+display:block;
+text-align:center;
+margin-top:20px;
+color:#ff5a00;
+font-weight:800;
+text-decoration:none;
+}
+
+/* CHANCES */
+
+.chances{
+padding:60px 20px;
+}
+
+.chances h2{
+font-family:'Oswald',sans-serif;
+font-size:42px;
+text-align:center;
+margin-bottom:30px;
+}
+
+.chance-card{
+background:#101010;
+border:1px solid #1e1e1e;
+border-radius:18px;
+padding:22px;
+margin-bottom:14px;
+
+display:flex;
+justify-content:space-between;
+align-items:center;
+
+cursor:pointer;
+transition:.25s;
+}
+
+.chance-card:hover{
+border-color:#ff5a00;
+transform:translateY(-2px);
+}
+
+.chance-card h3{
+font-size:18px;
+}
+
+.chance-card strong{
+font-size:24px;
+color:#ff5a00;
+}
+
+.featured{
+  border:2px solid #ff5a00;
+  box-shadow:
+    0 0 20px rgba(255,90,0,.35),
+    0 0 40px rgba(255,90,0,.15);
+
+  transform: scale(1.02);
+}
+
+.featured small{
+display:block;
+margin-top:5px;
+color:#ff5a00;
+font-weight:700;
+}
+
+/* DESKTOP */
+
+@media(min-width:992px){
+
+.hero{
+max-width:1200px;
+margin:auto;
+padding-top:50px;
+}
+
+.hero-title{
+font-size:110px;
+}
+
+.logo{
+width:240px;
+}
+
+.hero-bike{
+max-width:800px;
+}
+
+.countdown{
+max-width:700px;
+}
+
+.time-box span{
+font-size:48px;
+}
+
+.chances{
+max-width:900px;
+margin:auto;
+}
+
+}
+/* INCLUDES */
+
+.includes{
+padding:70px 20px;
+}
+
+.includes h2{
+font-family:'Oswald',sans-serif;
+font-size:42px;
+text-align:center;
+margin-bottom:30px;
+}
+
+.includes-list{
+max-width:700px;
+margin:auto;
+}
+
+.include-item{
+background:#101010;
+border:1px solid #1e1e1e;
+padding:18px;
+border-radius:14px;
+margin-bottom:12px;
+font-weight:600;
+}
+
+/* GALLERY */
+
+.gallery{
+padding:70px 20px;
+}
+
+.gallery h2{
+font-family:'Oswald',sans-serif;
+font-size:42px;
+text-align:center;
+margin-bottom:30px;
+}
+
+.carousel{
+display:flex;
+gap:15px;
+overflow-x:auto;
+scroll-snap-type:x mandatory;
+padding-bottom:10px;
+}
+
+.carousel::-webkit-scrollbar{
+display:none;
+}
+
+.carousel img{
+width:85%;
+flex-shrink:0;
+scroll-snap-align:center;
+border-radius:18px;
+object-fit:cover;
+}
+.winner{
+padding:70px 20px;
+}
+
+.winner h2{
+font-family:'Oswald',sans-serif;
+font-size:42px;
+text-align:center;
+margin-bottom:30px;
+}
+
+.winner-card{
+background:#101010;
+border:1px solid #1f1f1f;
+border-radius:20px;
+padding:25px;
+max-width:900px;
+margin:auto;
+}
+
+.winner-card img{
+width:100%;
+border-radius:16px;
+margin-bottom:20px;
+}
+
+.winner-card h3{
+margin-bottom:10px;
+color:#ff5a00;
+}
+
+.winner-card p{
+line-height:1.6;
+color:#ccc;
+margin-bottom:15px;
+}
+
+.winner-card a{
+color:#ff5a00;
+text-decoration:none;
+font-weight:700;
+}
+.faq{
+padding:70px 20px;
+}
+
+.faq h2{
+font-family:'Oswald',sans-serif;
+font-size:42px;
+text-align:center;
+margin-bottom:30px;
+}
+
+.faq-item{
+background:#101010;
+border:1px solid #1f1f1f;
+padding:18px;
+border-radius:14px;
+margin-bottom:10px;
+}
+/* MODAL */
+
+.modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.85);
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+padding:20px;
+
+opacity:0;
+visibility:hidden;
+
+transition:.3s;
+
+z-index:99999;
+}
+
+.modal.show{
+opacity:1;
+visibility:visible;
+}
+
+.modal-content{
+  width:100%;
+  max-width:520px;
+
+  max-height:90vh;
+  overflow-y:auto;
+
+  background:#101010;
+  border:1px solid #252525;
+  border-radius:24px;
+
+  padding:30px;
+  position:relative;
+}
+
+.close-modal{
+position:absolute;
+top:15px;
+right:15px;
+
+width:40px;
+height:40px;
+
+border:none;
+background:#1a1a1a;
+
+border-radius:50%;
+color:white;
+
+font-size:24px;
+cursor:pointer;
+}
+
+.modal-content h2{
+font-family:'Oswald',sans-serif;
+margin-bottom:20px;
+text-align:center;
+}
+
+.bank-info{
+background:#0b0b0b;
+border:1px solid #202020;
+padding:18px;
+border-radius:14px;
+margin-bottom:20px;
+}
+
+.bank-info p{
+word-break:break-word;
+}
+
+.purchase-form{
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.purchase-form input{
+width:100%;
+padding:15px;
+background:#0b0b0b;
+border:1px solid #222;
+border-radius:12px;
+color:white;
+font-size:15px;
+}
+
+.upload-label{
+font-size:14px;
+color:#bbb;
+margin-top:5px;
+}
+
+.purchase-form button{
+background:#ff5a00;
+color:white;
+border:none;
+padding:16px;
+border-radius:14px;
+font-weight:800;
+cursor:pointer;
+font-size:15px;
+}
+.selected-pack{
+background:#0b0b0b;
+border:1px solid #202020;
+border-radius:14px;
+padding:15px;
+margin-bottom:20px;
+text-align:center;
+}
+
+.selected-pack p{
+font-size:12px;
+color:#999;
+letter-spacing:1px;
+margin-bottom:5px;
+}
+
+.selected-pack h3{
+color:#ff5a00;
+font-size:24px;
+font-weight:800;
+}
+.copy-btn{
+width:100%;
+margin-top:10px;
+
+background:#1a1a1a;
+color:#fff;
+
+border:1px solid #2a2a2a;
+
+padding:12px;
+border-radius:10px;
+
+font-weight:700;
+cursor:pointer;
+
+transition:.2s;
+}
+
+.copy-btn:hover{
+border-color:#ff5a00;
+color:#ff5a00;
+}
+.wp-float{
+position:fixed;
+
+right:20px;
+bottom:20px;
+
+width:68px;
+height:68px;
+
+border-radius:50%;
+
+background:#25D366;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+box-shadow:
+0 10px 25px rgba(37,211,102,.35);
+
+z-index:9999;
+
+transition:.25s;
+}
+
+.wp-float:hover{
+transform:scale(1.08);
+}
+
+.wp-float i{
+font-size:34px;
+color:white;
+}
+.wp-float{
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+
+    width: 68px;
+    height: 68px;
+
+    border-radius: 50%;
+    background: #25D366;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    text-decoration: none; /* importante */
+    overflow: hidden;      /* importante */
+
+    z-index: 999999;
+}
+
+.wp-float i{
+    color: #fff;
+    font-size: 34px;
+    line-height: 1;
+}
+body.modal-open{
+  overflow: hidden;
+}

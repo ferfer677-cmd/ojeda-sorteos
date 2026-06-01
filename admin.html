@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Panel Admin</title>
+
+<link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+
+<div id="loginAdmin">
+
+  <h1>Panel Administrador</h1>
+
+  <input
+    type="password"
+    id="passwordAdmin"
+    placeholder="Contraseña"
+  >
+
+  <button id="btnLogin">
+    Entrar
+  </button>
+
+</div>
+
+<div id="panelAdmin" style="display:none;">
+
+<h1>Participantes</h1>
+
+<button id="cerrarSesion">
+  CERRAR SESIÓN
+</button>
+
+<p id="totalParticipantes">
+  Participantes únicos: 0
+</p>
+
+<input
+  type="text"
+  id="buscador"
+  placeholder="Buscar por nombre, apellido o DNI"
+>
+
+<h2 id="tituloPendientes">
+  Pagos pendientes (0)
+</h2>
+<div id="pendientes"></div>
+
+<h2 id="tituloPagados">
+  Pagos aprobados (0)
+</h2>
+<div id="pagados"></div>
+
+<script type="module" src="admin.js"></script>
+
+</div>
+
+</body>
+</html>

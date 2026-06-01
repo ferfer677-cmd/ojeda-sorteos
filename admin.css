@@ -1,0 +1,88 @@
+body{
+  font-family: Arial, sans-serif;
+  background:#111;
+  color:white;
+  padding:20px;
+}
+
+.card{
+  background:#1a1a1a;
+  padding:15px;
+  margin-bottom:15px;
+  border-radius:10px;
+}
+
+a{
+  color:#ff6600;
+}
+
+button{
+  background:#ff6600;
+  border:none;
+  color:white;
+  padding:10px;
+  cursor:pointer;
+  border-radius:6px;
+}
+.comprobante-img{
+width:100%;
+max-width:500px;
+border-radius:10px;
+margin:15px 0;
+display:block;
+}
+
+#buscador{
+  width: 100%;
+  max-width: 500px;
+  padding: 12px;
+  margin: 15px 0 25px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: white;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+#loginAdmin{
+  max-width: 450px;
+  margin: 80px auto;
+  text-align: center;
+}
+
+#loginAdmin h1{
+  margin-bottom: 30px;
+}
+
+#passwordAdmin{
+  width: 100%;
+  padding: 14px;
+  font-size: 18px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: white;
+  box-sizing: border-box;
+  margin-bottom: 15px;
+}
+
+#btnLogin{
+  width: 100%;
+  padding: 14px;
+  font-size: 18px;
+  border: none;
+  border-radius: 8px;
+  background: #ff6600;
+  color: white;
+  cursor: pointer;
+}
+
+#btnLogin:hover{
+  opacity: 0.9;
+}
+
+#cerrarSesion{
+  float: right;
+  margin-top: -55px;
+}
