@@ -266,6 +266,9 @@ document.getElementById("btnLogin");
 const cerrarSesion =
 document.getElementById("cerrarSesion");
 
+const exportarSorteo =
+document.getElementById("exportarSorteo");
+
 btnLogin.addEventListener(
   "click",
   () => {
@@ -319,6 +322,60 @@ cerrarSesion.addEventListener(
     );
 
     location.reload();
+
+  }
+);
+
+exportarSorteo.addEventListener(
+  "click",
+  async () => {
+
+    const snapshot = await getDocs(
+      collection(db, "participantes")
+    );
+
+    const filas = [];
+
+snapshot.forEach((documento) => {
+
+  const datos = documento.data();
+
+  if (datos.estado !== "Pagado") {
+    return;
+  }
+
+  if (!datos.numeros) {
+    return;
+  }
+
+  datos.numeros.forEach((numero) => {
+
+   filas.push({
+  numero: numero,
+  nombre: `${datos.nombre} ${datos.apellido}`,
+  dni: datos.dni,
+  telefono: datos.telefono
+});
+
+  });
+
+});
+
+const hoja = XLSX.utils.json_to_sheet(filas);
+
+const libro = XLSX.utils.book_new();
+
+XLSX.utils.book_append_sheet(
+  libro,
+  hoja,
+  "Sorteo"
+);
+
+XLSX.writeFile(
+  libro,
+  "sorteo.xlsx"
+);
+    
 
   }
 );
