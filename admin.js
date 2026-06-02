@@ -1,5 +1,12 @@
 import { db } from "./firebase.js";
 
+import { storage } from "./firebase.js";
+
+import {
+  ref,
+  deleteObject
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
+
 import {
   collection,
   getDocs,
@@ -257,7 +264,39 @@ if (textoBusqueda && !coincide) {
         return;
       }
 
-     await deleteDoc(
+  if (datos.comprobantePath) {
+
+  try {
+
+      console.log(
+      "Intentando borrar:",
+      datos.comprobantePath
+    );
+
+    const archivoRef = ref(
+      storage,
+      datos.comprobantePath
+    );
+
+    await deleteObject(archivoRef);
+
+    console.log(
+      "Comprobante eliminado:",
+      datos.comprobantePath
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Error eliminando comprobante:",
+      error
+    );
+
+  }
+
+}
+
+await deleteDoc(
   doc(
     db,
     "participantes",
@@ -336,6 +375,9 @@ document.getElementById("cerrarSesion");
 const exportarSorteo =
 document.getElementById("exportarSorteo");
 
+const borrarTodo =
+document.getElementById("borrarTodo");
+
 btnLogin.addEventListener(
   "click",
   () => {
@@ -389,6 +431,75 @@ cerrarSesion.addEventListener(
     );
 
     location.reload();
+
+  }
+);
+
+borrarTodo.addEventListener(
+  "click",
+  async () => {
+
+    const texto = prompt(
+      'Escribí BORRAR para eliminar todo el sorteo'
+    );
+
+    if (texto !== "BORRAR") {
+
+      alert(
+        "Operación cancelada"
+      );
+
+      return;
+
+    }
+
+    const snapshot = await getDocs(
+      collection(db, "participantes")
+    );
+
+    for (const documento of snapshot.docs) {
+
+      const datos = documento.data();
+
+      if (datos.comprobantePath) {
+
+        try {
+
+          const archivoRef = ref(
+            storage,
+            datos.comprobantePath
+          );
+
+          await deleteObject(
+            archivoRef
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Error eliminando comprobante:",
+            error
+          );
+
+        }
+
+      }
+
+      await deleteDoc(
+        doc(
+          db,
+          "participantes",
+          documento.id
+        )
+      );
+
+    }
+
+    alert(
+      "Sorteo eliminado correctamente"
+    );
+
+    cargarParticipantes();
 
   }
 );
