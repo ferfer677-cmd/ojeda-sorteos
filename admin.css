@@ -83,6 +83,13 @@ display:block;
 }
 
 #cerrarSesion{
-  float: right;
-  margin-top: -55px;
+  display: block;
+  margin-bottom: 15px;
+}
+#cerrarSesion,
+#exportarSorteo,
+#borrarTodo{
+  width: 100%;
+  max-width: 260px;
+  margin-bottom: 10px;
 }
