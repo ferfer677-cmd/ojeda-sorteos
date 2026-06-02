@@ -18,9 +18,10 @@ export async function guardarParticipante(datos) {
         dni: datos.dni,
         telefono: datos.telefono,
         instagram: datos.instagram,
-        pack: datos.pack,
-        comprobanteURL: datos.comprobanteURL,
-        estado: "Esperando",
+       pack: datos.pack,
+comprobanteURL: datos.comprobanteURL,
+comprobantePath: datos.comprobantePath,
+estado: "Esperando",
         fecha: serverTimestamp()
       }
     );

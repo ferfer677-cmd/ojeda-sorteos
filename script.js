@@ -194,18 +194,19 @@ const archivo =
   return;
 }
 
-const comprobanteURL =
+const comprobante =
   await subirComprobante(archivo);
 
    
- const guardado = await guardarParticipante({
+const guardado = await guardarParticipante({
   nombre,
   apellido,
   dni,
   telefono,
   instagram,
   pack,
-  comprobanteURL
+  comprobanteURL: comprobante.url,
+  comprobantePath: comprobante.path
 });
 
 if (!guardado) {

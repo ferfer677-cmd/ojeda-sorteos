@@ -11,14 +11,20 @@ export async function subirComprobante(file) {
   const nombreArchivo =
     Date.now() + "_" + file.name;
 
+  const rutaArchivo =
+    "comprobantes/" + nombreArchivo;
+
   const storageRef = ref(
     storage,
-    "comprobantes/" + nombreArchivo
+    rutaArchivo
   );
 
   await uploadBytes(storageRef, file);
 
   const url = await getDownloadURL(storageRef);
 
-  return url;
+  return {
+    url,
+    path: rutaArchivo
+  };
 }

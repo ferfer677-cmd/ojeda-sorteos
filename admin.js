@@ -5,6 +5,7 @@ import {
   getDocs,
   doc,
   updateDoc,
+  deleteDoc,
   query,
   orderBy
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
@@ -19,8 +20,13 @@ document.getElementById("tituloPendientes");
 
 const tituloPagados =
 document.getElementById("tituloPagados");
+
 const totalParticipantes =
 document.getElementById("totalParticipantes");
+
+const recaudacionTotal =
+document.getElementById("recaudacionTotal");
+
 const buscador =
 document.getElementById("buscador");
 
@@ -102,6 +108,8 @@ async function cargarParticipantes() {
 
   let cantidadPendientes = 0;
 let cantidadPagados = 0;
+let recaudacion = 0;
+
 const dniUnicos = new Set();
   const snapshot = await getDocs(
     collection(db, "participantes")
@@ -178,18 +186,31 @@ if (textoBusqueda && !coincide) {
       <br>
 
       ${
-        datos.estado === "Pagado"
-          ? `<p>✅ Pagado</p>`
-          : `
-            <button class="aprobar-btn">
-              Aprobar pago
-            </button>
-          `
-      }
+  datos.estado === "Pagado"
+    ? `
+      <p>✅ Pagado</p>
+
+      <button class="eliminar-btn">
+        🗑 ELIMINAR PARTICIPANTE
+      </button>
+    `
+    : `
+      <button class="aprobar-btn">
+        Aprobar pago
+      </button>
+
+      <button class="eliminar-btn">
+        🗑 ELIMINAR PARTICIPANTE
+      </button>
+    `
+}
     `;
 
     const boton =
       card.querySelector(".aprobar-btn");
+
+      const botonEliminar =
+  card.querySelector(".eliminar-btn");
 
     if (boton) {
 
@@ -222,10 +243,53 @@ if (textoBusqueda && !coincide) {
 
     }
 
-    if (datos.estado === "Pagado") {
+   if (botonEliminar) {
+
+ botonEliminar.addEventListener(
+  "click",
+  async () => {
+
+      const confirmar = confirm(
+        `¿Eliminar a ${datos.nombre} ${datos.apellido}?`
+      );
+
+      if (!confirmar) {
+        return;
+      }
+
+     await deleteDoc(
+  doc(
+    db,
+    "participantes",
+    documento.id
+  )
+);
+
+cargarParticipantes();
+
+    }
+  );
+
+}
+
+if (datos.estado === "Pagado") {
 
   pagados.appendChild(card);
   cantidadPagados++;
+
+  const precioTexto =
+    datos.pack.split("$")[1];
+
+  if (precioTexto) {
+
+    const precio =
+      Number(
+        precioTexto.replace(/\./g, "")
+      );
+
+    recaudacion += precio;
+
+  }
 
 } else {
 
@@ -243,6 +307,9 @@ tituloPagados.textContent =
 
   totalParticipantes.textContent =
   `Participantes únicos: ${dniUnicos.size}`;
+
+  recaudacionTotal.textContent =
+  `Recaudación estimada: $${recaudacion.toLocaleString("es-AR")}`;
 
 }console.log("ADMIN CARGADO");
 cargarParticipantes(); 
