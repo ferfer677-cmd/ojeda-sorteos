@@ -164,9 +164,25 @@ document.body.classList.remove("modal-open");
 
 if (purchaseForm) {
 
- purchaseForm.addEventListener("submit", async (e) => {
+let enviando = false;
 
-    e.preventDefault();
+purchaseForm.addEventListener("submit", async (e) => {
+
+  if (enviando) return;
+
+  enviando = true;
+
+  console.log("SUBMIT EJECUTADO");
+
+  e.preventDefault();
+
+    const submitBtn =
+  purchaseForm.querySelector('button[type="submit"]');
+
+submitBtn.disabled = true;
+submitBtn.innerText = "Subiendo...";
+
+alert("Subiendo comprobante...");
 
     const nombre =
       document.getElementById("nombre").value;
@@ -210,6 +226,9 @@ const guardado = await guardarParticipante({
 });
 
 if (!guardado) {
+  submitBtn.disabled = false;
+  submitBtn.innerText =  "ENVIAR COMPROBANTE";
+
   alert("Error al guardar el participante");
   return;
 }
