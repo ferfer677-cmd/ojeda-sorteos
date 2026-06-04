@@ -225,6 +225,8 @@ if (textoBusqueda && !coincide) {
         "click",
         async () => {
 
+          
+
           const cantidad =
             cantidadPorPack(datos.pack);
 

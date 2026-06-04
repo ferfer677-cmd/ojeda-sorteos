@@ -99,8 +99,8 @@ COPIAR CVU
   required
 >
 
-      <button type="submit" onclick="alert('CLICK')">
-  ENVIAR COMPROBANTE
+      <button type="submit">
+ ENVIAR COMPROBANTE 
 </button>
 
     </form>
@@ -352,8 +352,38 @@ class="ig-link"
 
 </section>
 
+<div id="successModal" class="success-modal">
 
-<script type="module" src="script.js"></script>
+  <div class="success-box">
+
+    <h2>✅ Comprobante enviado</h2>
+
+  <p>
+  Tu pago fue recibido y será revisado por el administrador.
+</p>
+
+<p>
+  Una vez aprobado, podrás consultar tus números en la sección:
+</p>
+
+<p>
+  <strong>BUSCAR NÚMEROS POR DNI</strong>
+</p>
+
+<p>
+  Gracias por participar.
+</p>
+
+    <button id="successBtn">
+      ACEPTAR
+    </button>
+
+  </div>
+
+</div>
+
+
+<script type="module" src="script.js?v=1003"></script>
 <script type="module" src="firebase.js"></script>
 <script type="module" src="firestore.js"></script>
 

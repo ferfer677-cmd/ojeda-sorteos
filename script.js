@@ -2,11 +2,20 @@ import { guardarParticipante } from "./firestore.js";
 import { subirComprobante } from "./storage.js";
 document.addEventListener("DOMContentLoaded", () => {
 
+
+
   /* =========================
      MODAL
   ========================= */
 
   const modal = document.getElementById("purchaseModal");
+  const successModal =
+  document.getElementById("successModal");
+
+  console.log("SUCCESS MODAL:", successModal);
+
+const successBtn =
+  document.getElementById("successBtn");
   const cards = document.querySelectorAll(".open-modal");
   const closeBtn = document.getElementById("closeModal");
   const selectedPack = document.getElementById("selectedPack");
@@ -35,6 +44,16 @@ document.body.classList.add("modal-open");
     modal.classList.remove("show");
 document.body.classList.remove("modal-open");
   });
+
+if (successBtn) {
+
+ successBtn.addEventListener("click", () => {
+
+  location.reload();
+
+});
+
+}
 
   window.addEventListener("click", (e) => {
     if (e.target === modal) {
@@ -168,11 +187,13 @@ let enviando = false;
 
 purchaseForm.addEventListener("submit", async (e) => {
 
+
+
   if (enviando) return;
 
   enviando = true;
 
-  console.log("SUBMIT EJECUTADO");
+
 
   e.preventDefault();
 
@@ -180,9 +201,14 @@ purchaseForm.addEventListener("submit", async (e) => {
   purchaseForm.querySelector('button[type="submit"]');
 
 submitBtn.disabled = true;
-submitBtn.innerText = "Subiendo...";
 
-alert("Subiendo comprobante...");
+submitBtn.innerHTML = `
+⏳ SUBIENDO...
+`;
+
+purchaseForm.style.pointerEvents = "none";
+purchaseForm.style.opacity = "0.6";
+
 
     const nombre =
       document.getElementById("nombre").value;
@@ -211,7 +237,15 @@ const archivo =
 }
 
 const comprobante =
-  await subirComprobante(archivo);
+  await subirComprobante(
+    archivo,
+    (progreso) => {
+
+      submitBtn.innerHTML =
+        `⏳ PAGANDO... ${progreso}%`;
+
+    }
+  );
 
    
 const guardado = await guardarParticipante({
@@ -233,12 +267,30 @@ if (!guardado) {
   return;
 }
     
-alert("Datos enviados correctamente. Estado del pago: Esperando");
-
-purchaseForm.reset();
+const successModal =
+  document.getElementById("successModal");
 
 modal.classList.remove("show");
 document.body.classList.remove("modal-open");
+
+console.log("ABRIENDO MODAL VERDE");
+
+successModal.classList.add("show");
+
+purchaseForm.reset();
+
+submitBtn.disabled = false;
+
+submitBtn.innerHTML =
+  "ENVIAR COMPROBANTE";
+
+purchaseForm.style.pointerEvents =
+  "auto";
+
+purchaseForm.style.opacity =
+  "1";
+
+enviando = false;
 
   });
 
