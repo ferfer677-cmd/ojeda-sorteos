@@ -275,6 +275,8 @@ document.body.classList.remove("modal-open");
 
 console.log("ABRIENDO MODAL VERDE");
 
+alert("ABRIENDO MODAL VERDE");
+
 successModal.classList.add("show");
 
 purchaseForm.reset();

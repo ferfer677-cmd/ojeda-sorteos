@@ -676,3 +676,23 @@ body.modal-open{
   }
 
 }
+#comprobante{
+  width:100%;
+  padding:18px;
+  background:#0b0b0b;
+  border:2px solid #22c55e;
+  border-radius:14px;
+  color:white;
+  font-size:16px;
+}
+
+#comprobante::file-selector-button{
+  background:#22c55e;
+  color:white;
+  border:none;
+  padding:12px 18px;
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
+  margin-right:12px;
+}

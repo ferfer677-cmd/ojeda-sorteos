@@ -93,3 +93,47 @@ display:block;
   max-width: 260px;
   margin-bottom: 10px;
 }
+
+#cerrarSesion{
+  background:#2563eb;
+  color:white;
+  border:none;
+  padding:14px;
+  border-radius:10px;
+  width:100%;
+  margin-bottom:15px;
+  font-weight:700;
+}
+
+#exportarSorteo{
+  background:#16a34a;
+  color:white;
+  border:none;
+  padding:14px;
+  border-radius:10px;
+  width:100%;
+  margin-bottom:15px;
+  font-weight:700;
+}
+
+#aprobarTodos{
+  background:#22c55e;
+  color:white;
+  border:none;
+  padding:14px;
+  border-radius:10px;
+  width:100%;
+  margin-bottom:15px;
+  font-weight:700;
+}
+
+#borrarTodo{
+  background:#dc2626;
+  color:white;
+  border:none;
+  padding:14px;
+  border-radius:10px;
+  width:100%;
+  margin-bottom:30px;
+  font-weight:700;
+}

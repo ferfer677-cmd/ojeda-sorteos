@@ -377,8 +377,12 @@ document.getElementById("cerrarSesion");
 const exportarSorteo =
 document.getElementById("exportarSorteo");
 
+const aprobarTodos =
+document.getElementById("aprobarTodos");
+
 const borrarTodo =
 document.getElementById("borrarTodo");
+
 
 btnLogin.addEventListener(
   "click",
@@ -433,6 +437,60 @@ cerrarSesion.addEventListener(
     );
 
     location.reload();
+
+  }
+);
+aprobarTodos.addEventListener(
+  "click",
+  async () => {
+
+    const confirmar = confirm(
+      "¿Aprobar todos los pagos pendientes?"
+    );
+
+    if (!confirmar) return;
+
+    let aprobados = 0;
+
+    const snapshot = await getDocs(
+      collection(db, "participantes")
+    );
+
+    for (const documento of snapshot.docs) {
+
+      const datos = documento.data();
+
+      if (datos.estado === "Pagado") {
+        continue;
+      }
+
+      const cantidad =
+        cantidadPorPack(datos.pack);
+
+      const numeros =
+        await generarNumerosUnicos(cantidad);
+
+      await updateDoc(
+        doc(
+          db,
+          "participantes",
+          documento.id
+        ),
+        {
+          estado: "Pagado",
+          numeros: numeros
+        }
+      );
+
+      aprobados++;
+
+    }
+
+    alert(
+      `${aprobados} pagos aprobados correctamente`
+    );
+
+    cargarParticipantes();
 
   }
 );
