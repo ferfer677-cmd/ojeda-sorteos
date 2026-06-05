@@ -44,15 +44,17 @@ margin-bottom:25px;
 }
 
 .hero-title{
-font-family:'Oswald',sans-serif;
-font-size:58px;
-line-height:.9;
-margin-bottom:20px;
+  font-family:'Oswald',sans-serif;
+  font-size:36px;
+  line-height:1;
+  margin-bottom:25px;
+  position:relative;
 }
 
+
 .hero-title span{
-display:block;
-color:#ff5a00;
+  display:block;
+  color:#ff5a00;
 }
 
 .hero-bike{
@@ -101,16 +103,32 @@ font-size:14px;
 }
 
 .cta-btn{
-display:inline-block;
-background:#ff5a00;
-color:white;
+display:block;
+width:90%;
+max-width:450px;
+
+margin:18px auto;
+
+text-align:center;
 text-decoration:none;
-padding:16px 30px;
-border-radius:14px;
+
+padding:18px;
+
+border-radius:16px;
+
 font-weight:800;
-font-size:15px;
+font-size:18px;
+
+color:white;
 }
 
+.participar-btn{
+background:#ff5a00;
+}
+
+.consultar-btn{
+background:#2563eb;
+}
 /* TRUST */
 
 .trust{
@@ -210,7 +228,11 @@ padding-top:50px;
 }
 
 .hero-title{
-font-size:110px;
+font-size:54px;
+}
+
+.logo{
+width:240px;
 }
 
 .logo{
@@ -695,4 +717,353 @@ body.modal-open{
   font-weight:700;
   cursor:pointer;
   margin-right:12px;
+}
+.upload-btn{
+  display:block;
+  width:100%;
+  padding:18px;
+  background:#22c55e;
+  color:#fff;
+  text-align:center;
+  border-radius:14px;
+  font-weight:800;
+  font-size:16px;
+  cursor:pointer;
+  margin-bottom:12px;
+  transition:.2s;
+}
+
+.upload-btn:hover{
+  transform:translateY(-1px);
+  background:#16a34a;
+}
+.upload-btn{
+  display:block !important;
+  width:100% !important;
+  padding:18px !important;
+  background:#22c55e !important;
+  color:#ffffff !important;
+  text-align:center !important;
+  border-radius:14px !important;
+  font-weight:800 !important;
+  font-size:18px !important;
+  cursor:pointer !important;
+  margin-bottom:15px !important;
+  border:none !important;
+}
+.cta-btn{
+  display:block;
+  width:90%;
+  max-width:450px;
+  margin:15px auto;
+  text-align:center;
+  text-decoration:none;
+  padding:18px;
+  border-radius:16px;
+  font-weight:800;
+  font-size:18px;
+}
+.hero .cta-btn:first-of-type{
+  background:#ff5a00;
+  color:white;
+}
+
+.hero .cta-btn:last-of-type{
+  background:#2563eb;
+  color:white;
+}
+.consulta-container{
+  max-width:500px;
+  margin:120px auto;
+  padding:30px;
+}
+
+.consulta-container h1{
+  text-align:center;
+  font-family:'Oswald',sans-serif;
+  font-size:48px;
+  margin-bottom:25px;
+}
+
+#dni{
+  width:100%;
+  padding:18px;
+  background:#101010;
+  border:1px solid #333;
+  border-radius:14px;
+  color:white;
+  font-size:18px;
+  margin-bottom:15px;
+}
+
+#btnConsultar{
+  width:100%;
+  padding:18px;
+  background:#ff5a00;
+  color:white;
+  border:none;
+  border-radius:14px;
+  font-size:18px;
+  font-weight:800;
+  cursor:pointer;
+  transition:.2s;
+}
+
+#btnConsultar:hover{
+  transform:translateY(-2px);
+  opacity:.95;
+}
+
+
+
+.progress-title{
+  text-align:center;
+  font-weight:700;
+  margin-bottom:12px;
+  color:#fff;
+}
+
+.progress-bar{
+  width:100%;
+  height:28px;
+  background:#222;
+  border-radius:999px;
+  overflow:hidden;
+}
+
+.progress-fill{
+  width:0%;
+  height:100%;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-weight:800;
+  color:#fff;
+
+  background:linear-gradient(
+    90deg,
+    #facc15,
+    #f59e0b
+  );
+
+  border-radius:999px;
+
+  box-shadow:
+    0 0 20px rgba(250,204,21,.45);
+
+  transition:width .4s ease;
+}
+
+
+.progress-note{
+  text-align:center;
+  color:#22c55e;
+  font-weight:800;
+  font-size:15px;
+  margin-bottom:12px;
+}
+
+
+.progress-section{
+  max-width:700px;
+  margin:25px auto 15px;
+  padding:0 20px;
+}
+.instagram-card{
+  display:flex;
+  align-items:center;
+  gap:15px;
+
+  max-width:420px;
+  margin:25px auto 0;
+
+  padding:16px 20px;
+
+  text-decoration:none;
+  color:white;
+
+  border-radius:20px;
+
+  background:linear-gradient(
+    45deg,
+    #405DE6,
+    #5851DB,
+    #833AB4,
+    #C13584,
+    #E1306C,
+    #FD1D1D,
+    #F77737,
+    #FCAF45
+  );
+
+  box-shadow:
+    0 10px 25px rgba(193,53,132,.35);
+
+  transition:.25s;
+}
+
+.instagram-card:hover{
+  transform:translateY(-2px);
+}
+
+.instagram-icon{
+  width:55px;
+  height:55px;
+
+  border-radius:16px;
+
+  background:rgba(255,255,255,.15);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.instagram-icon i{
+  font-size:30px;
+  color:white;
+}
+
+.instagram-info{
+  text-align:left;
+}
+
+.instagram-info span{
+  display:block;
+  font-size:13px;
+  opacity:.9;
+}
+
+.instagram-info strong{
+  display:block;
+  font-size:20px;
+  font-weight:800;
+}
+.gallery-grid{
+  display:grid;
+  gap:12px;
+}
+
+.gallery-img{
+  width:100%;
+  aspect-ratio:1/1;
+  object-fit:cover;
+  border-radius:18px;
+  cursor:pointer;
+  border:1px solid #1f1f1f;
+}
+
+.image-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.95);
+
+  display:none;
+  align-items:center;
+  justify-content:center;
+
+  padding:20px;
+
+  z-index:999999;
+}
+
+.image-modal.show{
+  display:flex;
+}
+
+.image-modal img{
+  max-width:100%;
+  max-height:90vh;
+  border-radius:18px;
+}
+
+.close-image{
+  position:absolute;
+  top:20px;
+  right:20px;
+
+  width:50px;
+  height:50px;
+
+  border:none;
+  border-radius:50%;
+
+  background:#111;
+  color:white;
+
+  font-size:24px;
+  cursor:pointer;
+}
+
+.gallery-grid:has(.gallery-img:nth-child(4):last-child){
+  grid-template-columns:repeat(2,1fr);
+}
+
+@media(min-width:1px){
+
+.gallery-grid{
+  grid-template-columns:repeat(3,1fr);
+}
+
+.gallery-grid:has(.gallery-img:nth-child(4):last-child){
+  grid-template-columns:repeat(2,1fr);
+}
+
+}
+
+@media(min-width:992px){
+
+.gallery-grid{
+  grid-template-columns:repeat(4,1fr);
+}
+
+}
+.gallery-arrow{
+  position:fixed;
+
+  top:50%;
+  transform:translateY(-50%);
+
+  width:70px;
+  height:70px;
+
+  background:#111;
+  color:white;
+
+  border:2px solid white;
+  border-radius:50%;
+
+  font-size:40px;
+  font-weight:800;
+
+  z-index:999999999;
+
+  cursor:pointer;
+}
+
+.gallery-arrow.left{
+  left:20px;
+}
+
+.gallery-arrow.right{
+  right:20px;
+}
+.gallery-arrow.left{
+  left:10px;
+}
+
+.gallery-arrow.right{
+  right:10px;
+}
+
+.close-image{
+  z-index:999999999;
+}
+
+#progressText{
+  width:100%;
+  text-align:center;
+  white-space:nowrap;
 }

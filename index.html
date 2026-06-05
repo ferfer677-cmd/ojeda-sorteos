@@ -12,7 +12,7 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=1006">
 
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -88,8 +88,8 @@ COPIAR CVU
 
 <input type="text" id="instagram" placeholder="Instagram" required>
 
-    <label class="upload-label">
-  Adjuntar comprobante
+<label for="comprobante" class="upload-btn">
+  📷 ADJUNTAR COMPROBANTE
 </label>
 
 <input
@@ -97,6 +97,7 @@ COPIAR CVU
   id="comprobante"
   accept="image/*,.pdf"
   required
+  hidden
 >
 
       <button type="submit">
@@ -157,15 +158,29 @@ class="hero-bike"
 
 </div>
 
+<section class="progress-section">
+
+  <div class="progress-note">
+    🔥 SI LA BARRA SE COMPLETA, EL SORTEO SE REALIZA ANTES
+  </div>
+
+<div class="progress-bar">
+  <div id="progressFill" class="progress-fill">
+    <span id="progressText">0%</span>
+  </div>
+</div>
+
+</section>
+
 <p class="draw-date">
-📅 Sorteo en vivo · Viernes 10 de julio · 21:00 hs
+📅 Sorteo en vivo · Viernes 10 de julio · 21:00 hs  
 </p>
 
-<a href="#chances" class="cta-btn">
+<a href="#chances" class="cta-btn participar-btn">
 PARTICIPAR AHORA
 </a>
 
-<a href="consultar.html" class="cta-btn">
+<a href="consultar.html" class="cta-btn consultar-btn">
 CONSULTAR MIS NÚMEROS
 </a>
 
@@ -188,12 +203,22 @@ en Instagram.
 <a
 href="https://instagram.com/sorteo_ojeda_"
 target="_blank"
-class="ig-link"
+class="instagram-card"
 >
-@sorteo_ojeda_
-</a>
 
+<div class="instagram-icon">
+  <i class="fa-brands fa-instagram"></i>
+</div>
+
+<div class="instagram-info">
+  <span>Instagram Oficial</span>
+  <strong>@sorteo_ojeda_</strong>
+</div>
+
+</a>
 </section>
+
+
 
 <!-- CHANCES -->
 
@@ -283,16 +308,39 @@ class="ig-link"
 
   <h2>Fotos de la moto</h2>
 
-  <div class="carousel">
-
-    <img src="assets/foto1.jpeg" alt="">
-    <img src="assets/foto2.jpeg" alt="">
-    <img src="assets/foto3.jpeg" alt="">
-    <img src="assets/foto4.jpeg" alt="">
-
-  </div>
+  <div id="galleryGrid" class="gallery-grid"></div>
 
 </section>
+
+<div id="imageModal" class="image-modal">
+
+  <button id="closeImageModal" class="close-image">
+    ✕
+  </button>
+
+  <button id="prevImage" class="gallery-arrow left">
+    ❮
+  </button>
+
+  <img id="modalImage">
+
+  <button id="nextImage" class="gallery-arrow right">
+    ❯
+  </button>
+
+</div>
+
+</section>
+
+<div id="imageModal" class="image-modal">
+
+  <button id="closeImageModal" class="close-image">
+    ✕
+  </button>
+
+  <img id="modalImage" src="">
+
+</div>
 <section class="winner">
 
   <h2>GANADORES REALES</h2>

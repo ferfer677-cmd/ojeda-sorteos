@@ -123,6 +123,7 @@ display:block;
   padding:14px;
   border-radius:10px;
   width:100%;
+  max-width:390px;
   margin-bottom:15px;
   font-weight:700;
 }

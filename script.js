@@ -1,7 +1,36 @@
+import { db } from "./firebase.js";
+
+import {
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 import { guardarParticipante } from "./firestore.js";
 import { subirComprobante } from "./storage.js";
 document.addEventListener("DOMContentLoaded", () => {
 
+  const comprobante =
+  document.getElementById("comprobante");
+
+const uploadBtn =
+  document.querySelector(".upload-btn");
+
+if (comprobante && uploadBtn) {
+
+  comprobante.addEventListener(
+    "change",
+    () => {
+
+      if (comprobante.files.length > 0) {
+
+        uploadBtn.innerHTML =
+          "✅ COMPROBANTE SELECCIONADO";
+
+      }
+
+    }
+  );
+
+}
 
 
   /* =========================
@@ -12,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const successModal =
   document.getElementById("successModal");
 
-  console.log("SUCCESS MODAL:", successModal);
+
 
 const successBtn =
   document.getElementById("successBtn");
@@ -273,13 +302,16 @@ const successModal =
 modal.classList.remove("show");
 document.body.classList.remove("modal-open");
 
-console.log("ABRIENDO MODAL VERDE");
-
-alert("ABRIENDO MODAL VERDE");
-
 successModal.classList.add("show");
 
 purchaseForm.reset();
+
+if (uploadBtn) {
+
+  uploadBtn.innerHTML =
+    "📷 ADJUNTAR COMPROBANTE";
+
+}
 
 submitBtn.disabled = false;
 
@@ -299,3 +331,214 @@ enviando = false;
 }
 
 });
+const modalImagen =
+document.getElementById("imageModal");
+
+const imagenGrande =
+document.getElementById("modalImage");
+
+const cerrarImagen =
+document.getElementById("closeImageModal");
+
+document
+.querySelectorAll(".gallery-img")
+.forEach((img)=>{
+
+  img.addEventListener("click",()=>{
+
+    imagenGrande.src = img.src;
+
+    modalImagen.classList.add("show");
+
+  });
+
+});
+
+cerrarImagen.addEventListener(
+  "click",
+  ()=>{
+
+    modalImagen.classList.remove("show");
+
+  }
+);
+
+modalImagen.addEventListener(
+  "click",
+  (e)=>{
+
+    if(e.target === modalImagen){
+
+      modalImagen.classList.remove("show");
+
+    }
+
+  }
+);
+import {
+  storage
+} from "./firebase.js";
+
+import {
+  ref,
+  listAll,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
+
+async function cargarGaleria() {
+
+  const gallery =
+    document.getElementById("galleryGrid");
+
+  if (!gallery) return;
+
+  gallery.innerHTML = "";
+
+  const carpeta =
+    ref(storage, "Premio");
+
+  const archivos =
+    await listAll(carpeta);
+
+  for (const item of archivos.items) {
+
+    const url =
+      await getDownloadURL(item);
+
+    const img =
+      document.createElement("img");
+
+    img.src = url;
+
+    img.className =
+      "gallery-img";
+
+    gallery.appendChild(img);
+
+  }
+
+  iniciarModalGaleria();
+
+}
+let imagenActual = 0;
+
+function iniciarModalGaleria() {
+
+  const imagenes =
+    document.querySelectorAll(".gallery-img");
+
+  const modal =
+    document.getElementById("imageModal");
+
+  const modalImg =
+    document.getElementById("modalImage");
+
+  const cerrar =
+    document.getElementById("closeImageModal");
+
+  const anterior =
+    document.getElementById("prevImage");
+
+  const siguiente =
+    document.getElementById("nextImage");
+
+  imagenes.forEach((img,index)=>{
+
+    img.onclick = ()=>{
+
+      imagenActual = index;
+
+      modalImg.src = img.src;
+
+      modal.classList.add("show");
+
+    };
+
+  });
+
+  cerrar.onclick = ()=>{
+
+    modal.classList.remove("show");
+
+  };
+
+  anterior.onclick = ()=>{
+
+    imagenActual--;
+
+    if(imagenActual < 0){
+
+      imagenActual =
+        imagenes.length - 1;
+
+    }
+
+    modalImg.src =
+      imagenes[imagenActual].src;
+
+  };
+
+  siguiente.onclick = ()=>{
+
+    imagenActual++;
+
+    if(imagenActual >= imagenes.length){
+
+      imagenActual = 0;
+
+    }
+
+    modalImg.src =
+      imagenes[imagenActual].src;
+
+  };
+
+}
+
+cargarGaleria();
+
+async function cargarProgreso() {
+
+  const barra =
+    document.getElementById("progressFill");
+
+  const texto =
+    document.getElementById("progressText");
+
+  if (!barra) return;
+
+  try {
+
+    const progresoRef =
+      doc(db, "configuracion", "progreso");
+
+    const progresoSnap =
+      await getDoc(progresoRef);
+
+    if (!progresoSnap.exists()) return;
+
+    const avance =
+      progresoSnap.data().avance || 0;
+
+    barra.style.width =
+      avance + "%";
+
+    if (texto) {
+
+      texto.textContent =
+        avance + "%";
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Error cargando progreso:",
+      error
+    );
+
+  }
+
+}
+
+cargarProgreso();

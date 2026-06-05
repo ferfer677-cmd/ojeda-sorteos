@@ -14,7 +14,8 @@ import {
   updateDoc,
   deleteDoc,
   query,
-  orderBy
+  orderBy,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 const pendientes =
 document.getElementById("pendientes");
@@ -233,19 +234,21 @@ if (textoBusqueda && !coincide) {
           const numeros =
             await generarNumerosUnicos(cantidad);
 
-          await updateDoc(
-            doc(
-              db,
-              "participantes",
-              documento.id
-            ),
-            {
-              estado: "Pagado",
-              numeros: numeros
-            }
-          );
+        await updateDoc(
+  doc(
+    db,
+    "participantes",
+    documento.id
+  ),
+  {
+    estado: "Pagado",
+    numeros: numeros
+  }
+);
 
-          cargarParticipantes();
+await actualizarProgresoAutomatico();
+
+await cargarParticipantes();
 
         }
       );
@@ -306,7 +309,9 @@ await deleteDoc(
   )
 );
 
-cargarParticipantes();
+await actualizarProgresoAutomatico();
+
+await cargarParticipantes();
 
     }
   );
@@ -352,8 +357,34 @@ tituloPagados.textContent =
   recaudacionTotal.textContent =
   `Recaudación estimada: $${recaudacion.toLocaleString("es-AR")}`;
 
+  const META_SORTEO = 30000000;
+
+const porcentaje =
+  Math.min(
+    (recaudacion / META_SORTEO) * 100,
+    100
+  );
+
+const barra =
+  document.getElementById("progressFill");
+
+const texto =
+  document.getElementById("progressText");
+
+if (barra) {
+  barra.style.width = porcentaje + "%";
+}
+
+if (texto) {
+  texto.textContent =
+    Math.round(porcentaje) + "%";
+}
+
 }console.log("ADMIN CARGADO");
-cargarParticipantes(); 
+
+cargarParticipantes();
+actualizarProgresoAutomatico();
+
 buscador.addEventListener(
   "input",
   cargarParticipantes
@@ -490,7 +521,9 @@ aprobarTodos.addEventListener(
       `${aprobados} pagos aprobados correctamente`
     );
 
-    cargarParticipantes();
+    await actualizarProgresoAutomatico();
+
+await cargarParticipantes();
 
   }
 );
@@ -559,7 +592,9 @@ borrarTodo.addEventListener(
       "Sorteo eliminado correctamente"
     );
 
-    cargarParticipantes();
+    await actualizarProgresoAutomatico();
+
+await cargarParticipantes();
 
   }
 );
@@ -617,3 +652,57 @@ XLSX.writeFile(
 
   }
 );
+
+
+
+
+async function actualizarProgresoAutomatico()
+ {console.log("ACTUALIZANDO PROGRESO");
+
+  let recaudacion = 0;
+
+  const snapshot = await getDocs(
+    collection(db, "participantes")
+  );
+
+  snapshot.forEach((documento) => {
+
+    const datos = documento.data();
+
+    if (datos.estado !== "Pagado") return;
+
+    const precioTexto =
+      datos.pack.split("$")[1];
+
+    if (!precioTexto) return;
+
+    const precio =
+      Number(
+        precioTexto.replace(/\./g, "")
+      );
+
+    recaudacion += precio;
+
+  });
+
+  const META_SORTEO = 30000000;
+
+  const avance = Math.min(
+    Math.round(
+      (recaudacion / META_SORTEO) * 100
+    ),
+    100
+  );
+
+  await setDoc(
+    doc(
+      db,
+      "configuracion",
+      "progreso"
+    ),
+    {
+      avance
+    }
+  );
+
+}
