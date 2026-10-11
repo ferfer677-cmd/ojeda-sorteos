@@ -61,6 +61,24 @@ export function nombreAbreviado(nombre, apellido) {
 }
 
 // =====================================================
+// LÍMITE DE TIEMPO
+// =====================================================
+// Con mala conexión, Firestore espera indefinidamente.
+// Después de este tiempo se avisa al comprador.
+
+function conLimite(promesa, segundos) {
+  return Promise.race([
+    promesa,
+    new Promise((_, reject) =>
+      setTimeout(
+        () => reject(new Error("SIN_CONEXION")),
+        segundos * 1000
+      )
+    )
+  ]);
+}
+
+// =====================================================
 // GUARDAR PARTICIPANTE
 // =====================================================
 
@@ -68,7 +86,7 @@ export async function guardarParticipante(datos) {
   try {
     const dniNormalizado = corto(normalizarDNI(datos.dni), 20);
 
-    await addDoc(
+    await conLimite(addDoc(
       collection(db, "participantes"),
       {
         nombre: corto(datos.nombre, 80),
@@ -105,7 +123,7 @@ export async function guardarParticipante(datos) {
         // Fecha
         fecha: serverTimestamp()
       }
-    );
+    ), 40);
 
     // -------------------------------------------------
     // AVISO PÚBLICO DE "NUEVA COMPRA"

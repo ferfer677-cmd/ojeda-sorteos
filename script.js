@@ -848,6 +848,13 @@ setInterval(
             // SUBIR COMPROBANTE
             // ------------------------------------------
 
+            if (submitBtn) {
+
+              submitBtn.innerHTML =
+                "⏳ PREPARANDO COMPROBANTE...";
+
+            }
+
             const comprobanteSubido =
               await subirComprobante(
                 archivo,
@@ -867,6 +874,13 @@ setInterval(
             // ------------------------------------------
             // GUARDAR PARTICIPANTE
             // ------------------------------------------
+
+            if (submitBtn) {
+
+              submitBtn.innerHTML =
+                "⏳ GUARDANDO DATOS...";
+
+            }
 
             const guardado =
               await guardarParticipante({
@@ -928,7 +942,7 @@ multiplicadorPromo:
             if (!guardado) {
 
               throw new Error(
-                "No se pudo guardar el participante en Firebase."
+                "NO_GUARDADO"
               );
 
             }
@@ -991,9 +1005,35 @@ multiplicadorPromo:
             );
 
 
-            alert(
-              "No se pudo enviar el comprobante. Revisá la consola o intentá nuevamente."
-            );
+            // Mensaje claro según qué falló
+
+            let mensaje =
+              "No se pudo enviar el comprobante. Probá de nuevo en un momento.";
+
+            if (error.message === "SIN_CONEXION") {
+
+              mensaje =
+                "⚠️ Se cortó la conexión mientras subía el comprobante.\n\n" +
+                "Revisá tu señal o wifi y tocá ENVIAR COMPROBANTE de nuevo.";
+
+            } else if (
+              error.code === "storage/unauthorized" ||
+              error.code === "storage/canceled"
+            ) {
+
+              mensaje =
+                "⚠️ No se pudo subir ese archivo.\n\n" +
+                "Probá con una captura de pantalla del comprobante (JPG o PNG).";
+
+            } else if (error.message === "NO_GUARDADO") {
+
+              mensaje =
+                "⚠️ El comprobante se subió pero no pudimos registrar tu compra.\n\n" +
+                "Revisá tu conexión y tocá ENVIAR COMPROBANTE de nuevo.";
+
+            }
+
+            alert(mensaje);
 
 
           } finally {
