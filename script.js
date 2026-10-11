@@ -192,6 +192,14 @@ function actualizarPreciosDescuento() {
 
 const btnAplicarDescuento = document.getElementById("btnAplicarDescuento");
 
+// Enter en el campo también aplica la palabra clave
+document.getElementById("codigoDescuento")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    btnAplicarDescuento?.click();
+  }
+});
+
 if (btnAplicarDescuento) {
   btnAplicarDescuento.addEventListener("click", () => {
     const input = document.getElementById("codigoDescuento");

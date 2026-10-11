@@ -11,7 +11,7 @@
 
   <title>Ojeda Preparación | Sorteo</title>
 
-  <link rel="stylesheet" href="style.css?v=20261013">
+  <link rel="stylesheet" href="style.css?v=20261015">
 
   <!-- META PIXEL -->
   <script>
@@ -125,42 +125,41 @@
      DESCUENTO POR PALABRA CLAVE
 ================================================== -->
 
-<section class="descuento-especial">
+<section class="palabra-clave">
 
-  <h2>🔥 DESCUENTO ESPECIAL</h2>
-
-  <p>
-    ¿TENÉS UNA PALABRA CLAVE?
+  <p class="palabra-clave-titulo">
+    🔑 ¿Tenés palabra clave? <strong>50% OFF</strong> en todas las chances
   </p>
 
-  <p>
-    INGRESALA Y OBTENÉ
-    <strong>50% OFF</strong>
-    EN TODAS LAS CHANCES.
-  </p>
-
-  <div class="codigo-descuento">
+  <div class="palabra-clave-form">
 
     <input
       type="text"
       id="codigoDescuento"
-      placeholder="INGRESÁ TU PALABRA CLAVE"
+      placeholder="Palabra clave"
       autocomplete="off"
+      autocapitalize="characters"
+      enterkeyhint="go"
+      aria-label="Palabra clave"
     >
 
     <button
       type="button"
       id="btnAplicarDescuento"
     >
-      APLICAR 50% OFF
+      Aplicar
     </button>
 
   </div>
 
-  <div
-    id="mensajeDescuento"
-    style="margin-top:12px;font-weight:bold;"
-  ></div>
+  <div id="mensajeDescuento"></div>
+
+  <p class="palabra-clave-ayuda">
+    ¿No tenés? Pedila por
+    <a href="https://instagram.com/sorteo_ojeda_" target="_blank" rel="noopener">Instagram</a>
+    o unite al
+    <a href="https://whatsapp.com/channel/0029Vb5dDFT0bIdhfmabL11s" target="_blank" rel="noopener">canal de WhatsApp</a>.
+  </p>
 
 </section>
 
@@ -814,7 +813,7 @@
 
 <script
   type="module"
-  src="./script.js?v=2"
+  src="./script.js?v=3"
 ></script>
 
 <!-- Cartel de cierre de participaciones (viernes 16/10 21:30) -->
