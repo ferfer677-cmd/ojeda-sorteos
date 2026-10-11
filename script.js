@@ -374,7 +374,7 @@ ofertaEnteroOverlay?.addEventListener("click", (e) => {
             codigoPromoActivo = "";
 
             packSeleccionado =
-              `${packName} • ${packPrice}`;
+              `${packName} • ${cantidad} CHANCE${cantidad === 1 ? "" : "S"} • ${packPrice}`;
 
 
             if (selectedPack) {
@@ -1370,6 +1370,21 @@ function procesarColaNotificaciones() {
   }
 
 
+  // Nunca dos carteles juntos: si hay uno abierto
+  // (cierre, súper promo, formulario...), esperar.
+
+  if (window.Carteles?.hayAbierto()) {
+
+    setTimeout(
+      procesarColaNotificaciones,
+      2000
+    );
+
+    return;
+
+  }
+
+
   mostrandoNotificacion =
     true;
 
@@ -2330,8 +2345,18 @@ function mostrarSuperPromo() {
     clearInterval(superPromoInterval);
   }
 
-  // Esperar 1 segundos
-  superPromoTimer = setTimeout(() => {
+  // Después del cierre no se ofrece nada
+  if (window.participacionesCerradas?.()) {
+    return;
+  }
+
+  // Esperar 1 segundo y que no haya otro cartel abierto
+  const cuandoLibre =
+    window.Carteles
+      ? (abrir) => window.Carteles.cuandoLibre(abrir)
+      : (abrir) => abrir();
+
+  superPromoTimer = setTimeout(() => cuandoLibre(() => {
 
     let segundosRestantes = 120;
 
@@ -2369,7 +2394,7 @@ function mostrarSuperPromo() {
       1000
     );
 
-  }, 1000);
+  }), 1000);
 }
 
 

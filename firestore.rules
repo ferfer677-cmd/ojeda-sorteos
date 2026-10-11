@@ -26,6 +26,13 @@ service cloud.firestore {
       return request.resource.data[campo] is number;
     }
 
+    // Cierre de participaciones: viernes 16/10/2026 21:30 hs Argentina
+    // (1792197000000 = milisegundos desde 1970, hora UTC).
+    // Para el próximo sorteo, cambiar este número (y OJEDA_CIERRE en carteles.js).
+    function abierto() {
+      return request.time < timestamp.value(1792197000000);
+    }
+
     // El admin puede todo
     match /{documento=**} {
       allow read, write: if esAdmin();
@@ -34,7 +41,8 @@ service cloud.firestore {
     // Compras: el público solo puede crear la suya, nunca leer ni modificar
     match /participantes/{id} {
       allow create: if
-        request.resource.data.keys().hasOnly([
+        abierto()
+        && request.resource.data.keys().hasOnly([
           "nombre", "apellido", "dni", "dniNormalizado",
           "telefono", "instagram",
           "pack", "chancesBase", "chancesFinales",
@@ -66,7 +74,8 @@ service cloud.firestore {
     match /compras_recientes/{id} {
       allow read: if true;
       allow create: if
-        request.resource.data.keys().hasOnly(["nombre", "pack", "fecha"])
+        abierto()
+        && request.resource.data.keys().hasOnly(["nombre", "pack", "fecha"])
         && texto("nombre", 40)
         && texto("pack", 80)
         && request.resource.data.fecha == request.time;

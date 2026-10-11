@@ -11,7 +11,7 @@
 
   <title>Ojeda Preparación | Sorteo</title>
 
-  <link rel="stylesheet" href="style.css?v=20261011">
+  <link rel="stylesheet" href="style.css?v=20261013">
 
   <!-- META PIXEL -->
   <script>
@@ -221,8 +221,8 @@
   </div>
 </div>
 
-<div class="pack-card open-modal" data-chances="30">
-  <h3>LA QUE MAS COMPRAN</h3>
+<div class="pack-card open-modal pack-recomendado" data-chances="30">
+  <h3>⭐ LA MÁS ELEGIDA</h3>
   <span class="cantidad-chances">30 CHANCES</span>
 
   <div class="precio-pack">
@@ -809,13 +809,19 @@
      JAVASCRIPT
 ================================================== -->
 
+<!-- Hora de cierre y "un cartel por vez" (va antes que el resto) -->
+<script src="./carteles.js?v=1"></script>
+
 <script
   type="module"
-  src="./script.js"
+  src="./script.js?v=2"
 ></script>
 
 <!-- Cartel de cierre de participaciones (viernes 16/10 21:30) -->
-<script src="./cartel-cierre.js?v=2" defer></script>
+<script src="./cartel-cierre.js?v=4" defer></script>
+
+<!-- Barra de compra fija en celular + bloqueo de compras al cierre -->
+<script src="./barra-compra.js?v=1" defer></script>
 
 
 <!-- OFERTA SECRETA ENTERO -->

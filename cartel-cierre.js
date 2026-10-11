@@ -5,9 +5,9 @@
 // con la cuenta regresiva hasta el cierre de participaciones.
 // Después del cierre ya no aparece.
 
-// Viernes 16 de octubre de 2026 — 21:30 hs (Argentina UTC-3)
+// La hora de cierre está en carteles.js (OJEDA_CIERRE)
 const CIERRE_PARTICIPACIONES =
-  new Date("2026-10-16T21:30:00-03:00");
+  window.OJEDA_CIERRE;
 
 // Espera antes de mostrarlo (para que cargue la página)
 const DEMORA_MS = 1200;
@@ -196,10 +196,16 @@ function iniciarCartelCierre() {
   intervalo =
     setInterval(actualizar, 1000);
 
-  document.body.appendChild(overlay);
-
+  // Si hay otro cartel abierto, espera a que se cierre
   setTimeout(
-    () => overlay.classList.add("activo"),
+    () => window.Carteles.cuandoLibre(() => {
+      document.body.appendChild(overlay);
+      // Pequeña pausa para que se vea la animación de entrada
+      setTimeout(
+        () => overlay.classList.add("activo"),
+        30
+      );
+    }),
     DEMORA_MS
   );
 
