@@ -48,7 +48,6 @@
 
   let actual = 0;
   let temporizador = null;
-  let pausado = false;
 
   const sinMovimiento =
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -105,10 +104,6 @@
 
     detener();
 
-    if (pausado) {
-      return;
-    }
-
     temporizador =
       setInterval(siguiente, SEGUNDOS_POR_BANNER * 1000);
 
@@ -127,18 +122,6 @@
       mover(i);
       iniciar();
     });
-  });
-
-
-  // Pausa con el mouse encima (PC)
-  carrusel.addEventListener("mouseenter", () => {
-    pausado = true;
-    detener();
-  });
-
-  carrusel.addEventListener("mouseleave", () => {
-    pausado = false;
-    iniciar();
   });
 
 
@@ -186,6 +169,12 @@
     inicioX = null;
     iniciar();
 
+  }, { passive: true });
+
+  // Si el toque se cancela (por ejemplo, al bajar por la página), seguir pasando
+  carrusel.addEventListener("touchcancel", () => {
+    inicioX = null;
+    iniciar();
   }, { passive: true });
 
 
