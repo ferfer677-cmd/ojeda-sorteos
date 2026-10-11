@@ -5624,3 +5624,205 @@ body.participaciones-cerradas .participar-btn {
   height: 100%;
   object-fit: cover;
 }
+
+/* =====================================================
+   PREMIOS — GRILLA QUE SIEMPRE ENTRA
+   3 por fila en celular, 4 en PC (pisa las reglas viejas)
+===================================================== */
+
+.gallery .gallery-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 12px !important;
+
+  max-width: 900px !important;
+  padding: 0 !important;
+}
+
+.gallery .gallery-grid .gallery-img,
+.gallery .gallery-grid .gallery-img:only-child {
+  width: 100% !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 1 / 1;
+
+  flex: none !important;
+  margin: 0 !important;
+
+  object-fit: cover !important;
+  border-radius: 12px !important;
+
+  background: #151515;
+}
+
+@media (max-width: 600px) {
+  .gallery {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .gallery .gallery-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .gallery .gallery-grid .gallery-img {
+    border-radius: 10px !important;
+  }
+}
+
+
+/* =====================================================
+   PIE DE PÁGINA (REDES)
+===================================================== */
+
+.pie {
+  max-width: 900px;
+  margin: 10px auto 0;
+  padding: 34px 16px 40px;
+
+  text-align: center;
+
+  border-top: 1px solid #222;
+}
+
+.pie-titulo {
+  margin: 0 0 16px;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  color: #eee;
+}
+
+.pie-titulo strong {
+  color: #ff2a1a;
+}
+
+.pie-redes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.pie-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px 14px;
+
+  text-align: left;
+  text-decoration: none;
+
+  color: #fff;
+  border-radius: 14px;
+
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .35);
+
+  transition: transform .2s ease, filter .2s ease;
+}
+
+.pie-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+
+.pie-btn svg {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+}
+
+.pie-btn span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pie-btn small {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  opacity: .85;
+}
+
+.pie-btn b {
+  font-size: 15px;
+  font-weight: 900;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pie-instagram {
+  background: linear-gradient(135deg, #833ab4, #e1306c 55%, #f77737);
+}
+
+.pie-whatsapp {
+  background: linear-gradient(135deg, #25d366, #128c4a);
+}
+
+.pie-legal {
+  margin: 22px 0 0;
+
+  font-size: 12px;
+
+  color: #666;
+}
+
+/* En celular: espacio para que el botón de WhatsApp flotante
+   y la barra de compra no tapen el pie */
+@media (max-width: 600px) {
+  .pie {
+    padding-bottom: 96px;
+  }
+
+  .pie-titulo {
+    font-size: 16px;
+  }
+
+  .pie-btn {
+    padding: 11px 10px;
+    gap: 8px;
+  }
+
+  .pie-btn svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .pie-btn b {
+    font-size: 13px;
+  }
+}
+
+/* =====================================================
+   PREMIOS SIMÉTRICO: solo filas completas
+   -----------------------------------------------------
+   Si sobran fotos que no completan la última fila, se
+   ocultan. Cuando se suben las que faltan, aparecen solas.
+   (Si hay menos fotos que una fila entera, se muestran todas.)
+===================================================== */
+
+/* PC: filas de 4 */
+@media (min-width: 601px) {
+  .gallery .gallery-grid .gallery-img:nth-child(4n+1):nth-child(n+5):nth-last-child(-n+3),
+  .gallery .gallery-grid .gallery-img:nth-child(4n+1):nth-child(n+5):nth-last-child(-n+3) ~ .gallery-img {
+    display: none !important;
+  }
+}
+
+/* Celular: filas de 3 */
+@media (max-width: 600px) {
+  .gallery .gallery-grid .gallery-img:nth-child(3n+1):nth-child(n+4):nth-last-child(-n+2),
+  .gallery .gallery-grid .gallery-img:nth-child(3n+1):nth-child(n+4):nth-last-child(-n+2) ~ .gallery-img {
+    display: none !important;
+  }
+}
