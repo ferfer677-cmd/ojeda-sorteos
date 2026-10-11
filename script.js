@@ -85,6 +85,13 @@ if (closeBtn && modal) {
     document.body.classList.remove("modal-open");
   });
 }
+
+// Cerrar el cartel de "Comprobante enviado"
+if (successBtn && successModal) {
+  successBtn.addEventListener("click", () => {
+    successModal.classList.remove("show");
+  });
+}
     const selectedPack =
       document.getElementById(
         "selectedPack"

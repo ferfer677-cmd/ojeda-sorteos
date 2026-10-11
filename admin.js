@@ -185,7 +185,7 @@ async function actualizarRankingPublico() {
           const partes =
             String(datos.nombre || "")
               .trim()
-              .split(/s+/)
+              .split(/\s+/)
               .filter(Boolean);
 
           return {
