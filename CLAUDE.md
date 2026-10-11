@@ -21,9 +21,6 @@ Each HTML page loads its own module. Everything shares `firebase.js`, which expo
 | `index.html` | `script.js` | Public landing page: countdown, pack selection, promo codes, receipt upload, purchase form, live "someone bought" notifications, gallery, ranking |
 | `admin.html` | `admin.js` | Admin panel: list, approve, edit and delete participants, assign raffle numbers, Excel export (SheetJS from CDN) |
 | `consultar.html` | `consultar.js` | Participants look up their numbers by DNI |
-| `afiliados.html` | `afiliados.js` | Affiliate (referrer) login and stats by DNI, checked against the `afiliados` collection |
-| `afiliados-admin.html` | `afiliados-admin.js` | Admin view of affiliate commissions; marks them as paid |
-| `mis-comisiones.html` | `mis-comisiones.js` | An affiliate's own commissions (`where("referido", "==", dni)`) |
 | `detectar_comprobantes_duplicados.html` | inline module | Standalone tool that scans Storage `comprobantes/` for duplicate receipt files |
 
 Helpers: `firestore.js` has `guardarParticipante()`, which defines the participant document shape. `storage.js` has `subirComprobante()`, a resumable upload to `comprobantes/<timestamp>_<name>` with a progress callback.
@@ -32,7 +29,6 @@ Helpers: `firestore.js` has `guardarParticipante()`, which defines the participa
 
 1. **Purchase on `index.html`.** The buyer picks a pack (1/3/10/30/50/100 chances) and uploads a payment receipt to Storage. A doc is then added to the `participantes` collection with `estado: "Esperando"`, `dni` plus `dniNormalizado` (digits only), `pack`, `chancesBase`/`chancesFinales`, `codigoPromo`, `precioFinal`, `comprobanteURL`/`comprobantePath` and `referido` (the affiliate's DNI).
 2. **Admin approval in `admin.js`.** The admin sets `estado: "Pagado"`, generates unique 6-digit `numeros`, and increments the `ranking/{dniNormalizado}` doc (`chances: increment(n)`, merge). Uniqueness works by reading **every** participant and collecting the used numbers on the client, so there is no transaction or server-side check.
-3. **Affiliates.** `afiliados/{dni}` docs exist. Commissions are computed from `participantes` fields: `referido`, `comisionAfiliado` and `comisionPagada`. Nothing in the repo currently writes `comisionAfiliado`, so check how it is set before you rely on it.
 
 ### Business logic is duplicated
 
