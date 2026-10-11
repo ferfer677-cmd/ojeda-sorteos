@@ -1,13 +1,22 @@
 import { db, storage } from "./firebase.js";
 
 import {
+  entrarConGoogle,
+  salir,
+  alCambiarSesion
+} from "./auth.js";
+
+import { nombreAbreviado } from "./firestore.js";
+
+import {
   collection,
   getDocs,
   doc,
   updateDoc,
   deleteDoc,
   setDoc,
-  increment
+  increment,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 import {
@@ -17,10 +26,12 @@ import {
 
 
 // =====================================================
-// CONFIGURACIÓN
+// SESIÓN
 // =====================================================
+// El login es con Google (ver auth.js). Las reglas de Firebase
+// solo dejan leer y modificar participantes a la cuenta admin.
 
-const CONTRASENA_ADMIN = "Ojeda2026!";
+let adminActivo = false;
 
 
 // =====================================================
@@ -33,8 +44,6 @@ const loginAdmin =
 const panelAdmin =
   document.getElementById("panelAdmin");
 
-const passwordAdmin =
-  document.getElementById("passwordAdmin");
 
 const btnLogin =
   document.getElementById("btnLogin");
@@ -141,70 +150,244 @@ async function actualizarRanking(datos, cantidad) {
 
 }
 
-if (
-  localStorage.getItem("adminLogueado") === "si"
-) {
+// =====================================================
+// ACTUALIZAR CONSULTAS PÚBLICAS ("VER MIS NÚMEROS")
+// =====================================================
+// "consultas/{dni}" es lo único que lee el público al buscar
+// sus números: nombre abreviado + compras aprobadas.
 
-  mostrarPanel();
+function dniDe(datos) {
 
-} else {
-
-  mostrarLogin();
+  return (
+    datos.dniNormalizado ||
+    String(datos.dni || "")
+  )
+    .toString()
+    .replace(/\D/g, "")
+    .trim();
 
 }
+
+
+function armarConsulta(participantesDelDni) {
+
+  const aprobados =
+    participantesDelDni.filter(
+      (p) =>
+        p.datos.estado === "Pagado" &&
+        Array.isArray(p.datos.numeros) &&
+        p.datos.numeros.length
+    );
+
+  if (!aprobados.length) {
+    return null;
+  }
+
+  const primero =
+    aprobados[0].datos;
+
+  return {
+    nombre:
+      nombreAbreviado(
+        primero.nombre,
+        primero.apellido
+      ),
+    compras:
+      aprobados.map(
+        (p) => ({
+          pack: p.datos.pack || "",
+          chances: Number(p.datos.chancesFinales) || p.datos.numeros.length,
+          numeros: p.datos.numeros
+        })
+      ),
+    actualizado:
+      serverTimestamp()
+  };
+
+}
+
+
+async function guardarConsulta(dni, consulta) {
+
+  if (!dni) {
+    return;
+  }
+
+  if (consulta) {
+
+    await setDoc(
+      doc(db, "consultas", dni),
+      consulta
+    );
+
+  } else {
+
+    await deleteDoc(
+      doc(db, "consultas", dni)
+    );
+
+  }
+
+}
+
+
+// Rearma la consulta de un DNI (después de aprobar o borrar)
+
+async function actualizarConsulta(dni) {
+
+  if (!dni) {
+    return;
+  }
+
+  try {
+
+    const participantes =
+      await obtenerParticipantes();
+
+    await guardarConsulta(
+      dni,
+      armarConsulta(
+        participantes.filter(
+          (p) => dniDe(p.datos) === dni
+        )
+      )
+    );
+
+  } catch (error) {
+
+    console.error(
+      "No se pudo actualizar la consulta pública:",
+      error
+    );
+
+  }
+
+}
+
+
+// Rearma todas las consultas (para pasar los aprobados viejos)
+
+async function actualizarTodasLasConsultas() {
+
+  const participantes =
+    await obtenerParticipantes();
+
+  const porDni =
+    new Map();
+
+  participantes.forEach(
+    (p) => {
+
+      const dni =
+        dniDe(p.datos);
+
+      if (!dni) {
+        return;
+      }
+
+      if (!porDni.has(dni)) {
+        porDni.set(dni, []);
+      }
+
+      porDni.get(dni).push(p);
+
+    }
+  );
+
+  // Borrar consultas de DNIs que ya no tienen compras
+
+  const existentes =
+    await getDocs(
+      collection(db, "consultas")
+    );
+
+  for (const documento of existentes.docs) {
+
+    if (!porDni.has(documento.id)) {
+      await deleteDoc(documento.ref);
+    }
+
+  }
+
+  let actualizadas = 0;
+
+  for (const [dni, lista] of porDni) {
+
+    const consulta =
+      armarConsulta(lista);
+
+    await guardarConsulta(dni, consulta);
+
+    if (consulta) {
+      actualizadas++;
+    }
+
+  }
+
+  return actualizadas;
+
+}
+
+
+// =====================================================
+// LOGIN CON GOOGLE
+// =====================================================
+
+alCambiarSesion(
+  (esAdmin) => {
+
+    adminActivo = esAdmin;
+
+    if (esAdmin) {
+
+      mostrarPanel();
+
+      cargarParticipantes();
+
+    } else {
+
+      mostrarLogin();
+
+    }
+
+  }
+);
 
 
 if (btnLogin) {
 
   btnLogin.addEventListener(
     "click",
-    () => {
+    async () => {
 
-      const password =
-        passwordAdmin
-          ? passwordAdmin.value
-          : "";
+      try {
 
-      if (
-        password === CONTRASENA_ADMIN
-      ) {
+        btnLogin.disabled = true;
 
-        localStorage.setItem(
-          "adminLogueado",
-          "si"
+        await entrarConGoogle();
+
+      } catch (error) {
+
+        console.error(
+          "Error de login:",
+          error
         );
 
-        mostrarPanel();
+        if (
+          error.code !== "auth/popup-closed-by-user" &&
+          error.code !== "auth/cancelled-popup-request"
+        ) {
 
-        cargarParticipantes();
+          alert(
+            "❌ No se pudo entrar.\n\n" +
+            error.message
+          );
 
-      } else {
-
-        alert(
-          "❌ Contraseña incorrecta"
-        );
-
-      }
-
-    }
-  );
-
-}
-
-
-if (passwordAdmin) {
-
-  passwordAdmin.addEventListener(
-    "keydown",
-    (e) => {
-
-      if (e.key === "Enter") {
-
-        e.preventDefault();
-
-        if (btnLogin) {
-          btnLogin.click();
         }
+
+      } finally {
+
+        btnLogin.disabled = false;
 
       }
 
@@ -222,13 +405,56 @@ if (cerrarSesion) {
 
   cerrarSesion.addEventListener(
     "click",
-    () => {
+    async () => {
 
-      localStorage.removeItem(
-        "adminLogueado"
-      );
+      await salir();
 
       location.reload();
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// ACTUALIZAR CONSULTAS (BOTÓN)
+// =====================================================
+
+const btnActualizarConsultas =
+  document.getElementById("actualizarConsultas");
+
+if (btnActualizarConsultas) {
+
+  btnActualizarConsultas.addEventListener(
+    "click",
+    async () => {
+
+      btnActualizarConsultas.disabled = true;
+
+      try {
+
+        const cantidad =
+          await actualizarTodasLasConsultas();
+
+        alert(
+          `✅ Consultas actualizadas: ${cantidad} participantes con números.`
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "❌ Error actualizando consultas.\n\n" +
+          error.message
+        );
+
+      } finally {
+
+        btnActualizarConsultas.disabled = false;
+
+      }
 
     }
   );
@@ -1147,6 +1373,11 @@ await actualizarRanking(
   cantidad
 );
 
+// Actualizar "Ver mis números"
+await actualizarConsulta(
+  dniDe(datos)
+);
+
                 alert(
                   `✅ Pago aprobado.\n\nSe asignaron ${cantidad} números.`
                 );
@@ -1257,6 +1488,12 @@ await actualizarRanking(
                     id
                   )
 
+                );
+
+
+                // Actualizar "Ver mis números"
+                await actualizarConsulta(
+                  dniDe(datos)
                 );
 
 
@@ -1443,11 +1680,7 @@ if (buscador) {
     "input",
     () => {
 
-      if (
-        localStorage.getItem(
-          "adminLogueado"
-        ) === "si"
-      ) {
+      if (adminActivo) {
 
         cargarParticipantes();
 
@@ -1637,6 +1870,9 @@ await actualizarRanking(
         }
 
 
+        // Actualizar "Ver mis números" de todos
+        await actualizarTodasLasConsultas();
+
         alert(
           `✅ ${aprobados} pagos aprobados.`
         );
@@ -1754,6 +1990,9 @@ if (borrarTodo) {
 
         }
 
+
+        // Vaciar "Ver mis números"
+        await actualizarTodasLasConsultas();
 
         alert(
           "✅ Todos los participantes fueron eliminados."
@@ -1925,13 +2164,5 @@ console.log(
 );
 
 
-if (
-  localStorage.getItem(
-    "adminLogueado"
-  ) === "si"
-) {
-
-  cargarParticipantes();
-
-}
+// La carga empieza en alCambiarSesion, cuando entra el admin.
 

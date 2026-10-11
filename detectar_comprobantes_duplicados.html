@@ -232,6 +232,8 @@
 
 import { storage, db } from "./firebase.js";
 
+import { entrarConGoogle, alCambiarSesion } from "./auth.js";
+
 import {
   ref,
   listAll,
@@ -856,9 +858,30 @@ btnBorrarSeleccionados.addEventListener(
 );
 
 
+// Solo el admin (cuenta de Google) puede leer comprobantes y participantes
+let adminActivo = false;
+
+alCambiarSesion((esAdmin) => {
+  adminActivo = esAdmin;
+});
+
 btnAnalizar.addEventListener(
   "click",
-  analizar
+  async () => {
+
+    if (!adminActivo) {
+      try {
+        await entrarConGoogle();
+        adminActivo = true;
+      } catch (error) {
+        estado.textContent = "❌ " + error.message;
+        return;
+      }
+    }
+
+    analizar();
+
+  }
 );
 
 </script>

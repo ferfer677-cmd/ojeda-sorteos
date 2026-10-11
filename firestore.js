@@ -18,43 +18,86 @@ function normalizarDNI(dni) {
 }
 
 // =====================================================
+// TEXTO CON LARGO MÁXIMO
+// =====================================================
+// Las reglas de Firestore rechazan textos más largos.
+
+function corto(valor, maximo) {
+  return String(valor || "")
+    .trim()
+    .slice(0, maximo);
+}
+
+// =====================================================
+// NOMBRE ABREVIADO ("Kevin Porchile" -> "Kevin P.")
+// =====================================================
+
+export function nombreAbreviado(nombre, apellido) {
+
+  const primerNombre =
+    String(nombre || "")
+      .trim()
+      .split(/\s+/)[0] || "";
+
+  const partesApellido =
+    String(apellido || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+  const inicial =
+    partesApellido.length
+      ? partesApellido[partesApellido.length - 1]
+          .charAt(0)
+          .toUpperCase() + "."
+      : "";
+
+  const resultado =
+    `${primerNombre.charAt(0).toUpperCase()}${primerNombre.slice(1).toLowerCase()} ${inicial}`
+      .trim();
+
+  return resultado || "Participante";
+
+}
+
+// =====================================================
 // GUARDAR PARTICIPANTE
 // =====================================================
 
 export async function guardarParticipante(datos) {
   try {
-    const dniNormalizado = normalizarDNI(datos.dni);
+    const dniNormalizado = corto(normalizarDNI(datos.dni), 20);
 
     await addDoc(
       collection(db, "participantes"),
       {
-        nombre: datos.nombre || "",
-        apellido: datos.apellido || "",
+        nombre: corto(datos.nombre, 80),
+        apellido: corto(datos.apellido, 80),
 
         // DNI original y normalizado
-        dni: datos.dni || "",
+        dni: corto(datos.dni, 20),
         dniNormalizado: dniNormalizado,
 
-        telefono: datos.telefono || "",
-        instagram: datos.instagram || "",
+        telefono: corto(datos.telefono, 40),
+        instagram: corto(datos.instagram, 80),
 
         // Pack y chances
-        pack: datos.pack || "",
+        pack: corto(datos.pack, 80),
         chancesBase: Number(datos.chancesBase) || 0,
         chancesFinales: Number(datos.chancesFinales) || 0,
 
         // Promoción y precio
-        codigoPromo: datos.codigoPromo || "",
+        codigoPromo: corto(datos.codigoPromo, 40),
         precioFinal: Number(datos.precioFinal) || 0,
         multiplicadorPromo:
           Number(datos.multiplicadorPromo) || 1,
 
         // Comprobante
-        comprobanteURL: datos.comprobanteURL || "",
-        comprobantePath: datos.comprobantePath || "",
+        comprobanteURL: corto(datos.comprobanteURL, 1000),
+        comprobantePath: corto(datos.comprobantePath, 300),
 
         // Referido
-        referido: datos.referido || "",
+        referido: corto(datos.referido, 40),
 
         // Estado
         estado: "Esperando",
@@ -63,6 +106,33 @@ export async function guardarParticipante(datos) {
         fecha: serverTimestamp()
       }
     );
+
+    // -------------------------------------------------
+    // AVISO PÚBLICO DE "NUEVA COMPRA"
+    // -------------------------------------------------
+    // Solo nombre abreviado y pack: los datos completos
+    // quedan en "participantes", que solo ve el admin.
+
+    try {
+
+      await addDoc(
+        collection(db, "compras_recientes"),
+        {
+          nombre: corto(nombreAbreviado(datos.nombre, datos.apellido), 40),
+          pack: corto(datos.pack, 80),
+          fecha: serverTimestamp()
+        }
+      );
+
+    } catch (error) {
+
+      // Si falla el aviso, la compra igual quedó guardada
+      console.warn(
+        "No se pudo publicar el aviso de compra:",
+        error
+      );
+
+    }
 
     return true;
 

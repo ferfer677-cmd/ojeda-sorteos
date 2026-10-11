@@ -1,0 +1,85 @@
+rules_version = '2';
+
+// =====================================================
+// REGLAS DE FIRESTORE - OJEDA SORTEOS
+// =====================================================
+// Público: puede crear su compra y leer solo datos públicos
+// (ranking, consultas por DNI, compras recientes abreviadas).
+// Admin (cuenta de Google en esAdmin): acceso total.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function esAdmin() {
+      return request.auth != null
+        && request.auth.token.email == "ferfer677@gmail.com"
+        && request.auth.token.email_verified == true
+        && request.auth.token.firebase.sign_in_provider == "google.com";
+    }
+
+    function texto(campo, maximo) {
+      return request.resource.data[campo] is string
+        && request.resource.data[campo].size() <= maximo;
+    }
+
+    function numero(campo) {
+      return request.resource.data[campo] is number;
+    }
+
+    // El admin puede todo
+    match /{documento=**} {
+      allow read, write: if esAdmin();
+    }
+
+    // Compras: el público solo puede crear la suya, nunca leer ni modificar
+    match /participantes/{id} {
+      allow create: if
+        request.resource.data.keys().hasOnly([
+          "nombre", "apellido", "dni", "dniNormalizado",
+          "telefono", "instagram",
+          "pack", "chancesBase", "chancesFinales",
+          "codigoPromo", "precioFinal", "multiplicadorPromo",
+          "comprobanteURL", "comprobantePath",
+          "referido", "estado", "fecha"
+        ])
+        && request.resource.data.estado == "Esperando"
+        && request.resource.data.fecha == request.time
+        && texto("nombre", 80)
+        && texto("apellido", 80)
+        && texto("dni", 20)
+        && texto("dniNormalizado", 20)
+        && texto("telefono", 40)
+        && texto("instagram", 80)
+        && texto("pack", 80)
+        && texto("codigoPromo", 40)
+        && texto("comprobanteURL", 1000)
+        && texto("comprobantePath", 300)
+        && request.resource.data.comprobantePath.matches("comprobantes/.+")
+        && texto("referido", 40)
+        && numero("chancesBase")
+        && numero("chancesFinales")
+        && numero("precioFinal")
+        && numero("multiplicadorPromo");
+    }
+
+    // Aviso de "Nueva compra": solo nombre abreviado y pack
+    match /compras_recientes/{id} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.keys().hasOnly(["nombre", "pack", "fecha"])
+        && texto("nombre", 40)
+        && texto("pack", 80)
+        && request.resource.data.fecha == request.time;
+    }
+
+    // Ranking público (lo escribe el admin al aprobar)
+    match /ranking/{dni} {
+      allow read: if true;
+    }
+
+    // "Ver mis números": se lee solo con el DNI exacto, no se puede listar
+    match /consultas/{dni} {
+      allow get: if true;
+    }
+  }
+}

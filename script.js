@@ -3,6 +3,8 @@ import { db, storage } from "./firebase.js";
 import {
   collection,
   getDocs,
+  getDoc,
+  doc,
   onSnapshot,
   query,
   where,
@@ -1472,8 +1474,10 @@ function iniciarNotificacionesEnVivo() {
 
   try {
 
+// "compras_recientes" solo tiene nombre abreviado y pack.
+// Los datos completos están en "participantes", que solo lee el admin.
 const consulta = query(
-  collection(db, "participantes"),
+  collection(db, "compras_recientes"),
   orderBy("fecha", "desc"),
   limit(1)
 );
@@ -2064,50 +2068,54 @@ if (btnConsultar && resultadoNumeros) {
 
       try {
 
-      const consulta = query(
-  collection(db, "participantes"),
-  where("dniNormalizado", "==", dniBuscado)
-);
+        // "consultas/{dni}" solo tiene nombre abreviado
+        // y las compras aprobadas con sus números.
+        // Lo arma el admin al aprobar cada pago.
 
-const snapshot = await getDocs(consulta);
+        const consultaDoc =
+          await getDoc(
+            doc(
+              db,
+              "consultas",
+              dniBuscado
+            )
+          );
 
-        let encontrados = [];
+        const consultaDatos =
+          consultaDoc.exists()
+            ? consultaDoc.data()
+            : null;
 
-        snapshot.forEach(
-          (documento) => {
-
-            const datos =
-              documento.data();
-
-            const dniGuardado =
-              (datos.dni || "")
-                .toString()
-                .trim()
-                .replace(/\D/g, "");
-
-            if (
-              dniGuardado === dniBuscado
-            ) {
-
-              encontrados.push(
-                datos
-              );
-
-            }
-
-          }
-        );
+        const encontrados =
+          Array.isArray(consultaDatos?.compras)
+            ? consultaDatos.compras.map(
+                (compra) => ({
+                  nombre: consultaDatos.nombre,
+                  apellido: "",
+                  estado: "Pagado",
+                  pack: compra.pack,
+                  chancesFinales: compra.chances,
+                  numeros: compra.numeros
+                })
+              )
+            : [];
 
 
         if (!encontrados.length) {
 
           resultadoNumeros.innerHTML = `
             <div class="consulta-resultado">
-              <h3>❌ NO ENCONTRAMOS TU DNI</h3>
+              <h3>❌ NO ENCONTRAMOS NÚMEROS PARA TU DNI</h3>
 
               <p>
                 Revisá que el DNI ingresado
                 sea correcto.
+              </p>
+
+              <p>
+                Si compraste hace poco, tu pago
+                todavía se está verificando: los
+                números aparecen cuando se aprueba.
               </p>
             </div>
           `;

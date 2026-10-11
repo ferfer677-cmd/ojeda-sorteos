@@ -1,8 +1,8 @@
 import { db } from "./firebase.js";
 
 import {
-  collection,
-  getDocs
+  doc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 const boton =
@@ -11,118 +11,116 @@ const boton =
 const resultado =
   document.getElementById("resultado");
 
+// =====================================================
+// CONSULTAR NÚMEROS POR DNI
+// =====================================================
+// Lee "consultas/{dni}", que solo tiene nombre abreviado
+// y las compras aprobadas. Lo arma el admin al aprobar.
+
 boton.addEventListener(
   "click",
   async () => {
 
-   const dni =
-  document.getElementById("dni")
-  .value
-  .trim()
-  .replace(/\D/g, "");
-
-    const snapshot =
-      await getDocs(
-        collection(db, "participantes")
-      );
-
-    let encontrado = false;
-
-    let totalCompras = 0;
-let totalNumeros = 0;
-let nombreCompleto = "";
+    const dni =
+      document.getElementById("dni")
+        .value
+        .trim()
+        .replace(/\D/g, "");
 
     resultado.innerHTML = "";
 
-    snapshot.forEach((documento) => {
+    if (!dni) {
+      resultado.textContent = "Ingresá tu DNI";
+      return;
+    }
+
+    try {
+
+      const snapshot =
+        await getDoc(
+          doc(db, "consultas", dni)
+        );
 
       const datos =
-        documento.data();
+        snapshot.exists()
+          ? snapshot.data()
+          : null;
 
-     const dniGuardado =
-  (datos.dni || "")
-    .toString()
-    .trim()
-    .replace(/\D/g, "");
+      const compras =
+        Array.isArray(datos?.compras)
+          ? datos.compras
+          : [];
 
-if (dniGuardado === dni) {
+      if (!compras.length) {
 
-  encontrado = true;
+        resultado.textContent =
+          "No encontramos números para ese DNI. Si compraste hace poco, tu pago todavía se está verificando.";
 
-  totalCompras++;
+        return;
 
-  nombreCompleto =
-    `${datos.nombre} ${datos.apellido}`;
-
-  if (datos.numeros) {
-    totalNumeros += datos.numeros.length;
-  }
-
-        resultado.innerHTML += `
-          <div class="compra-card">
-
-            <h2>
-              ${datos.nombre}
-              ${datos.apellido}
-            </h2>
-
-            <p>
-              <strong>Estado:</strong>
-              ${datos.estado}
-            </p>
-
-            <p>
-              <strong>Pack:</strong>
-              ${datos.pack}
-            </p>
-
-            <h3>
-              Tus números
-            </h3>
-
-            <p>
-              ${
-                datos.numeros
-                  ? datos.numeros.join("<br>")
-                  : "Todavía no fueron asignados"
-              }
-            </p>
-
-          </div>
-        `;
       }
 
-    });
+      const totalNumeros =
+        compras.reduce(
+          (total, compra) =>
+            total + (compra.numeros || []).length,
+          0
+        );
 
-    if (encontrado) {
+      // Resumen
 
-  resultado.innerHTML =
-    `
-      <div class="compra-card">
+      const resumen =
+        document.createElement("div");
 
-        <h2>
-          ${nombreCompleto}
-        </h2>
+      resumen.className = "compra-card";
 
-        <p>
-          <strong>Total de compras:</strong>
-          ${totalCompras}
-        </p>
+      resumen.innerHTML = `
+        <h2></h2>
+        <p><strong>Total de compras:</strong> ${compras.length}</p>
+        <p><strong>Total de números asignados:</strong> ${totalNumeros}</p>
+      `;
 
-        <p>
-          <strong>Total de números asignados:</strong>
-          ${totalNumeros}
-        </p>
+      resumen.querySelector("h2").textContent =
+        datos.nombre || "Participante";
 
-      </div>
-    `
-    + resultado.innerHTML;
+      resultado.appendChild(resumen);
 
-}
-    if (!encontrado) {
+      // Una tarjeta por compra
 
-      resultado.innerHTML =
-        "Participante no encontrado";
+      compras.forEach(
+        (compra) => {
+
+          const card =
+            document.createElement("div");
+
+          card.className = "compra-card";
+
+          card.innerHTML = `
+            <p><strong>Pack:</strong> <span class="pack"></span></p>
+            <h3>Tus números</h3>
+            <p class="numeros"></p>
+          `;
+
+          card.querySelector(".pack").textContent =
+            compra.pack || "-";
+
+          card.querySelector(".numeros").textContent =
+            (compra.numeros || []).join(", ");
+
+          resultado.appendChild(card);
+
+        }
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Error consultando números:",
+        error
+      );
+
+      resultado.textContent =
+        "No se pudieron consultar tus números. Probá de nuevo.";
 
     }
 

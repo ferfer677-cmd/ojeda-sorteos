@@ -1,0 +1,35 @@
+rules_version = '2';
+
+// =====================================================
+// REGLAS DE STORAGE - OJEDA SORTEOS
+// =====================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function esAdmin() {
+      return request.auth != null
+        && request.auth.token.email == "ferfer677@gmail.com"
+        && request.auth.token.email_verified == true
+        && request.auth.token.firebase.sign_in_provider == "google.com";
+    }
+
+    // El admin puede todo
+    match /{todo=**} {
+      allow read, write: if esAdmin();
+    }
+
+    // Comprobantes: cualquiera sube el suyo (máx. 20 MB).
+    // Solo se puede leer durante 15 minutos después de subirlo
+    // (para obtener el link al enviar la compra); después, solo el admin.
+    match /comprobantes/{archivo} {
+      allow create: if request.resource.size < 20 * 1024 * 1024;
+      allow get: if resource.timeCreated > request.time - duration.value(15, "m");
+    }
+
+    // Fotos de premios: públicas
+    match /Premio/{archivo=**} {
+      allow read: if true;
+    }
+  }
+}

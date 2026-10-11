@@ -8,6 +8,10 @@ import {
   getStorage
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
 
+import {
+  getAuth
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyC9Ui0oVlfb81ADeZL8p3lK4gng38-yHiA",
   authDomain: "ojeda-sorteos.firebaseapp.com",
@@ -23,4 +27,6 @@ const db = getFirestore(app);
 
 const storage = getStorage(app);
 
-export { db, storage };
+const auth = getAuth(app);
+
+export { db, storage, auth };
