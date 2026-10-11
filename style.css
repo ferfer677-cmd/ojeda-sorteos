@@ -4554,3 +4554,247 @@ img {
   flex-direction: column;
   gap: 4px !important;
 }
+
+/* =====================================================
+   CARTEL CIERRE DE PARTICIPACIONES (cartel-cierre.js)
+===================================================== */
+
+.cierre-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 18px;
+
+  background: rgba(0, 0, 0, .82);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .3s ease, visibility .3s ease;
+}
+
+.cierre-overlay.activo {
+  opacity: 1;
+  visibility: visible;
+}
+
+.cierre-card {
+  position: relative;
+
+  width: 100%;
+  max-width: 420px;
+
+  padding: 30px 22px 24px;
+
+  text-align: center;
+  color: #fff;
+
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 40, 20, .35), transparent 60%),
+    linear-gradient(160deg, #1c0a0a, #0a0a0a 55%);
+
+  border: 2px solid #ff2a1a;
+  border-radius: 22px;
+
+  box-shadow:
+    0 0 0 4px rgba(255, 42, 26, .15),
+    0 0 45px rgba(255, 42, 26, .45);
+
+  transform: scale(.85) translateY(20px);
+  transition: transform .35s cubic-bezier(.2, 1.4, .4, 1);
+
+  animation: cierreBrillo 2s ease-in-out infinite;
+}
+
+.cierre-overlay.activo .cierre-card {
+  transform: scale(1) translateY(0);
+}
+
+@keyframes cierreBrillo {
+  0%, 100% {
+    box-shadow:
+      0 0 0 4px rgba(255, 42, 26, .15),
+      0 0 35px rgba(255, 42, 26, .35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px rgba(255, 42, 26, .25),
+      0 0 60px rgba(255, 42, 26, .65);
+  }
+}
+
+.cierre-cerrar {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+
+  width: 36px;
+  height: 36px;
+
+  color: #fff;
+  font-size: 20px;
+
+  background: rgba(255, 255, 255, .08);
+  border: 0;
+  border-radius: 50%;
+
+  cursor: pointer;
+}
+
+.cierre-cerrar:hover {
+  background: rgba(255, 255, 255, .18);
+}
+
+.cierre-reloj {
+  font-size: 46px;
+  line-height: 1;
+  animation: cierreReloj 1.2s ease-in-out infinite;
+}
+
+@keyframes cierreReloj {
+  0%, 100% { transform: rotate(-10deg); }
+  50% { transform: rotate(10deg); }
+}
+
+.cierre-etiqueta {
+  display: inline-block;
+
+  margin: 14px 0 8px;
+  padding: 5px 12px;
+
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+
+  color: #111;
+  background: #ffcc00;
+  border-radius: 999px;
+}
+
+.cierre-titulo {
+  margin: 4px 0 6px;
+
+  font-family: 'Oswald', sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+
+  color: #fff;
+  text-shadow: 0 0 18px rgba(255, 42, 26, .7);
+}
+
+.cierre-subtitulo {
+  margin: 0 0 18px;
+
+  font-size: 16px;
+  color: #ddd;
+}
+
+.cierre-subtitulo strong {
+  color: #ffcc00;
+}
+
+.cierre-contador {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+
+  margin-bottom: 18px;
+}
+
+.cierre-caja {
+  flex: 1;
+  max-width: 82px;
+
+  padding: 10px 4px 8px;
+
+  background: #fff;
+  border-radius: 12px;
+
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .4);
+}
+
+.cierre-caja span {
+  display: block;
+
+  font-family: 'Oswald', sans-serif;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+
+  color: #e30613;
+}
+
+.cierre-caja small {
+  display: block;
+  margin-top: 4px;
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+
+  color: #333;
+}
+
+.cierre-texto {
+  margin: 0 0 20px;
+
+  font-size: 14px;
+  line-height: 1.5;
+  color: #bbb;
+}
+
+.cierre-cta {
+  display: block;
+
+  padding: 16px;
+
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: .5px;
+  text-decoration: none;
+
+  color: #fff;
+  background: linear-gradient(135deg, #ff3b00, #ff0000, #b80000);
+  border: 2px solid #ff6a4a;
+  border-radius: 14px;
+
+  box-shadow: 0 8px 25px rgba(255, 0, 0, .45);
+
+  animation: cierrePulso 1.4s ease-in-out infinite;
+}
+
+@keyframes cierrePulso {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+/* Menos de 3 horas: números titilan */
+.cierre-overlay.urgente .cierre-caja span {
+  animation: cierreTitila 1s steps(2, start) infinite;
+}
+
+@keyframes cierreTitila {
+  to { color: #ff7a00; }
+}
+
+@media (max-width: 400px) {
+  .cierre-titulo { font-size: 25px; }
+  .cierre-caja span { font-size: 28px; }
+  .cierre-contador { gap: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cierre-card,
+  .cierre-reloj,
+  .cierre-cta,
+  .cierre-overlay.urgente .cierre-caja span {
+    animation: none;
+  }
+}
