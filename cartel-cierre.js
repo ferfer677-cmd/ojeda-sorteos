@@ -5,9 +5,9 @@
 // con la cuenta regresiva hasta el cierre de participaciones.
 // Después del cierre ya no aparece.
 
-// Viernes 16 de octubre de 2026 — 19:30 hs (Argentina UTC-3)
+// Viernes 16 de octubre de 2026 — 21:30 hs (Argentina UTC-3)
 const CIERRE_PARTICIPACIONES =
-  new Date("2026-10-16T19:30:00-03:00");
+  new Date("2026-10-16T21:30:00-03:00");
 
 // Espera antes de mostrarlo (para que cargue la página)
 const DEMORA_MS = 1200;
@@ -47,7 +47,7 @@ function crearCartel() {
       </h2>
 
       <p class="cierre-subtitulo">
-        Viernes 16/10 a las <strong>19:30 hs</strong>
+        Viernes 16/10 a las <strong>21:30 hs</strong>
       </p>
 
       <div class="cierre-contador">
