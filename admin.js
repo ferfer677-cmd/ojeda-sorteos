@@ -18,6 +18,7 @@ import {
   increment,
   serverTimestamp,
   query,
+  where,
   orderBy,
   limit
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
@@ -311,16 +312,26 @@ async function actualizarConsulta(dni) {
 
   try {
 
-    const participantes =
-      await obtenerParticipantes();
+    // Solo las compras de ese DNI (antes leía todos los participantes)
+    const snapshot =
+      await getDocs(
+        query(
+          collection(db, "participantes"),
+          where("dniNormalizado", "==", dni)
+        )
+      );
+
+    const delDni =
+      snapshot.docs.map(
+        (documento) => ({
+          id: documento.id,
+          datos: documento.data()
+        })
+      );
 
     await guardarConsulta(
       dni,
-      armarConsulta(
-        participantes.filter(
-          (p) => dniDe(p.datos) === dni
-        )
-      )
+      armarConsulta(delDni)
     );
 
   } catch (error) {
@@ -641,7 +652,17 @@ function generarNumero() {
 // OBTENER PARTICIPANTES
 // =====================================================
 
-async function obtenerParticipantes() {
+// Última lista descargada. El buscador la reutiliza
+// para no descargar todo de nuevo con cada letra.
+let cacheParticipantes = null;
+
+async function obtenerParticipantes(
+  { usarCache = false } = {}
+) {
+
+  if (usarCache && cacheParticipantes) {
+    return cacheParticipantes;
+  }
 
   const snapshot =
     await getDocs(
@@ -700,6 +721,9 @@ async function obtenerParticipantes() {
     }
   );
 
+
+  cacheParticipantes =
+    participantes;
 
   return participantes;
 
@@ -832,7 +856,9 @@ function mostrarFecha(
 // CARGAR PARTICIPANTES
 // =====================================================
 
-async function cargarParticipantes() {
+async function cargarParticipantes(
+  { usarCache = false } = {}
+) {
 
   if (
     !pendientes ||
@@ -861,7 +887,7 @@ async function cargarParticipantes() {
   try {
 
     const participantes =
-      await obtenerParticipantes();
+      await obtenerParticipantes({ usarCache });
 
 
     pendientes.innerHTML = "";
@@ -1750,15 +1776,25 @@ await actualizarConsulta(
 
 if (buscador) {
 
+  let esperaBuscador = null;
+
   buscador.addEventListener(
     "input",
     () => {
 
-      if (adminActivo) {
-
-        cargarParticipantes();
-
+      if (!adminActivo) {
+        return;
       }
+
+      // Espera a que termines de escribir y filtra
+      // la lista ya descargada (no vuelve a leer Firebase)
+      clearTimeout(esperaBuscador);
+
+      esperaBuscador =
+        setTimeout(
+          () => cargarParticipantes({ usarCache: true }),
+          250
+        );
 
     }
   );
@@ -1794,6 +1830,8 @@ if (aprobarTodos) {
 
 
         let aprobados = 0;
+
+        const dnisAprobados = new Set();
 
 
         for (
@@ -1939,13 +1977,19 @@ await actualizarRanking(
   cantidad
 );
 
+          dnisAprobados.add(
+            dniDe(datos)
+          );
+
           aprobados++;
 
         }
 
 
-        // Actualizar "Ver mis números" de todos
-        await actualizarTodasLasConsultas();
+        // Actualizar "Ver mis números" solo de los aprobados
+        for (const dni of dnisAprobados) {
+          await actualizarConsulta(dni);
+        }
 
         alert(
           `✅ ${aprobados} pagos aprobados.`
