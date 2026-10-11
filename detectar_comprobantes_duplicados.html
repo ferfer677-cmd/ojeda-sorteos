@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comprobantes duplicados</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 25px;
+      background: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    .contenedor { max-width: 1150px; margin: auto; }
+
+    h1 { color: #ff3030; margin-bottom: 8px; }
+
+    .aviso {
+      background: #241515;
+      border: 1px solid #6d2020;
+      padding: 13px;
+      border-radius: 9px;
+      color: #ddd;
+      margin-bottom: 18px;
+    }
+
+    button {
+      background: #e00000;
+      color: white;
+      border: 0;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 4px;
+    }
+
+    button.secundario { background: #333; }
+    button.peligro { background: #a90000; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+
+    #barraAcciones {
+      display: none;
+      background: #191919;
+      border: 1px solid #333;
+      padding: 12px;
+      border-radius: 10px;
+      margin: 15px 0;
+    }
+
+    #contadorSeleccion {
+      color: #ff5a5a;
+      font-weight: bold;
+      margin-left: 8px;
+    }
+
+    #estado {
+      margin: 15px 0;
+      color: #aaa;
+      min-height: 20px;
+    }
+
+    .resumen {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .caja {
+      background: #1c1c1c;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 17px;
+    }
+
+    .numero {
+      display: block;
+      font-size: 26px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .grupo {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+
+    .grupo-titulo {
+      padding: 14px;
+      background: #242424;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .grupo-titulo strong { color: #ff5a5a; }
+
+    .archivo {
+      padding: 14px;
+      border-top: 1px solid #333;
+      display: grid;
+      grid-template-columns: 30px 1fr auto;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .archivo.seleccionado {
+      background: #241414;
+    }
+
+    .checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: #e00000;
+    }
+
+    .nombre {
+      font-weight: bold;
+      word-break: break-all;
+    }
+
+    .datos {
+      color: #999;
+      font-size: 13px;
+      margin-top: 7px;
+      line-height: 1.65;
+    }
+
+    .persona {
+      color: #ff5a5a;
+      font-weight: bold;
+    }
+
+    .abrir {
+      display: inline-block;
+      padding: 8px 11px;
+      background: #333;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .sinResultados {
+      background: #191919;
+      border: 1px solid #333;
+      padding: 18px;
+      border-radius: 10px;
+    }
+
+    @media(max-width:800px) {
+      .resumen { grid-template-columns: repeat(2, 1fr); }
+      .archivo { grid-template-columns: 30px 1fr; }
+      .archivo .acciones { grid-column: 2; }
+    }
+
+    @media(max-width:500px) {
+      .resumen { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="contenedor">
+
+  <h1>🔎 Detector de comprobantes duplicados</h1>
+
+  <div class="aviso">
+    <strong>Importante:</strong> el botón borrar elimina solamente el archivo de
+    <strong>Firebase Storage</strong>. No elimina ni modifica el participante,
+    sus números, sus chances ni el documento de Firestore.
+  </div>
+
+  <button id="btnAnalizar">ANALIZAR COMPROBANTES</button>
+
+  <div id="barraAcciones">
+    <button id="btnSeleccionarTodos" class="secundario">
+      ☑️ SELECCIONAR TODOS
+    </button>
+
+    <button id="btnDeseleccionarTodos" class="secundario">
+      ⬜ DESELECCIONAR TODOS
+    </button>
+
+    <button id="btnBorrarSeleccionados" class="peligro">
+      🗑️ BORRAR SELECCIONADOS
+    </button>
+
+    <span id="contadorSeleccion">0 seleccionados</span>
+  </div>
+
+  <div id="estado">Esperando...</div>
+
+  <div class="resumen">
+    <div class="caja">
+      Archivos encontrados
+      <span class="numero" id="totalArchivos">0</span>
+    </div>
+
+    <div class="caja">
+      Tamaños repetidos
+      <span class="numero" id="totalGrupos">0</span>
+    </div>
+
+    <div class="caja">
+      Posibles duplicados
+      <span class="numero" id="totalDuplicados">0</span>
+    </div>
+
+    <div class="caja">
+      Seleccionados
+      <span class="numero" id="totalSeleccionados">0</span>
+    </div>
+  </div>
+
+  <div id="resultados"></div>
+</div>
+
+<script type="module">
+
+import { storage, db } from "./firebase.js";
+
+import {
+  ref,
+  listAll,
+  getMetadata,
+  getDownloadURL,
+  deleteObject
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
+
+import {
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+
+const btnAnalizar = document.getElementById("btnAnalizar");
+const btnSeleccionarTodos = document.getElementById("btnSeleccionarTodos");
+const btnDeseleccionarTodos = document.getElementById("btnDeseleccionarTodos");
+const btnBorrarSeleccionados = document.getElementById("btnBorrarSeleccionados");
+
+const barraAcciones = document.getElementById("barraAcciones");
+const contadorSeleccion = document.getElementById("contadorSeleccion");
+const estado = document.getElementById("estado");
+const resultados = document.getElementById("resultados");
+
+let registrosMostrados = [];
+
+
+/* =====================================================
+   OBTENER ARCHIVOS
+===================================================== */
+
+async function obtenerComprobantes() {
+
+  const carpeta = ref(storage, "comprobantes");
+
+  const salida = [];
+
+  async function recorrer(refActual) {
+
+    const lista = await listAll(refActual);
+
+    for (const item of lista.items) {
+      salida.push(item);
+    }
+
+    for (const subcarpeta of lista.prefixes) {
+      await recorrer(subcarpeta);
+    }
+  }
+
+  await recorrer(carpeta);
+
+  return salida;
+}
+
+
+/* =====================================================
+   OBTENER PARTICIPANTES
+===================================================== */
+
+async function obtenerParticipantes() {
+
+  const mapa = new Map();
+
+  const snapshot =
+    await getDocs(collection(db, "participantes"));
+
+  snapshot.forEach((doc) => {
+
+    const datos = doc.data();
+
+    const path =
+      (datos.comprobantePath || "")
+        .toString()
+        .replace(/^\/+/, "");
+
+    if (!path) return;
+
+    mapa.set(path, datos);
+  });
+
+  return mapa;
+}
+
+
+/* =====================================================
+   ACTUALIZAR CONTADOR
+===================================================== */
+
+function actualizarSeleccion() {
+
+  const seleccionados =
+    document.querySelectorAll(
+      ".comprobante-check:checked"
+    );
+
+  const cantidad = seleccionados.length;
+
+  contadorSeleccion.textContent =
+    `${cantidad} seleccionado${cantidad === 1 ? "" : "s"}`;
+
+  document.getElementById("totalSeleccionados")
+    .textContent = cantidad;
+
+  document.querySelectorAll(".archivo")
+    .forEach((elemento) => {
+
+      const check =
+        elemento.querySelector(".comprobante-check");
+
+      if (check) {
+        elemento.classList.toggle(
+          "seleccionado",
+          check.checked
+        );
+      }
+    });
+}
+
+
+/* =====================================================
+   ANALIZAR
+===================================================== */
+
+async function analizar() {
+
+  btnAnalizar.disabled = true;
+  barraAcciones.style.display = "none";
+  resultados.innerHTML = "";
+  registrosMostrados = [];
+
+  estado.textContent =
+    "⏳ Buscando comprobantes en Firebase Storage...";
+
+  try {
+
+    const archivos =
+      await obtenerComprobantes();
+
+    document.getElementById("totalArchivos")
+      .textContent = archivos.length;
+
+    if (!archivos.length) {
+
+      estado.textContent =
+        "No se encontraron comprobantes.";
+
+      btnAnalizar.disabled = false;
+      return;
+    }
+
+
+    estado.textContent =
+      "⏳ Buscando participantes en Firestore...";
+
+    const participantes =
+      await obtenerParticipantes();
+
+
+    const grupos = new Map();
+
+
+    for (let i = 0; i < archivos.length; i++) {
+
+      const archivo = archivos[i];
+
+      estado.textContent =
+        `⏳ Analizando ${i + 1} de ${archivos.length}...`;
+
+      let metadata;
+
+      try {
+        metadata = await getMetadata(archivo);
+      } catch (error) {
+        console.error(error);
+        continue;
+      }
+
+      const tamaño =
+        Number(metadata.size || 0);
+
+      if (!grupos.has(tamaño)) {
+        grupos.set(tamaño, []);
+      }
+
+      grupos.get(tamaño).push({
+
+        archivo,
+        tamaño,
+        participante:
+          participantes.get(
+            archivo.fullPath
+          ) || null
+
+      });
+    }
+
+
+    const repetidos =
+      [...grupos.values()]
+        .filter(grupo => grupo.length > 1)
+        .sort((a, b) => b.length - a.length);
+
+
+    document.getElementById("totalGrupos")
+      .textContent = repetidos.length;
+
+
+    let cantidadDuplicados = 0;
+
+
+    repetidos.forEach((grupo, indice) => {
+
+      cantidadDuplicados += grupo.length;
+
+      const tamañoKB =
+        (grupo[0].tamaño / 1024).toFixed(2);
+
+      const div =
+        document.createElement("div");
+
+      div.className = "grupo";
+
+      const grupoId =
+        `grupo-${indice}`;
+
+
+      div.innerHTML = `
+        <div class="grupo-titulo">
+
+          <div>
+            <strong>⚠️ POSIBLE DUPLICADO</strong>
+            <br>
+            ${grupo.length} archivos con el mismo tamaño:
+            <strong>${tamañoKB} KB</strong>
+          </div>
+
+          <button
+            class="secundario seleccionar-grupo"
+            data-grupo="${grupoId}">
+            ☑️ SELECCIONAR GRUPO
+          </button>
+
+        </div>
+      `;
+
+
+      grupo.forEach((item, indexArchivo) => {
+
+        const archivoDiv =
+          document.createElement("div");
+
+        archivoDiv.className = "archivo";
+
+        const checkboxId =
+          `${grupoId}-archivo-${indexArchivo}`;
+
+        const datos =
+          item.participante;
+
+        let personaHTML =
+          "⚠️ No vinculado con Firestore";
+
+        if (datos) {
+
+          personaHTML = `
+            <span class="persona">
+              👤 ${datos.nombre || ""}
+              ${datos.apellido || ""}
+              ${datos.dni
+                ? " — DNI " + datos.dni
+                : ""}
+            </span>
+
+            <br>
+
+            Estado:
+            ${datos.estado || "-"}
+
+            <br>
+
+            Chances:
+            ${datos.chancesFinales || 0}
+          `;
+        }
+
+
+        archivoDiv.innerHTML = `
+
+          <input
+            type="checkbox"
+            class="checkbox comprobante-check"
+            id="${checkboxId}"
+            data-path="${item.archivo.fullPath}"
+          >
+
+          <div>
+
+            <label
+              for="${checkboxId}"
+              class="nombre"
+              style="cursor:pointer;"
+            >
+              📄 ${item.archivo.name}
+            </label>
+
+            <div class="datos">
+
+              Tamaño:
+              ${tamañoKB} KB
+
+              <br>
+
+              Ruta:
+              ${item.archivo.fullPath}
+
+              <br><br>
+
+              ${personaHTML}
+
+            </div>
+
+          </div>
+
+          <div class="acciones">
+            <span>⏳ Cargando...</span>
+          </div>
+        `;
+
+
+        div.appendChild(archivoDiv);
+
+        registrosMostrados.push(item);
+
+
+        const check =
+          archivoDiv.querySelector(
+            ".comprobante-check"
+          );
+
+        check.addEventListener(
+          "change",
+          actualizarSeleccion
+        );
+
+
+        getDownloadURL(item.archivo)
+          .then((url) => {
+
+            const acciones =
+              archivoDiv.querySelector(".acciones");
+
+            acciones.innerHTML = `
+              <a
+                href="${url}"
+                target="_blank"
+                rel="noopener"
+                class="abrir"
+              >
+                👁️ ABRIR
+              </a>
+            `;
+
+          })
+          .catch(() => {
+
+            const acciones =
+              archivoDiv.querySelector(".acciones");
+
+            acciones.innerHTML =
+              "⚠️ No disponible";
+
+          });
+
+      });
+
+
+      resultados.appendChild(div);
+
+
+      const botonGrupo =
+        div.querySelector(
+          ".seleccionar-grupo"
+        );
+
+
+      botonGrupo.addEventListener(
+        "click",
+        () => {
+
+          div.querySelectorAll(
+            ".comprobante-check"
+          ).forEach((check) => {
+
+            check.checked = true;
+
+          });
+
+          actualizarSeleccion();
+
+        }
+      );
+
+    });
+
+
+    document.getElementById("totalDuplicados")
+      .textContent = cantidadDuplicados;
+
+
+    if (!repetidos.length) {
+
+      resultados.innerHTML = `
+        <div class="sinResultados">
+          ✅ No se encontraron comprobantes
+          con el mismo tamaño.
+        </div>
+      `;
+
+    } else {
+
+      barraAcciones.style.display = "block";
+
+    }
+
+
+    estado.textContent =
+      "✅ Análisis terminado.";
+
+    actualizarSeleccion();
+
+  } catch (error) {
+
+    console.error(error);
+
+    estado.innerHTML =
+      `❌ <strong>Error:</strong> ${error.message}`;
+
+  }
+
+  btnAnalizar.disabled = false;
+}
+
+
+/* =====================================================
+   SELECCIONAR TODOS
+===================================================== */
+
+btnSeleccionarTodos.addEventListener(
+  "click",
+  () => {
+
+    document.querySelectorAll(
+      ".comprobante-check"
+    ).forEach((check) => {
+
+      check.checked = true;
+
+    });
+
+    actualizarSeleccion();
+  }
+);
+
+
+/* =====================================================
+   DESELECCIONAR TODOS
+===================================================== */
+
+btnDeseleccionarTodos.addEventListener(
+  "click",
+  () => {
+
+    document.querySelectorAll(
+      ".comprobante-check"
+    ).forEach((check) => {
+
+      check.checked = false;
+
+    });
+
+    actualizarSeleccion();
+  }
+);
+
+
+/* =====================================================
+   BORRAR SELECCIONADOS
+===================================================== */
+
+btnBorrarSeleccionados.addEventListener(
+  "click",
+  async () => {
+
+    const seleccionados =
+      [...document.querySelectorAll(
+        ".comprobante-check:checked"
+      )];
+
+
+    if (!seleccionados.length) {
+
+      alert(
+        "No seleccionaste ningún comprobante."
+      );
+
+      return;
+    }
+
+
+    const confirmar =
+      confirm(
+        `Vas a borrar ${seleccionados.length} comprobante(s) de Firebase Storage.\n\n` +
+        `IMPORTANTE: se borrarán las fotos/archivos, ` +
+        `pero NO se eliminarán los participantes ni sus números de Firestore.\n\n` +
+        `¿Querés continuar?`
+      );
+
+
+    if (!confirmar) return;
+
+
+    const confirmarDos =
+      confirm(
+        "Esta acción no se puede deshacer desde este panel.\n\n" +
+        "¿CONFIRMÁS EL BORRADO?"
+      );
+
+
+    if (!confirmarDos) return;
+
+
+    btnBorrarSeleccionados.disabled = true;
+    btnSeleccionarTodos.disabled = true;
+    btnDeseleccionarTodos.disabled = true;
+
+    const total =
+      seleccionados.length;
+
+    let borrados = 0;
+    let errores = 0;
+
+
+    for (let i = 0; i < seleccionados.length; i++) {
+
+      const check =
+        seleccionados[i];
+
+      const path =
+        check.dataset.path;
+
+      estado.textContent =
+        `🗑️ Borrando ${i + 1} de ${total}: ${path}`;
+
+
+      try {
+
+        await deleteObject(
+          ref(storage, path)
+        );
+
+        borrados++;
+
+        const archivoDiv =
+          check.closest(".archivo");
+
+        if (archivoDiv) {
+
+          archivoDiv.remove();
+
+        }
+
+      } catch (error) {
+
+        errores++;
+
+        console.error(
+          "Error borrando:",
+          path,
+          error
+        );
+
+      }
+
+    }
+
+
+    actualizarSeleccion();
+
+
+    estado.innerHTML =
+      `✅ Borrado terminado. ` +
+      `<strong>${borrados}</strong> eliminado(s)` +
+      (errores
+        ? ` — ⚠️ ${errores} con error.`
+        : ".");
+
+
+    btnBorrarSeleccionados.disabled = false;
+    btnSeleccionarTodos.disabled = false;
+    btnDeseleccionarTodos.disabled = false;
+
+    document.getElementById("totalArchivos")
+      .textContent =
+      Math.max(
+        0,
+        Number(
+          document.getElementById("totalArchivos").textContent
+        ) - borrados
+      );
+
+    document.getElementById("totalDuplicados")
+      .textContent =
+      Math.max(
+        0,
+        Number(
+          document.getElementById("totalDuplicados").textContent
+        ) - borrados
+      );
+
+  }
+);
+
+
+btnAnalizar.addEventListener(
+  "click",
+  analizar
+);
+
+</script>
+
+</body>
+</html>

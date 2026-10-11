@@ -15,10 +15,11 @@ boton.addEventListener(
   "click",
   async () => {
 
-    const dni =
-      document.getElementById("dni")
-      .value
-      .trim();
+   const dni =
+  document.getElementById("dni")
+  .value
+  .trim()
+  .replace(/\D/g, "");
 
     const snapshot =
       await getDocs(
@@ -38,7 +39,13 @@ let nombreCompleto = "";
       const datos =
         documento.data();
 
-     if (datos.dni === dni) {
+     const dniGuardado =
+  (datos.dni || "")
+    .toString()
+    .trim()
+    .replace(/\D/g, "");
+
+if (dniGuardado === dni) {
 
   encontrado = true;
 

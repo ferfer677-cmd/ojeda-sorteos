@@ -1,11 +1,4 @@
-import { db } from "./firebase.js";
-
-import { storage } from "./firebase.js";
-
-import {
-  ref,
-  deleteObject
-} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
+import { db, storage } from "./firebase.js";
 
 import {
   collection,
@@ -13,696 +6,1932 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  query,
-  orderBy,
-  setDoc
+  setDoc,
+  increment
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
-const pendientes =
-document.getElementById("pendientes");
 
-const pagados =
-document.getElementById("pagados");
+import {
+  ref,
+  deleteObject
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
 
-const tituloPendientes =
-document.getElementById("tituloPendientes");
 
-const tituloPagados =
-document.getElementById("tituloPagados");
+// =====================================================
+// CONFIGURACIÓN
+// =====================================================
 
-const totalParticipantes =
-document.getElementById("totalParticipantes");
+const CONTRASENA_ADMIN = "Ojeda2026!";
 
-const recaudacionTotal =
-document.getElementById("recaudacionTotal");
+
+// =====================================================
+// ELEMENTOS
+// =====================================================
+
+const loginAdmin =
+  document.getElementById("loginAdmin");
+
+const panelAdmin =
+  document.getElementById("panelAdmin");
+
+const passwordAdmin =
+  document.getElementById("passwordAdmin");
+
+const btnLogin =
+  document.getElementById("btnLogin");
+
+const cerrarSesion =
+  document.getElementById("cerrarSesion");
 
 const buscador =
-document.getElementById("buscador");
+  document.getElementById("buscador");
+
+const pendientes =
+  document.getElementById("pendientes");
+
+const pagados =
+  document.getElementById("pagados");
+
+const tituloPendientes =
+  document.getElementById("tituloPendientes");
+
+const tituloPagados =
+  document.getElementById("tituloPagados");
+
+const totalParticipantes =
+  document.getElementById("totalParticipantes");
+
+const recaudacionTotal =
+  document.getElementById("recaudacionTotal");
+
+const aprobarTodos =
+  document.getElementById("aprobarTodos");
+
+const borrarTodo =
+  document.getElementById("borrarTodo");
+
+const exportarSorteo =
+  document.getElementById("exportarSorteo");
+
+
+// =====================================================
+// LOGIN
+// =====================================================
+
+function mostrarPanel() {
+
+  if (loginAdmin) {
+    loginAdmin.style.display = "none";
+  }
+
+  if (panelAdmin) {
+    panelAdmin.style.display = "block";
+  }
+
+}
+
+
+function mostrarLogin() {
+
+  if (loginAdmin) {
+    loginAdmin.style.display = "block";
+  }
+
+  if (panelAdmin) {
+    panelAdmin.style.display = "none";
+  }
+
+}
+
+// =====================================================
+// ACTUALIZAR RANKING
+// =====================================================
+
+async function actualizarRanking(datos, cantidad) {
+
+  const dniRanking =
+    datos.dniNormalizado ||
+    String(datos.dni || "")
+      .replace(/\D/g, "")
+      .trim();
+
+  if (!dniRanking) {
+    console.warn(
+      "No se pudo actualizar ranking: participante sin DNI",
+      datos
+    );
+    return;
+  }
+
+  const nombreRanking =
+    `${datos.nombre || ""} ${datos.apellido || ""}`
+      .replace(/\s+/g, " ")
+      .trim();
+
+  await setDoc(
+    doc(db, "ranking", dniRanking),
+    {
+      dniNormalizado: dniRanking,
+      nombre: nombreRanking,
+      chances: increment(Number(cantidad) || 0)
+    },
+    {
+      merge: true
+    }
+  );
+
+}
+
+if (
+  localStorage.getItem("adminLogueado") === "si"
+) {
+
+  mostrarPanel();
+
+} else {
+
+  mostrarLogin();
+
+}
+
+
+if (btnLogin) {
+
+  btnLogin.addEventListener(
+    "click",
+    () => {
+
+      const password =
+        passwordAdmin
+          ? passwordAdmin.value
+          : "";
+
+      if (
+        password === CONTRASENA_ADMIN
+      ) {
+
+        localStorage.setItem(
+          "adminLogueado",
+          "si"
+        );
+
+        mostrarPanel();
+
+        cargarParticipantes();
+
+      } else {
+
+        alert(
+          "❌ Contraseña incorrecta"
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+if (passwordAdmin) {
+
+  passwordAdmin.addEventListener(
+    "keydown",
+    (e) => {
+
+      if (e.key === "Enter") {
+
+        e.preventDefault();
+
+        if (btnLogin) {
+          btnLogin.click();
+        }
+
+      }
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// CERRAR SESIÓN
+// =====================================================
+
+if (cerrarSesion) {
+
+  cerrarSesion.addEventListener(
+    "click",
+    () => {
+
+      localStorage.removeItem(
+        "adminLogueado"
+      );
+
+      location.reload();
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// CANTIDAD DE CHANCES
+// =====================================================
 
 function cantidadPorPack(pack) {
 
-if (pack.includes("15")) return 15;
-if (pack.includes("10")) return 10;
-if (pack.includes("6")) return 6;
-if (pack.includes("4")) return 4;
-if (pack.includes("2")) return 2;
+  if (!pack) return 0;
 
-return 1;
+  const texto =
+    pack
+      .toString()
+      .toUpperCase();
 
+  if (
+    texto.includes("100 CHANCE")
+  ) {
+    return 100;
+  }
+
+  if (
+    texto.includes("50 CHANCE")
+  ) {
+    return 50;
+  }
+
+  if (
+    texto.includes("30 CHANCE")
+  ) {
+    return 30;
+  }
+
+  if (
+    texto.includes("10 CHANCE")
+  ) {
+    return 10;
+  }
+
+  if (
+    texto.includes("3 CHANCE")
+  ) {
+    return 3;
+  }
+
+  if (
+    texto.includes("1 CHANCE")
+  ) {
+    return 1;
+  }
+
+  return 0;
 }
+
+// =====================================================
+// PRECIO POR CHANCES
+// =====================================================
+
+function precioPorChances(chances) {
+
+  chances = Number(chances);
+
+  if (chances === 100) {
+    return 22000;
+  }
+
+  if (chances === 50) {
+    return 14000;
+  }
+
+  if (chances === 30) {
+    return 10000;
+  }
+
+  if (chances === 10) {
+    return 6000;
+  }
+
+  if (chances === 3) {
+    return 3600;
+  }
+
+  if (chances === 1) {
+    return 1600;
+  }
+
+  return 0;
+}
+// =====================================================
+// GENERAR NÚMERO
+// =====================================================
 
 function generarNumero() {
 
   return Math.floor(
     Math.random() * 1000000
   )
-  .toString()
-  .padStart(6, "0");
+    .toString()
+    .padStart(6, "0");
 
 }
 
-async function generarNumerosUnicos(cantidad) {
 
- const consulta = query(
-  collection(db, "participantes"),
-  orderBy("fecha", "desc")
-);
+// =====================================================
+// OBTENER PARTICIPANTES
+// =====================================================
 
-const snapshot = await getDocs(
-  consulta
-);
-console.log("Cantidad:", snapshot.size);
+async function obtenerParticipantes() {
 
-  const usados = new Set();
+  const snapshot =
+    await getDocs(
+      collection(
+        db,
+        "participantes"
+      )
+    );
 
-  snapshot.forEach((docu) => {
+  const participantes = [];
 
-    const datos = docu.data();
+  snapshot.forEach(
+    (documento) => {
 
-    if (datos.numeros) {
+      participantes.push({
 
-      datos.numeros.forEach((n) => {
-        usados.add(n);
+        id:
+          documento.id,
+
+        datos:
+          documento.data()
+
       });
 
     }
+  );
 
-  });
+
+  // Ordenar por fecha
+
+  participantes.sort(
+    (a, b) => {
+
+      const fechaA =
+        a.datos.fecha &&
+        typeof a.datos.fecha.toDate ===
+          "function"
+          ? a.datos.fecha
+              .toDate()
+              .getTime()
+          : 0;
+
+
+      const fechaB =
+        b.datos.fecha &&
+        typeof b.datos.fecha.toDate ===
+          "function"
+          ? b.datos.fecha
+              .toDate()
+              .getTime()
+          : 0;
+
+
+      return fechaB - fechaA;
+
+    }
+  );
+
+
+  return participantes;
+
+}
+
+
+// =====================================================
+// OBTENER NÚMEROS USADOS
+// =====================================================
+
+async function obtenerNumerosUsados() {
+
+  const participantes =
+    await obtenerParticipantes();
+
+  const usados =
+    new Set();
+
+
+  participantes.forEach(
+    (participante) => {
+
+      const numeros =
+        participante.datos.numeros;
+
+
+      if (
+        Array.isArray(numeros)
+      ) {
+
+        numeros.forEach(
+          (numero) => {
+
+            usados.add(
+              numero.toString()
+            );
+
+          }
+        );
+
+      }
+
+    }
+  );
+
+
+  return usados;
+
+}
+
+
+// =====================================================
+// GENERAR NÚMEROS ÚNICOS
+// =====================================================
+
+async function generarNumerosUnicos(
+  cantidad
+) {
+
+  const usados =
+    await obtenerNumerosUsados();
 
   const nuevos = [];
 
-  while (nuevos.length < cantidad) {
 
-    const numero = generarNumero();
+  while (
+    nuevos.length < cantidad
+  ) {
+
+    const numero =
+      generarNumero();
+
 
     if (
       !usados.has(numero) &&
       !nuevos.includes(numero)
     ) {
+
       nuevos.push(numero);
+
       usados.add(numero);
+
     }
 
   }
+
 
   return nuevos;
 
 }
 
 
+// =====================================================
+// FECHA
+// =====================================================
+
+function mostrarFecha(
+  timestamp
+) {
+
+  if (
+    !timestamp ||
+    typeof timestamp.toDate !==
+      "function"
+  ) {
+
+    return "Sin fecha";
+
+  }
+
+
+  return timestamp
+    .toDate()
+    .toLocaleString(
+      "es-AR",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      }
+    );
+
+}
+
+
+// =====================================================
+// CARGAR PARTICIPANTES
+// =====================================================
+
 async function cargarParticipantes() {
 
-  pendientes.innerHTML = "";
-  pagados.innerHTML = "";
+  if (
+    !pendientes ||
+    !pagados
+  ) {
 
-  let cantidadPendientes = 0;
-let cantidadPagados = 0;
-let recaudacion = 0;
+    console.error(
+      "No se encontraron los contenedores del admin."
+    );
 
-const dniUnicos = new Set();
-  const snapshot = await getDocs(
-    collection(db, "participantes")
-  );
+    return;
 
-  snapshot.forEach((documento) => {
+  }
 
-    const datos = documento.data();
 
-    if (datos.dni) {
-  dniUnicos.add(datos.dni);
-}
-
-   const fechaFormateada =
-  datos.fecha
-    ? datos.fecha.toDate().toLocaleString(
-        "es-AR",
-        {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false
-        }
-      )
-    : "Sin fecha";
-    const textoBusqueda =
-  buscador.value
-  .toLowerCase()
-  .trim();
-
-const coincide =
-  datos.nombre?.toLowerCase().includes(textoBusqueda) ||
-  datos.apellido?.toLowerCase().includes(textoBusqueda) ||
-  datos.dni?.includes(textoBusqueda);
-
-if (textoBusqueda && !coincide) {
-  return;
-}
-
-    console.log("Participante:", datos.nombre);
-
-    const card = document.createElement("div");
-
-    card.classList.add("card");
-
-    card.innerHTML = `
-      <h3>${datos.nombre} ${datos.apellido}</h3>
-
-      <p><strong>DNI:</strong> ${datos.dni}</p>
-
-      <p><strong>Pack:</strong> ${datos.pack}</p>
-
-      <p><strong>Fecha:</strong> ${fechaFormateada}</p>
-
-      <p><strong>Estado:</strong> ${datos.estado}</p>
-
+  pendientes.innerHTML =
+    `
       <p>
-        <strong>Números:</strong><br>
-        ${
-          datos.numeros
-            ? datos.numeros.join(", ")
-            : "Sin asignar"
-        }
+        ⏳ Cargando participantes...
       </p>
-
-      ${
-        datos.comprobanteURL
-          ? `<img src="${datos.comprobanteURL}" class="comprobante-img">`
-          : `<p>Sin comprobante</p>`
-      }
-
-      <br>
-
-      ${
-  datos.estado === "Pagado"
-    ? `
-      <p>✅ Pagado</p>
-
-      <button class="eliminar-btn">
-        🗑 ELIMINAR PARTICIPANTE
-      </button>
-    `
-    : `
-      <button class="aprobar-btn">
-        Aprobar pago
-      </button>
-
-      <button class="eliminar-btn">
-        🗑 ELIMINAR PARTICIPANTE
-      </button>
-    `
-}
     `;
 
-    const boton =
-      card.querySelector(".aprobar-btn");
+  pagados.innerHTML = "";
 
-      const botonEliminar =
-  card.querySelector(".eliminar-btn");
 
-    if (boton) {
+  try {
 
-      boton.addEventListener(
-        "click",
-        async () => {
+    const participantes =
+      await obtenerParticipantes();
 
-          
 
-          const cantidad =
-            cantidadPorPack(datos.pack);
+    pendientes.innerHTML = "";
 
-          const numeros =
-            await generarNumerosUnicos(cantidad);
+    pagados.innerHTML = "";
 
-        await updateDoc(
-  doc(
-    db,
-    "participantes",
-    documento.id
-  ),
-  {
-    estado: "Pagado",
-    numeros: numeros
+
+    let cantidadPendientes = 0;
+
+    let cantidadPagados = 0;
+
+
+    const dniUnicos =
+      new Set();
+
+
+    // =================================================
+    // RECAUDACIÓN TOTAL
+    // SOLO PAGOS APROBADOS
+    // =================================================
+
+    let recaudacion = 0;
+
+
+    participantes.forEach(
+      (participante) => {
+
+        const datos =
+          participante.datos;
+
+
+        if (
+          datos.estado === "Pagado"
+        ) {
+
+      let precio = 0;
+
+// =============================================
+// PRECIO REAL DE LA COMPRA
+// =============================================
+
+if (datos.pack) {
+
+  const textoPack = datos.pack.toString();
+
+  // Busca el precio que quedó guardado dentro del pack.
+  // Ejemplo:
+  // "50 CHANCES • $35.000"
+  // "50 CHANCES • $14.000"
+  // "PROMO EXCLUSIVA • 50 CHANCES • $11.999"
+
+  const coincidenciaPrecio =
+    textoPack.match(/\$\s*([\d.]+)/);
+
+  if (coincidenciaPrecio) {
+
+    precio = Number(
+      coincidenciaPrecio[1]
+        .replace(/\./g, "")
+    );
+
   }
-);
 
-await actualizarProgresoAutomatico();
+}
 
-await cargarParticipantes();
+// Si el pack no tenía el precio escrito,
+// usa precioFinal guardado en Firebase.
+
+if (
+  !precio ||
+  !Number.isFinite(precio)
+) {
+
+  if (
+    Number(datos.precioFinal) > 0
+  ) {
+
+    precio =
+      Number(datos.precioFinal);
+
+  }
+
+}
+
+// Último respaldo para promociones.
+
+if (
+  !precio &&
+  datos.codigoPromo === "SUPER50"
+) {
+
+  precio = 11999;
+
+}
+
+if (
+  !precio &&
+  datos.codigoPromo === "SUPER100"
+) {
+
+  precio = 14999;
+
+}
+
+// Último respaldo por cantidad de chances.
+
+if (!precio) {
+
+  const chances =
+    Number(datos.chancesFinales) ||
+    cantidadPorPack(datos.pack);
+
+  precio =
+    precioPorChances(chances);
+
+}
+
+recaudacion += precio;
+
 
         }
+
+      }
+    );
+
+
+    // =================================================
+    // BUSCADOR
+    // =================================================
+
+    const textoBusqueda =
+      buscador
+        ? buscador.value
+            .toLowerCase()
+            .trim()
+        : "";
+
+
+    participantes.forEach(
+      (participante) => {
+
+        const id =
+          participante.id;
+
+        const datos =
+          participante.datos;
+
+
+        // =============================================
+        // DNI ÚNICO
+        // =============================================
+
+        if (datos.dni) {
+
+          const dni =
+            datos.dni
+              .toString()
+              .replace(/\D/g, "");
+
+
+          if (dni) {
+            dniUnicos.add(dni);
+          }
+
+        }
+
+
+        // =============================================
+        // FILTRO BUSCADOR
+        // =============================================
+
+        const nombre =
+          (
+            datos.nombre || ""
+          )
+            .toString()
+            .toLowerCase();
+
+
+        const apellido =
+          (
+            datos.apellido || ""
+          )
+            .toString()
+            .toLowerCase();
+
+
+        const dniTexto =
+          (
+            datos.dni || ""
+          )
+            .toString()
+            .toLowerCase();
+
+
+        const coincide =
+
+          nombre.includes(
+            textoBusqueda
+          )
+
+          ||
+
+          apellido.includes(
+            textoBusqueda
+          )
+
+          ||
+
+          dniTexto.includes(
+            textoBusqueda
+          );
+
+
+        if (
+          textoBusqueda &&
+          !coincide
+        ) {
+
+          return;
+
+        }
+
+
+        // =============================================
+        // NÚMEROS
+        // =============================================
+
+        const numeros =
+          Array.isArray(
+            datos.numeros
+          )
+            ? datos.numeros
+            : [];
+
+
+        const numerosHTML =
+          numeros.length
+            ? numeros.join(", ")
+            : "Sin asignar";
+
+
+        // =============================================
+        // TARJETA
+        // =============================================
+
+        const card =
+          document.createElement(
+            "div"
+          );
+
+
+        card.className =
+          "card";
+
+
+        card.innerHTML = `
+
+        <h3>
+  ${datos.nombre || ""}
+  ${datos.apellido || ""}
+</h3>
+
+<p>
+  <strong>DNI:</strong>
+  ${datos.dni || "-"}
+</p>
+
+<p>
+  <strong>DNI NORMALIZADO:</strong>
+  ${datos.dniNormalizado || "❌ NO EXISTE"}
+</p>
+
+          <p>
+            <strong>Teléfono:</strong>
+            ${datos.telefono || "-"}
+          </p>
+
+          <p>
+            <strong>Instagram:</strong>
+            ${datos.instagram || "-"}
+          </p>
+
+          <p>
+            <strong>Pack:</strong>
+            ${datos.pack || "-"}
+          </p>
+
+          <p>
+            <strong>Chances:</strong>
+            ${datos.chancesFinales || 0}
+          </p>
+
+          <p>
+            <strong>Estado:</strong>
+            ${datos.estado || "-"}
+          </p>
+
+          <p>
+            <strong>Fecha:</strong>
+            ${mostrarFecha(datos.fecha)}
+          </p>
+
+          <p>
+            <strong>Números:</strong><br>
+            ${numerosHTML}
+          </p>
+
+
+          ${
+            datos.comprobanteURL
+
+            ? `
+
+              <div class="comprobante-admin">
+
+                <p>
+                  <strong>
+                    📄 COMPROBANTE
+                  </strong>
+                </p>
+
+                <a
+                  href="${datos.comprobanteURL}"
+                  target="_blank"
+                  rel="noopener"
+                >
+
+                  <img
+                    src="${datos.comprobanteURL}"
+                    alt="Comprobante"
+                    class="comprobante-preview"
+                    loading="lazy"
+                    style="
+                      display:block;
+                      width:260px;
+                      height:300px;
+                      max-width:260px;
+                      max-height:300px;
+                      object-fit:cover;
+                      margin:10px auto;
+                      border-radius:8px;
+                      cursor:pointer;
+                    "
+                  >
+
+                </a>
+
+                <p>
+
+                  <a
+                    href="${datos.comprobanteURL}"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    🔍 VER EN GRANDE
+                  </a>
+
+                </p>
+
+              </div>
+
+            `
+
+            : `
+
+              <p>
+                📄 Sin comprobante
+              </p>
+
+            `
+          }
+
+
+          <div class="admin-actions">
+
+            ${
+              datos.estado !== "Pagado"
+
+              ? `
+
+                <button
+                  class="aprobar-btn"
+                  type="button"
+                >
+                  ✅ APROBAR PAGO
+                </button>
+
+              `
+
+              : `
+
+                <p>
+                  ✅ PAGO APROBADO
+                </p>
+
+              `
+            }
+
+
+            <button
+              class="eliminar-btn"
+              type="button"
+            >
+              🗑 ELIMINAR
+            </button>
+
+          </div>
+
+        `;
+
+
+        // =============================================
+        // APROBAR PAGO
+        // =============================================
+
+        const aprobar =
+          card.querySelector(
+            ".aprobar-btn"
+          );
+
+
+        if (aprobar) {
+
+          aprobar.addEventListener(
+            "click",
+            async () => {
+
+              const confirmar =
+                confirm(
+                  "¿Confirmar este pago?"
+                );
+
+
+              if (!confirmar) {
+                return;
+              }
+
+
+              try {
+
+                aprobar.disabled =
+                  true;
+
+
+                aprobar.innerText =
+                  "⏳ GENERANDO NÚMEROS...";
+
+
+                let cantidad =
+                  Number(
+                    datos.chancesFinales
+                  );
+
+
+                if (!cantidad) {
+
+                  cantidad =
+                    cantidadPorPack(
+                      datos.pack
+                    );
+
+                }
+
+
+                if (!cantidad) {
+
+                  alert(
+                    "❌ No se pudo determinar la cantidad de chances."
+                  );
+
+                  aprobar.disabled =
+                    false;
+
+                  aprobar.innerText =
+                    "✅ APROBAR PAGO";
+
+                  return;
+
+                }
+
+
+                const numeros =
+                  await generarNumerosUnicos(
+                    cantidad
+                  );
+
+
+          let precioFinal = 0;
+
+// Primero intenta recuperar el precio REAL
+// que tenía la compra cuando fue realizada.
+
+if (datos.pack) {
+
+  const textoPack =
+    datos.pack.toString();
+
+  const coincidenciaPrecio =
+    textoPack.match(/\$\s*([\d.]+)/);
+
+  if (coincidenciaPrecio) {
+
+    precioFinal =
+      Number(
+        coincidenciaPrecio[1]
+          .replace(/\./g, "")
       );
+
+  }
+}
+
+// Si no encontró precio dentro de "pack",
+// usa el precioFinal que ya exista.
+
+if (
+  !precioFinal &&
+  Number(datos.precioFinal) > 0
+) {
+
+  precioFinal =
+    Number(datos.precioFinal);
+
+}
+
+// Promos como último respaldo.
+
+if (
+  !precioFinal &&
+  datos.codigoPromo === "SUPER50"
+) {
+
+  precioFinal = 11999;
+
+}
+
+if (
+  !precioFinal &&
+  datos.codigoPromo === "SUPER100"
+) {
+
+  precioFinal = 14999;
+
+}
+
+// Último respaldo por cantidad.
+
+if (!precioFinal) {
+
+  precioFinal =
+    precioPorChances(cantidad);
+
+}
+
+                await updateDoc(
+
+                  doc(
+                    db,
+                    "participantes",
+                    id
+                  ),
+
+                  {
+
+                    estado:
+                      "Pagado",
+
+                    chancesFinales:
+                      cantidad,
+
+                    precioFinal:
+                      precioFinal,
+
+                    numeros:
+                      numeros
+
+                  }
+
+                );
+// Actualizar ranking
+await actualizarRanking(
+  datos,
+  cantidad
+);
+
+                alert(
+                  `✅ Pago aprobado.\n\nSe asignaron ${cantidad} números.`
+                );
+
+
+                await cargarParticipantes();
+
+
+              } catch (error) {
+
+                console.error(
+                  "ERROR APROBANDO:",
+                  error
+                );
+
+
+                alert(
+                  "❌ Error al aprobar el pago.\n\n" +
+                  error.message
+                );
+
+
+                aprobar.disabled =
+                  false;
+
+                aprobar.innerText =
+                  "✅ APROBAR PAGO";
+
+              }
+
+            }
+          );
+
+        }
+
+
+        // =============================================
+        // ELIMINAR
+        // =============================================
+
+        const eliminar =
+          card.querySelector(
+            ".eliminar-btn"
+          );
+
+
+        if (eliminar) {
+
+          eliminar.addEventListener(
+            "click",
+            async () => {
+
+              const confirmar =
+                confirm(
+                  `¿Eliminar a ${datos.nombre || ""} ${datos.apellido || ""}?`
+                );
+
+
+              if (!confirmar) {
+                return;
+              }
+
+
+              try {
+
+                // -----------------------------------------
+                // BORRAR COMPROBANTE
+                // -----------------------------------------
+
+                if (
+                  datos.comprobantePath
+                ) {
+
+                  try {
+
+                    const archivoRef =
+                      ref(
+                        storage,
+                        datos.comprobantePath
+                      );
+
+
+                    await deleteObject(
+                      archivoRef
+                    );
+
+                  } catch (error) {
+
+                    console.warn(
+                      "No se pudo eliminar el comprobante:",
+                      error
+                    );
+
+                  }
+
+                }
+
+
+                // -----------------------------------------
+                // BORRAR PARTICIPANTE
+                // -----------------------------------------
+
+                await deleteDoc(
+
+                  doc(
+                    db,
+                    "participantes",
+                    id
+                  )
+
+                );
+
+
+                await cargarParticipantes();
+
+
+              } catch (error) {
+
+                console.error(
+                  "ERROR ELIMINANDO:",
+                  error
+                );
+
+
+                alert(
+                  "❌ No se pudo eliminar.\n\n" +
+                  error.message
+                );
+
+              }
+
+            }
+          );
+
+        }
+
+
+        // =============================================
+        // MOSTRAR
+        // =============================================
+
+        if (
+          datos.estado === "Pagado"
+        ) {
+
+          pagados.appendChild(
+            card
+          );
+
+          cantidadPagados++;
+
+        } else {
+
+          pendientes.appendChild(
+            card
+          );
+
+          cantidadPendientes++;
+
+        }
+
+      }
+    );
+
+
+    // =================================================
+    // CONTADORES
+    // =================================================
+
+    if (tituloPendientes) {
+
+      tituloPendientes.textContent =
+        `PAGOS PENDIENTES (${cantidadPendientes})`;
 
     }
 
-   if (botonEliminar) {
 
- botonEliminar.addEventListener(
-  "click",
-  async () => {
+    if (tituloPagados) {
 
-      const confirmar = confirm(
-        `¿Eliminar a ${datos.nombre} ${datos.apellido}?`
-      );
+      tituloPagados.textContent =
+        `PAGOS APROBADOS (${cantidadPagados})`;
+
+    }
+
+
+    if (totalParticipantes) {
+
+      totalParticipantes.innerHTML = `
+
+        <div>
+          PARTICIPANTES ÚNICOS:
+          ${dniUnicos.size}
+        </div>
+
+      `;
+
+    }
+
+
+    // =================================================
+    // MOSTRAR RECAUDACIÓN
+    // =================================================
+
+    if (recaudacionTotal) {
+
+      recaudacionTotal.innerHTML = `
+
+        <div>
+          💰 RECAUDACIÓN:
+          $${recaudacion.toLocaleString("es-AR")}
+        </div>
+
+      `;
+
+    }
+
+
+    // =================================================
+    // SIN PARTICIPANTES
+    // =================================================
+
+    if (
+      participantes.length === 0
+    ) {
+
+      pendientes.innerHTML = `
+
+        <p>
+          No hay participantes en Firebase.
+        </p>
+
+      `;
+
+    }
+
+
+    console.log(
+      "Participantes encontrados:",
+      participantes.length
+    );
+
+
+    console.log(
+      "Recaudación:",
+      recaudacion
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "ERROR CARGANDO FIREBASE:",
+      error
+    );
+
+
+    pendientes.innerHTML = `
+
+      <div style="
+        padding:20px;
+        border:1px solid #f00;
+        border-radius:10px;
+      ">
+
+        <h3>
+          ❌ ERROR CON FIREBASE
+        </h3>
+
+        <p>
+          ${error.message}
+        </p>
+
+        <p>
+          Abrí F12 → Console para ver
+          el error completo.
+        </p>
+
+      </div>
+
+    `;
+
+  }
+
+}
+
+
+// =====================================================
+// BUSCADOR
+// =====================================================
+
+if (buscador) {
+
+  buscador.addEventListener(
+    "input",
+    () => {
+
+      if (
+        localStorage.getItem(
+          "adminLogueado"
+        ) === "si"
+      ) {
+
+        cargarParticipantes();
+
+      }
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// APROBAR TODOS
+// =====================================================
+
+if (aprobarTodos) {
+
+  aprobarTodos.addEventListener(
+    "click",
+    async () => {
+
+      const confirmar =
+        confirm(
+          "¿Aprobar TODOS los pagos pendientes?"
+        );
+
 
       if (!confirmar) {
         return;
       }
 
-  if (datos.comprobantePath) {
 
-  try {
+      try {
 
-      console.log(
-      "Intentando borrar:",
-      datos.comprobantePath
-    );
+        const participantes =
+          await obtenerParticipantes();
 
-    const archivoRef = ref(
-      storage,
-      datos.comprobantePath
-    );
 
-    await deleteObject(archivoRef);
+        let aprobados = 0;
 
-    console.log(
-      "Comprobante eliminado:",
-      datos.comprobantePath
-    );
 
-  } catch (error) {
+        for (
+          const participante
+          of participantes
+        ) {
 
-    console.error(
-      "Error eliminando comprobante:",
-      error
-    );
+          const datos =
+            participante.datos;
 
-  }
 
-}
+          if (
+            datos.estado === "Pagado"
+          ) {
 
-await deleteDoc(
-  doc(
-    db,
-    "participantes",
-    documento.id
-  )
-);
+            continue;
 
-await actualizarProgresoAutomatico();
+          }
 
-await cargarParticipantes();
 
-    }
-  );
+          let cantidad =
+            Number(
+              datos.chancesFinales
+            );
 
-}
 
-if (datos.estado === "Pagado") {
+          if (!cantidad) {
 
-  pagados.appendChild(card);
-  cantidadPagados++;
+            cantidad =
+              cantidadPorPack(
+                datos.pack
+              );
 
-  const precioTexto =
-    datos.pack.split("$")[1];
+          }
 
-  if (precioTexto) {
 
-    const precio =
+          if (!cantidad) {
+            continue;
+          }
+
+
+          const numeros =
+            await generarNumerosUnicos(
+              cantidad
+            );
+
+
+let precioFinal = 0;
+
+// Primero intenta recuperar el precio REAL
+// que tenía la compra cuando fue realizada.
+
+if (datos.pack) {
+
+  const textoPack =
+    datos.pack.toString();
+
+  const coincidenciaPrecio =
+    textoPack.match(/\$\s*([\d.]+)/);
+
+  if (coincidenciaPrecio) {
+
+    precioFinal =
       Number(
-        precioTexto.replace(/\./g, "")
+        coincidenciaPrecio[1]
+          .replace(/\./g, "")
       );
-
-    recaudacion += precio;
 
   }
+}
 
-} else {
+// Si no encontró precio dentro de "pack",
+// usa el precioFinal que ya exista.
 
-  pendientes.appendChild(card);
-  cantidadPendientes++;
+if (
+  !precioFinal &&
+  Number(datos.precioFinal) > 0
+) {
+
+  precioFinal =
+    Number(datos.precioFinal);
 
 }
 
-  });
-tituloPendientes.textContent =
-  `Pagos pendientes (${cantidadPendientes})`;
+// Promos como último respaldo.
 
-tituloPagados.textContent =
-  `Pagos aprobados (${cantidadPagados})`;
+if (
+  !precioFinal &&
+  datos.codigoPromo === "SUPER50"
+) {
 
-  totalParticipantes.textContent =
-  `Participantes únicos: ${dniUnicos.size}`;
+  precioFinal = 11999;
 
-  recaudacionTotal.textContent =
-  `Recaudación estimada: $${recaudacion.toLocaleString("es-AR")}`;
-
-  const META_SORTEO = 30000000;
-
-const porcentaje =
-  Math.min(
-    (recaudacion / META_SORTEO) * 100,
-    100
-  );
-
-const barra =
-  document.getElementById("progressFill");
-
-const texto =
-  document.getElementById("progressText");
-
-if (barra) {
-  barra.style.width = porcentaje + "%";
 }
 
-if (texto) {
-  texto.textContent =
-    Math.round(porcentaje) + "%";
+if (
+  !precioFinal &&
+  datos.codigoPromo === "SUPER100"
+) {
+
+  precioFinal = 14999;
+
 }
 
-}console.log("ADMIN CARGADO");
+// Último respaldo por cantidad.
 
-cargarParticipantes();
-actualizarProgresoAutomatico();
+if (!precioFinal) {
 
-buscador.addEventListener(
-  "input",
-  cargarParticipantes
+  precioFinal =
+    precioPorChances(cantidad);
+
+}
+
+
+          await updateDoc(
+
+            doc(
+              db,
+              "participantes",
+              participante.id
+            ),
+
+            {
+
+              estado:
+                "Pagado",
+
+              chancesFinales:
+                cantidad,
+
+              precioFinal:
+                precioFinal,
+
+              numeros:
+                numeros
+
+            }
+
+          );
+// Actualizar ranking
+await actualizarRanking(
+  datos,
+  cantidad
 );
 
-const loginAdmin =
-document.getElementById("loginAdmin");
+          aprobados++;
 
-const panelAdmin =
-document.getElementById("panelAdmin");
-
-const passwordAdmin =
-document.getElementById("passwordAdmin");
-
-const btnLogin =
-document.getElementById("btnLogin");
-
-const cerrarSesion =
-document.getElementById("cerrarSesion");
-
-const exportarSorteo =
-document.getElementById("exportarSorteo");
-
-const aprobarTodos =
-document.getElementById("aprobarTodos");
-
-const borrarTodo =
-document.getElementById("borrarTodo");
+        }
 
 
-btnLogin.addEventListener(
-  "click",
-  () => {
+        alert(
+          `✅ ${aprobados} pagos aprobados.`
+        );
 
-    if (
-      passwordAdmin.value ===
-      "Ojeda2026!"
-    ) {
 
-      localStorage.setItem(
-  "adminLogueado",
-  "si"
-);
+        await cargarParticipantes();
 
-      loginAdmin.style.display =
-        "none";
 
-      panelAdmin.style.display =
-        "block";
+      } catch (error) {
 
-    } else {
+        console.error(
+          error
+        );
 
-      alert(
-        "Contraseña incorrecta"
-      );
+
+        alert(
+          "❌ Error aprobando pagos.\n\n" +
+          error.message
+        );
+
+      }
 
     }
+  );
 
-  }
+}
+
+
+// =====================================================
+// BORRAR TODO
+// =====================================================
+
+if (borrarTodo) {
+
+  borrarTodo.addEventListener(
+    "click",
+    async () => {
+
+      const texto =
+        prompt(
+          "Escribí BORRAR para eliminar TODOS los participantes."
+        );
+
+
+      if (
+        texto !== "BORRAR"
+      ) {
+
+        alert(
+          "Operación cancelada."
+        );
+
+        return;
+
+      }
+
+
+      try {
+
+        const participantes =
+          await obtenerParticipantes();
+
+
+        for (
+          const participante
+          of participantes
+        ) {
+
+          const datos =
+            participante.datos;
+
+
+          // -----------------------------------------
+          // BORRAR COMPROBANTE
+          // -----------------------------------------
+
+          if (
+            datos.comprobantePath
+          ) {
+
+            try {
+
+              await deleteObject(
+                ref(
+                  storage,
+                  datos.comprobantePath
+                )
+              );
+
+            } catch (error) {
+
+              console.warn(
+                "No se pudo borrar archivo:",
+                error
+              );
+
+            }
+
+          }
+
+
+          // -----------------------------------------
+          // BORRAR PARTICIPANTE
+          // -----------------------------------------
+
+          await deleteDoc(
+
+            doc(
+              db,
+              "participantes",
+              participante.id
+            )
+
+          );
+
+        }
+
+
+        alert(
+          "✅ Todos los participantes fueron eliminados."
+        );
+
+
+        await cargarParticipantes();
+
+
+      } catch (error) {
+
+        console.error(
+          error
+        );
+
+
+        alert(
+          "❌ Error eliminando datos.\n\n" +
+          error.message
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// EXPORTAR SORTEO
+// =====================================================
+
+if (exportarSorteo) {
+
+  exportarSorteo.addEventListener(
+    "click",
+    async () => {
+
+      try {
+
+        const participantes =
+          await obtenerParticipantes();
+
+
+        const filas = [];
+
+
+        participantes.forEach(
+          (participante) => {
+
+            const datos =
+              participante.datos;
+
+
+            if (
+              datos.estado !== "Pagado"
+            ) {
+
+              return;
+
+            }
+
+
+            if (
+              !Array.isArray(
+                datos.numeros
+              )
+            ) {
+
+              return;
+
+            }
+
+
+            datos.numeros.forEach(
+              (numero) => {
+
+                filas.push({
+
+                  numero:
+                    numero,
+
+                  nombre:
+                    `${datos.nombre || ""} ${datos.apellido || ""}`,
+
+                  dni:
+                    datos.dni || "",
+
+                  telefono:
+                    datos.telefono || "",
+
+                  instagram:
+                    datos.instagram || ""
+
+                });
+
+              }
+            );
+
+          }
+        );
+
+
+        if (
+          typeof XLSX ===
+          "undefined"
+        ) {
+
+          alert(
+            "❌ No está cargada la librería de Excel."
+          );
+
+          return;
+
+        }
+
+
+        const hoja =
+          XLSX.utils.json_to_sheet(
+            filas
+          );
+
+
+        const libro =
+          XLSX.utils.book_new();
+
+
+        XLSX.utils.book_append_sheet(
+          libro,
+          hoja,
+          "Sorteo"
+        );
+
+
+        XLSX.writeFile(
+          libro,
+          "sorteo.xlsx"
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "ERROR EXPORTANDO:",
+          error
+        );
+
+
+        alert(
+          "❌ No se pudo exportar.\n\n" +
+          error.message
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+// =====================================================
+// INICIO
+// =====================================================
+
+console.log(
+  "✅ ADMIN NUEVO CARGADO"
 );
+
+
 if (
   localStorage.getItem(
     "adminLogueado"
   ) === "si"
 ) {
 
-  loginAdmin.style.display =
-    "none";
-
-  panelAdmin.style.display =
-    "block";
+  cargarParticipantes();
 
 }
 
-cerrarSesion.addEventListener(
-  "click",
-  () => {
-
-    localStorage.removeItem(
-      "adminLogueado"
-    );
-
-    location.reload();
-
-  }
-);
-aprobarTodos.addEventListener(
-  "click",
-  async () => {
-
-    const confirmar = confirm(
-      "¿Aprobar todos los pagos pendientes?"
-    );
-
-    if (!confirmar) return;
-
-    let aprobados = 0;
-
-    const snapshot = await getDocs(
-      collection(db, "participantes")
-    );
-
-    for (const documento of snapshot.docs) {
-
-      const datos = documento.data();
-
-      if (datos.estado === "Pagado") {
-        continue;
-      }
-
-      const cantidad =
-        cantidadPorPack(datos.pack);
-
-      const numeros =
-        await generarNumerosUnicos(cantidad);
-
-      await updateDoc(
-        doc(
-          db,
-          "participantes",
-          documento.id
-        ),
-        {
-          estado: "Pagado",
-          numeros: numeros
-        }
-      );
-
-      aprobados++;
-
-    }
-
-    alert(
-      `${aprobados} pagos aprobados correctamente`
-    );
-
-    await actualizarProgresoAutomatico();
-
-await cargarParticipantes();
-
-  }
-);
-
-borrarTodo.addEventListener(
-  "click",
-  async () => {
-
-    const texto = prompt(
-      'Escribí BORRAR para eliminar todo el sorteo'
-    );
-
-    if (texto !== "BORRAR") {
-
-      alert(
-        "Operación cancelada"
-      );
-
-      return;
-
-    }
-
-    const snapshot = await getDocs(
-      collection(db, "participantes")
-    );
-
-    for (const documento of snapshot.docs) {
-
-      const datos = documento.data();
-
-      if (datos.comprobantePath) {
-
-        try {
-
-          const archivoRef = ref(
-            storage,
-            datos.comprobantePath
-          );
-
-          await deleteObject(
-            archivoRef
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Error eliminando comprobante:",
-            error
-          );
-
-        }
-
-      }
-
-      await deleteDoc(
-        doc(
-          db,
-          "participantes",
-          documento.id
-        )
-      );
-
-    }
-
-    alert(
-      "Sorteo eliminado correctamente"
-    );
-
-    await actualizarProgresoAutomatico();
-
-await cargarParticipantes();
-
-  }
-);
-
-exportarSorteo.addEventListener(
-  "click",
-  async () => {
-
-    const snapshot = await getDocs(
-      collection(db, "participantes")
-    );
-
-    const filas = [];
-
-snapshot.forEach((documento) => {
-
-  const datos = documento.data();
-
-  if (datos.estado !== "Pagado") {
-    return;
-  }
-
-  if (!datos.numeros) {
-    return;
-  }
-
-  datos.numeros.forEach((numero) => {
-
-   filas.push({
-  numero: numero,
-  nombre: `${datos.nombre} ${datos.apellido}`,
-  dni: datos.dni,
-  telefono: datos.telefono
-});
-
-  });
-
-});
-
-const hoja = XLSX.utils.json_to_sheet(filas);
-
-const libro = XLSX.utils.book_new();
-
-XLSX.utils.book_append_sheet(
-  libro,
-  hoja,
-  "Sorteo"
-);
-
-XLSX.writeFile(
-  libro,
-  "sorteo.xlsx"
-);
-    
-
-  }
-);
-
-
-
-
-async function actualizarProgresoAutomatico()
- {console.log("ACTUALIZANDO PROGRESO");
-
-  let recaudacion = 0;
-
-  const snapshot = await getDocs(
-    collection(db, "participantes")
-  );
-
-  snapshot.forEach((documento) => {
-
-    const datos = documento.data();
-
-    if (datos.estado !== "Pagado") return;
-
-    const precioTexto =
-      datos.pack.split("$")[1];
-
-    if (!precioTexto) return;
-
-    const precio =
-      Number(
-        precioTexto.replace(/\./g, "")
-      );
-
-    recaudacion += precio;
-
-  });
-
-  const META_SORTEO = 30000000;
-
-  const avance = Math.min(
-    Math.round(
-      (recaudacion / META_SORTEO) * 100
-    ),
-    100
-  );
-
-  await setDoc(
-    doc(
-      db,
-      "configuracion",
-      "progreso"
-    ),
-    {
-      avance
-    }
-  );
-
-}
