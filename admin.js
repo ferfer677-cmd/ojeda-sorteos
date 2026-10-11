@@ -16,7 +16,10 @@ import {
   deleteDoc,
   setDoc,
   increment,
-  serverTimestamp
+  serverTimestamp,
+  query,
+  orderBy,
+  limit
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 import {
@@ -147,6 +150,73 @@ async function actualizarRanking(datos, cantidad) {
       merge: true
     }
   );
+
+  await actualizarRankingPublico();
+
+}
+
+
+// =====================================================
+// RANKING PÚBLICO (TOP 5)
+// =====================================================
+// "ranking" tiene DNI y nombre completo: solo lo lee el admin.
+// La página lee "publico/ranking": top 5 con nombre abreviado.
+
+async function actualizarRankingPublico() {
+
+  try {
+
+    const snapshot =
+      await getDocs(
+        query(
+          collection(db, "ranking"),
+          orderBy("chances", "desc"),
+          limit(5)
+        )
+      );
+
+    const top =
+      snapshot.docs.map(
+        (documento) => {
+
+          const datos =
+            documento.data();
+
+          const partes =
+            String(datos.nombre || "")
+              .trim()
+              .split(/s+/)
+              .filter(Boolean);
+
+          return {
+            nombre:
+              nombreAbreviado(
+                partes[0] || "",
+                partes.slice(1).join(" ")
+              ),
+            chances:
+              Number(datos.chances) || 0
+          };
+
+        }
+      );
+
+    await setDoc(
+      doc(db, "publico", "ranking"),
+      {
+        top,
+        actualizado: serverTimestamp()
+      }
+    );
+
+  } catch (error) {
+
+    console.error(
+      "No se pudo actualizar el ranking público:",
+      error
+    );
+
+  }
 
 }
 
@@ -344,6 +414,8 @@ alCambiarSesion(
 
       cargarParticipantes();
 
+      actualizarRankingPublico();
+
     } else {
 
       mostrarLogin();
@@ -433,6 +505,8 @@ if (btnActualizarConsultas) {
       btnActualizarConsultas.disabled = true;
 
       try {
+
+        await actualizarRankingPublico();
 
         const cantidad =
           await actualizarTodasLasConsultas();

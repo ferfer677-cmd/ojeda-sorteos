@@ -72,8 +72,14 @@ service cloud.firestore {
         && request.resource.data.fecha == request.time;
     }
 
-    // Ranking público (lo escribe el admin al aprobar)
+    // Ranking: solo el admin (tiene DNI y nombre completo)
+    // Ranking público temporal hasta que exista publico/ranking
     match /ranking/{dni} {
+      allow read: if true;
+    }
+
+    // Datos públicos que arma el admin (ej. top 5 del ranking)
+    match /publico/{documento} {
       allow read: if true;
     }
 

@@ -1918,44 +1918,33 @@ async function cargarRanking() {
 
   try {
 
-    const consulta =
-      query(
-        collection(
-          db,
-          "ranking"
-        ),
-        orderBy(
-          "chances",
-          "desc"
-        ),
-        limit(5)
-      );
+    // "publico/ranking" tiene solo el top 5 con nombre abreviado.
+    // Lo actualiza el admin; la colección "ranking" es privada.
 
     const snapshot =
-      await getDocs(
-        consulta
+      await getDoc(
+        doc(
+          db,
+          "publico",
+          "ranking"
+        )
       );
 
-    const top = [];
-
-    snapshot.forEach(
-      (documento) => {
-
-        const datos =
-          documento.data();
-
-        top.push({
-          nombre:
-            datos.nombre ||
-            "Participante",
-          chances:
-            Number(
-              datos.chances
-            ) || 0
-        });
-
-      }
-    );
+    const top =
+      snapshot.exists() &&
+      Array.isArray(snapshot.data().top)
+        ? snapshot.data().top.map(
+            (item) => ({
+              nombre:
+                item.nombre ||
+                "Participante",
+              chances:
+                Number(
+                  item.chances
+                ) || 0
+            })
+          )
+        : [];
 
     // ==================================================
     // MOSTRAR RANKING
