@@ -11,7 +11,7 @@
 
   <title>Ojeda Preparación | Sorteo</title>
 
-  <link rel="stylesheet" href="style.css?v=20261015">
+  <link rel="stylesheet" href="style.css?v=20261020">
 
   <!-- META PIXEL -->
   <script>
@@ -97,11 +97,107 @@
 
   <img src="assets/logo.png" alt="Ojeda Preparación" class="logo">
 
-  <img src="assets/foto-principal.png"
-       alt="Sorteo a nivel país de una Yamaha MT-07, original o enfierrada"
-       class="hero-bike">
+  <!-- =================================================
+       CARRUSEL DE BANNERS (fotos reales + textos en código)
+       Para cambiar fecha o textos, editar acá.
+       Pasa solo cada 3 s (banner-carrusel.js).
+  ================================================== -->
+  <div class="banner-carrusel" aria-roledescription="carrusel" aria-label="Sorteo Yamaha MT-07">
 
-  <p class="hero-subtitle">🏆 Sorteo en vivo · Viernes 16/10 · 22 hs · Participás desde $5.000</p>
+    <div class="banner-pista">
+
+      <!-- 1 · EL PREMIO -->
+      <div class="banner" aria-roledescription="diapositiva" aria-label="1 de 4">
+        <div class="banner-foto">
+          <img src="assets/banner-mt07.jpg"
+               alt="Dos Yamaha MT-07 en el taller de Ojeda Preparación"
+               width="1000" height="1000"
+               fetchpriority="high">
+          <span class="banner-sello">🇦🇷 A NIVEL PAÍS</span>
+        </div>
+        <div class="banner-info">
+          <p class="banner-etiqueta">SORTEO</p>
+          <h2 class="banner-titulo"><span>YAMAHA</span>MT-07</h2>
+          <p class="banner-elige">
+            El ganador elige
+            <span class="banner-opciones">
+              <b>ORIGINAL</b>
+              <i>o</i>
+              <b class="banner-enfierrada">ENFIERRADA</b>
+            </span>
+          </p>
+          <ul class="banner-datos">
+            <li>📅 <strong>Viernes 16/10 · 22 hs</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 2 · TODO EL PAÍS -->
+      <div class="banner" aria-roledescription="diapositiva" aria-label="2 de 4">
+        <div class="banner-foto">
+          <img src="assets/banner-perfil.jpg"
+               alt="Yamaha MT-07 de perfil"
+               width="1000" height="1000"
+               loading="lazy">
+        </div>
+        <div class="banner-info">
+          <p class="banner-etiqueta">ARGENTINA</p>
+          <h2 class="banner-titulo"><span>SORTEO</span>A NIVEL PAÍS</h2>
+          <p class="banner-elige">Participá desde cualquier provincia</p>
+          <ul class="banner-datos">
+            <li>🚚 <strong>Transferencia incluida</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 3 · EN VIVO -->
+      <div class="banner" aria-roledescription="diapositiva" aria-label="3 de 4">
+        <div class="banner-foto">
+          <img src="assets/banner-tanque.jpg"
+               alt="Tanque de la Yamaha MT-07"
+               width="1000" height="1000"
+               loading="lazy">
+        </div>
+        <div class="banner-info">
+          <p class="banner-etiqueta">NO TE LO PIERDAS</p>
+          <h2 class="banner-titulo"><span>SORTEO</span>EN VIVO</h2>
+          <p class="banner-elige">Viernes 16 de octubre · 22 hs</p>
+          <ul class="banner-datos">
+            <li>📲 <strong>@sorteo_ojeda_</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 4 · PRECIO -->
+      <div class="banner" aria-roledescription="diapositiva" aria-label="4 de 4">
+        <div class="banner-foto">
+          <img src="assets/banner-costado.jpg"
+               alt="Motor y escape de la Yamaha MT-07"
+               width="1000" height="1000"
+               loading="lazy">
+        </div>
+        <div class="banner-info">
+          <p class="banner-etiqueta">PARTICIPÁ</p>
+          <h2 class="banner-titulo"><span>DESDE</span>$5.000</h2>
+          <p class="banner-elige">Cuantas más chances, más posibilidades</p>
+          <ul class="banner-datos">
+            <li>🏆 <strong>+80 ganadores en 2025</strong></li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="banner-puntos" role="tablist" aria-label="Elegir banner">
+      <button type="button" aria-label="Banner 1"></button>
+      <button type="button" aria-label="Banner 2"></button>
+      <button type="button" aria-label="Banner 3"></button>
+      <button type="button" aria-label="Banner 4"></button>
+    </div>
+
+  </div>
+
+  <p class="hero-subtitle">🏆 Sorteo en vivo · Participás desde $5.000</p>
 
   <a href="#chances" class="cta-btn participar-btn">🎟️ QUIERO MI MT-07</a>
 
@@ -821,6 +917,9 @@
 
 <!-- Barra de compra fija en celular + bloqueo de compras al cierre -->
 <script src="./barra-compra.js?v=1" defer></script>
+
+<!-- Carrusel de banners -->
+<script src="./banner-carrusel.js?v=1" defer></script>
 
 
 <!-- OFERTA SECRETA ENTERO -->
