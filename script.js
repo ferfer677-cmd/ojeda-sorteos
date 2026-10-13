@@ -1686,8 +1686,29 @@ async function cargarGaleria() {
         );
 
 
-      img.src =
+      // Miniatura liviana (assets/premios/<mismo nombre>) para la grilla;
+      // la foto grande de Storage se descarga solo al abrirla.
+      // Si una foto nueva no tiene miniatura, se usa la grande.
+      img.dataset.full =
         url;
+
+      img.onerror = () => {
+        img.onerror = null;
+        img.src = url;
+      };
+
+      img.src =
+        `assets/premios/${encodeURIComponent(item.name)}`;
+
+      // Se descarga recién cuando la persona baja hasta Premios
+      img.loading =
+        "lazy";
+
+      img.decoding =
+        "async";
+
+      img.width = 400;
+      img.height = 400;
 
       img.className =
         "gallery-img";
@@ -1790,7 +1811,7 @@ function iniciarModalGaleria() {
 
 
           modalImg.src =
-            img.src;
+            img.dataset.full || img.src;
 
 
           if (contador) {
@@ -1853,9 +1874,8 @@ function iniciarModalGaleria() {
 
 
         modalImg.src =
-          imagenes[
-            imagenActual
-          ].src;
+          imagenes[imagenActual].dataset.full ||
+          imagenes[imagenActual].src;
 
 
         if (contador) {
@@ -1898,9 +1918,8 @@ function iniciarModalGaleria() {
 
 
         modalImg.src =
-          imagenes[
-            imagenActual
-          ].src;
+          imagenes[imagenActual].dataset.full ||
+          imagenes[imagenActual].src;
 
 
         if (contador) {
