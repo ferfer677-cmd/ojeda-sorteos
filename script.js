@@ -1800,6 +1800,43 @@ function iniciarModalGaleria() {
   }
 
 
+  // Muestra al instante la miniatura (ya descargada) y la cambia
+  // por la foto grande apenas termina de bajar. También precarga
+  // la anterior y la siguiente para que las flechas sean instantáneas.
+  const precargadas = new Set();
+
+  function precargar(imgEl) {
+    const full = imgEl && imgEl.dataset.full;
+    if (!full || precargadas.has(full)) return;
+    precargadas.add(full);
+    const grande = new Image();
+    grande.src = full;
+  }
+
+  function mostrarFoto(imgEl) {
+
+    const full = imgEl.dataset.full;
+
+    modalImg.src = imgEl.currentSrc || imgEl.src;
+
+    if (full) {
+      const grande = new Image();
+      grande.onload = () => {
+        if (imagenes[imagenActual] === imgEl) {
+          modalImg.src = full;
+        }
+      };
+      grande.src = full;
+      precargadas.add(full);
+    }
+
+    const total = imagenes.length;
+    precargar(imagenes[(imagenActual + 1) % total]);
+    precargar(imagenes[(imagenActual - 1 + total) % total]);
+
+  }
+
+
   imagenes.forEach(
     (img, index) => {
 
@@ -1810,8 +1847,7 @@ function iniciarModalGaleria() {
             index;
 
 
-          modalImg.src =
-            img.dataset.full || img.src;
+          mostrarFoto(img);
 
 
           if (contador) {
@@ -1873,9 +1909,7 @@ function iniciarModalGaleria() {
         }
 
 
-        modalImg.src =
-          imagenes[imagenActual].dataset.full ||
-          imagenes[imagenActual].src;
+        mostrarFoto(imagenes[imagenActual]);
 
 
         if (contador) {
@@ -1917,9 +1951,7 @@ function iniciarModalGaleria() {
         }
 
 
-        modalImg.src =
-          imagenes[imagenActual].dataset.full ||
-          imagenes[imagenActual].src;
+        mostrarFoto(imagenes[imagenActual]);
 
 
         if (contador) {
