@@ -433,6 +433,12 @@ const revelationDate =
 const raffleDate =
   new Date("2026-10-16T22:00:00-03:00");
 
+// Cierre de compras: la misma hora que el cartel emergente
+// (window.OJEDA_CIERRE en carteles.js), así los dos relojes coinciden.
+const closingDate =
+  window.OJEDA_CIERRE ||
+  new Date("2026-10-16T21:30:00-03:00");
+
 
 // ==================================================
 // ACTUALIZAR CONTADOR
@@ -467,14 +473,38 @@ function updateCountdown() {
 
 
   // ==================================================
-  // ETAPA 2 — FALTA PARA EL SORTEO EN VIVO
+  // ETAPA 2 — FALTA PARA EL CIERRE DE COMPRAS (21:30)
+  // ==================================================
+
+  if (now < closingDate) {
+
+    if (countdownLabel) {
+      countdownLabel.innerText =
+        "⏳ SE CIERRAN LAS COMPRAS EN";
+    }
+
+    if (drawDate) {
+      drawDate.innerText =
+        "🔒 CIERRE DE COMPRAS: VIERNES 16/10 · 21:30 HS\n🏆 SORTEO EN VIVO: 22:00 HS";
+    }
+
+    actualizarValores(
+      closingDate - now
+    );
+
+    return;
+  }
+
+
+  // ==================================================
+  // ETAPA 3 — COMPRAS CERRADAS: FALTA PARA EL SORTEO
   // ==================================================
 
   if (now < raffleDate) {
 
     if (countdownLabel) {
       countdownLabel.innerText =
-        "🔥 FALTA SOLO ESTO PARA EL SORTEO EN VIVO";
+        "🔴 EL SORTEO EN VIVO EMPIEZA EN";
     }
 
     if (drawDate) {
