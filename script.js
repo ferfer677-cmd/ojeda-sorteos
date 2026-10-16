@@ -2352,10 +2352,8 @@ if (btnConsultar && resultadoNumeros) {
 
         `;
 
-// Mostrar super promo después de 2 segundos
-if (totalNumeros > 0) {
-  mostrarSuperPromo();
-}
+// La súper promo al consultar el DNI (50 chances $14.999 /
+// 100 chances $19.999) se dio de baja el 16/10/2026.
 
 
       } catch (error) {
