@@ -129,10 +129,10 @@ if (successBtn && successModal) {
   let codigoPromoActivo = "";
 
   // ==================================================
-// DESCUENTO POR PALABRA CLAVE - 50% OFF
+// DESCUENTO POR PALABRA CLAVE - 70% OFF ("ULTIMO", 16/10/2026)
 // ==================================================
 
-const PALABRA_DESCUENTO = "MITAD";
+const PALABRA_DESCUENTO = "ULTIMO";
 
 let descuentoPalabraClaveActivo = false;
 
@@ -145,13 +145,14 @@ const preciosNormales = {
   100: 75000
 };
 
+// 30% del precio normal (70% OFF)
 const preciosConDescuento = {
-  1: 2500,
-  3: 5000,
-  10: 9000,
-  30: 19000,
-  50: 25000,
-  100: 37500
+  1: 1500,
+  3: 3000,
+  10: 5400,
+  30: 11400,
+  50: 15000,
+  100: 22500
 };
 
 function actualizarPreciosDescuento() {
@@ -207,10 +208,18 @@ if (btnAplicarDescuento) {
     const codigo = (input?.value || "").trim().toUpperCase();
 
     // Los códigos "MITAD" (50% OFF) y "ENTERO" (oferta secreta)
-    // se dieron de baja el 16/10/2026. Para agregar uno nuevo,
-    // sumar un "if (codigo === ...)" acá.
+    // se dieron de baja el 16/10/2026.
 
-    {
+    if (codigo === PALABRA_DESCUENTO) {
+      descuentoPalabraClaveActivo = true;
+      actualizarPreciosDescuento();
+
+      if (mensaje) {
+        mensaje.innerText = "✅ ¡CÓDIGO ACTIVADO! TENÉS 70% OFF EN TODAS LAS CHANCES.";
+        mensaje.style.color = "#00ff66";
+      }
+
+    } else {
       descuentoPalabraClaveActivo = false;
       actualizarPreciosDescuento();
 
@@ -364,7 +373,7 @@ ofertaEnteroOverlay?.addEventListener("click", (e) => {
             codigoPromoActivo = "";
 
             packSeleccionado =
-              `${packName} • ${cantidad} CHANCE${cantidad === 1 ? "" : "S"} • ${packPrice}`;
+              `${descuentoPalabraClaveActivo ? `${PALABRA_DESCUENTO} 70% OFF • ` : ""}${packName} • ${cantidad} CHANCE${cantidad === 1 ? "" : "S"} • ${packPrice}`;
 
 
             if (selectedPack) {
