@@ -1083,6 +1083,14 @@ recaudacion += precio;
             .toLowerCase();
 
 
+        // DNI: se comparan solo los números, así "40.123.456"
+        // y "40123456" encuentran a la misma persona.
+        const dniDigitos =
+          dniTexto.replace(/\D/g, "");
+
+        const busquedaDigitos =
+          textoBusqueda.replace(/\D/g, "");
+
         const coincide =
 
           nombre.includes(
@@ -1097,8 +1105,26 @@ recaudacion += precio;
 
           ||
 
+          // Nombre y apellido juntos ("kevin porchile")
+          `${nombre} ${apellido}`
+            .replace(/\s+/g, " ")
+            .includes(
+              textoBusqueda.replace(/\s+/g, " ")
+            )
+
+          ||
+
           dniTexto.includes(
             textoBusqueda
+          )
+
+          ||
+
+          (
+            busquedaDigitos.length > 0 &&
+            dniDigitos.includes(
+              busquedaDigitos
+            )
           );
 
 
