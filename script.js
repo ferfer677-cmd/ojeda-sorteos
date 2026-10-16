@@ -206,29 +206,11 @@ if (btnAplicarDescuento) {
     const mensaje = document.getElementById("mensajeDescuento");
     const codigo = (input?.value || "").trim().toUpperCase();
 
-    if (codigo === "MITAD") {
-      descuentoPalabraClaveActivo = true;
-      actualizarPreciosDescuento();
+    // Los códigos "MITAD" (50% OFF) y "ENTERO" (oferta secreta)
+    // se dieron de baja el 16/10/2026. Para agregar uno nuevo,
+    // sumar un "if (codigo === ...)" acá.
 
-      document.getElementById("ofertaEnteroOverlay")?.classList.remove("activo");
-
-      if (mensaje) {
-        mensaje.innerText = "✅ ¡CÓDIGO ACTIVADO! TENÉS 50% OFF.";
-        mensaje.style.color = "#00ff66";
-      }
-
-    } else if (codigo === "ENTERO") {
-      descuentoPalabraClaveActivo = false;
-      actualizarPreciosDescuento();
-
-      document.getElementById("ofertaEnteroOverlay")?.classList.add("activo");
-
-      if (mensaje) {
-        mensaje.innerText = "🔥 ¡OFERTA ENTERO ACTIVADA!";
-        mensaje.style.color = "#00ff66";
-      }
-
-    } else {
+    {
       descuentoPalabraClaveActivo = false;
       actualizarPreciosDescuento();
 
