@@ -2345,7 +2345,7 @@ async function revisarUnComprobante(participante) {
 
   if (!path) {
     // Compras viejas con link pero sin ruta: no se puede medir
-    return null;
+    return { tipo: "sinRuta", texto: "📎 Sin ruta (formato viejo)" };
   }
 
   try {
@@ -2382,9 +2382,17 @@ async function revisarUnComprobante(participante) {
 }
 
 
-function mostrarRevision(problemas, total) {
+function mostrarRevision(todos, total) {
 
   resultadoRevision.innerHTML = "";
+
+  // Las "sin ruta" se listan aparte: tienen comprobante (link),
+  // solo que no se puede medir el archivo.
+  const sinRuta =
+    todos.filter((p) => p.problema.tipo === "sinRuta");
+
+  const problemas =
+    todos.filter((p) => p.problema.tipo !== "sinRuta");
 
   const caja =
     document.createElement("div");
@@ -2451,6 +2459,56 @@ function mostrarRevision(problemas, total) {
     caja.appendChild(fila);
 
   });
+
+  if (sinRuta.length) {
+
+    const detalle =
+      document.createElement("details");
+
+    detalle.style.cssText =
+      "margin-top:14px;padding-top:10px;border-top:1px solid #444;";
+
+    const resumen =
+      document.createElement("summary");
+
+    resumen.style.cssText = "cursor:pointer;font-weight:700;";
+
+    const pagadas =
+      sinRuta.filter((p) => p.datos.estado === "Pagado").length;
+
+    resumen.textContent =
+      `📎 ${sinRuta.length} compra${sinRuta.length === 1 ? "" : "s"} sin ruta de archivo (formato viejo) · ${pagadas} pagada${pagadas === 1 ? "" : "s"} · tocá para ver`;
+
+    detalle.appendChild(resumen);
+
+    sinRuta.forEach(({ datos }) => {
+
+      const fila =
+        document.createElement("div");
+
+      fila.style.cssText =
+        "padding:6px 0;border-top:1px solid #2a2a2a;font-size:13px;";
+
+      fila.textContent =
+        `${datos.nombre || ""} ${datos.apellido || ""} · DNI ${datos.dni || "-"} · ${datos.estado || "-"} · ${datos.pack || "-"} `;
+
+      if (datos.comprobanteURL) {
+        const link = document.createElement("a");
+        link.href = datos.comprobanteURL;
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.textContent = "ver comprobante";
+        link.style.color = "#ffcc00";
+        fila.appendChild(link);
+      }
+
+      detalle.appendChild(fila);
+
+    });
+
+    caja.appendChild(detalle);
+
+  }
 
   const cerrar =
     document.createElement("button");
