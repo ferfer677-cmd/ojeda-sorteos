@@ -25,7 +25,8 @@ import {
 
 import {
   ref,
-  deleteObject
+  deleteObject,
+  getMetadata
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
 
 
@@ -2310,3 +2311,220 @@ console.log(
 
 // La carga empieza en alCambiarSesion, cuando entra el admin.
 
+
+
+// =====================================================
+// REVISAR COMPROBANTES (sin archivo, vacíos o faltantes)
+// =====================================================
+// Recorre todas las compras y revisa el archivo de cada una
+// en Storage. Lista solo las que tienen algún problema.
+
+const btnRevisarComprobantes =
+  document.getElementById("revisarComprobantes");
+
+const resultadoRevision =
+  document.getElementById("resultadoRevision");
+
+// Menos de esto se marca como "muy liviano" (sospechoso)
+const KB_SOSPECHOSO = 10;
+
+
+async function revisarUnComprobante(participante) {
+
+  const datos =
+    participante.datos;
+
+  const path =
+    (datos.comprobantePath || "")
+      .toString()
+      .replace(/^\/+/, "");
+
+  if (!path && !datos.comprobanteURL) {
+    return { tipo: "sin", texto: "❌ Sin comprobante" };
+  }
+
+  if (!path) {
+    // Compras viejas con link pero sin ruta: no se puede medir
+    return null;
+  }
+
+  try {
+
+    const meta =
+      await getMetadata(ref(storage, path));
+
+    const bytes =
+      Number(meta.size) || 0;
+
+    if (bytes === 0) {
+      return { tipo: "vacio", texto: "⚠️ Archivo vacío (0 KB)" };
+    }
+
+    if (bytes < KB_SOSPECHOSO * 1024) {
+      return {
+        tipo: "liviano",
+        texto: `🔍 Muy liviano (${(bytes / 1024).toFixed(1)} KB)`
+      };
+    }
+
+    return null;
+
+  } catch (error) {
+
+    if (error.code === "storage/object-not-found") {
+      return { tipo: "falta", texto: "🚫 Archivo no encontrado" };
+    }
+
+    return { tipo: "error", texto: `❓ No se pudo revisar (${error.code || error.message})` };
+
+  }
+
+}
+
+
+function mostrarRevision(problemas, total) {
+
+  resultadoRevision.innerHTML = "";
+
+  const caja =
+    document.createElement("div");
+
+  caja.style.cssText =
+    "margin:16px 0;padding:14px;border:1px solid #444;border-radius:12px;background:#151515;text-align:left;";
+
+  const titulo =
+    document.createElement("h3");
+
+  titulo.style.margin = "0 0 10px";
+
+  titulo.textContent =
+    problemas.length
+      ? `🧾 ${problemas.length} compra${problemas.length === 1 ? "" : "s"} con problemas (de ${total} revisadas)`
+      : `✅ Las ${total} compras tienen comprobante válido`;
+
+  caja.appendChild(titulo);
+
+  // Pendientes primero: son las que todavía podés rechazar
+  problemas.sort((a, b) =>
+    (a.datos.estado === "Pagado") - (b.datos.estado === "Pagado")
+  );
+
+  problemas.forEach(({ datos, problema }) => {
+
+    const fila =
+      document.createElement("div");
+
+    fila.style.cssText =
+      "padding:8px 0;border-top:1px solid #2a2a2a;font-size:14px;";
+
+    const linea1 =
+      document.createElement("div");
+
+    linea1.style.fontWeight = "700";
+
+    linea1.textContent =
+      `${problema.texto} — ${datos.nombre || ""} ${datos.apellido || ""}`;
+
+    const linea2 =
+      document.createElement("div");
+
+    linea2.style.color = "#aaa";
+
+    linea2.textContent =
+      `DNI ${datos.dni || "-"} · ${datos.estado || "-"} · ${datos.pack || "-"}`;
+
+    fila.appendChild(linea1);
+    fila.appendChild(linea2);
+
+    // Tocar la fila busca a la persona en el admin
+    fila.style.cursor = "pointer";
+    fila.title = "Buscar en el panel";
+    fila.addEventListener("click", () => {
+      if (buscador) {
+        buscador.value =
+          String(datos.dni || datos.nombre || "");
+        buscador.dispatchEvent(new Event("input"));
+        buscador.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+
+    caja.appendChild(fila);
+
+  });
+
+  const cerrar =
+    document.createElement("button");
+
+  cerrar.textContent = "CERRAR";
+  cerrar.style.marginTop = "10px";
+  cerrar.addEventListener("click", () => {
+    resultadoRevision.innerHTML = "";
+  });
+
+  caja.appendChild(cerrar);
+
+  resultadoRevision.appendChild(caja);
+
+}
+
+
+if (btnRevisarComprobantes && resultadoRevision) {
+
+  btnRevisarComprobantes.addEventListener(
+    "click",
+    async () => {
+
+      btnRevisarComprobantes.disabled = true;
+
+      try {
+
+        const participantes =
+          await obtenerParticipantes();
+
+        const problemas = [];
+        let revisados = 0;
+
+        // De a 15 a la vez para que no tarde tanto
+        const cola = [...participantes];
+
+        async function trabajador() {
+          while (cola.length) {
+            const participante = cola.shift();
+            const problema = await revisarUnComprobante(participante);
+            if (problema) {
+              problemas.push({ datos: participante.datos, problema });
+            }
+            revisados++;
+            if (revisados % 25 === 0 || revisados === participantes.length) {
+              resultadoRevision.textContent =
+                `⏳ Revisando comprobantes... ${revisados} de ${participantes.length}`;
+            }
+          }
+        }
+
+        resultadoRevision.textContent =
+          `⏳ Revisando comprobantes... 0 de ${participantes.length}`;
+
+        await Promise.all(
+          Array.from({ length: 15 }, trabajador)
+        );
+
+        mostrarRevision(problemas, participantes.length);
+
+      } catch (error) {
+
+        console.error(error);
+
+        resultadoRevision.textContent =
+          "❌ Error revisando comprobantes: " + error.message;
+
+      } finally {
+
+        btnRevisarComprobantes.disabled = false;
+
+      }
+
+    }
+  );
+
+}
