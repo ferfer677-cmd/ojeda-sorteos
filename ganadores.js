@@ -33,6 +33,9 @@ const SORTEOS_ANTERIORES = [
     titulo: "Honda Falcon 400 y más",
     fecha: "Septiembre 2026",
     video: IG + "DdK00veEWz-/",
+    fotos: [
+      { src: "assets/ganadores/falcon-fazzari.jpg", link: IG + "DdK00veEWz-/", alt: "@fazzari_motos con la Honda Falcon 400 que ganó" }
+    ],
     ganadores: [
       { premio: "🏍️ Honda Falcon 400", ig: "fazzari_motos" },
       { premio: "🔧 Combo Total impacto + pistola de calor", ig: "facu_frias99" },
