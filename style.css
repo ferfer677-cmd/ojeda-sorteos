@@ -6100,3 +6100,17 @@ a.ganador-quien:hover {
 .ganadores-foto:hover img {
   transform: scale(1.03);
 }
+
+/* Varias fotos lado a lado en una tarjeta de ganadores */
+.ganadores-fotos {
+  display: grid;
+  gap: 2px;
+  margin: -16px -16px 14px;
+  border-radius: 14px 14px 0 0;
+  overflow: hidden;
+}
+
+.ganadores-fotos .ganadores-foto {
+  margin: 0;
+  border-radius: 0;
+}

@@ -9,6 +9,7 @@
 //   nombre: si no hay usuario (o la cuenta ya no existe), se muestra el nombre sin link
 // video (opcional): link a la publicación del sorteo en Instagram
 // foto (opcional): imagen de la entrega; al tocarla abre fotoVideo (o video)
+// fotos (opcional): varias fotos lado a lado: [{ src, link, alt }]
 // Los sorteos van del más reciente al más viejo.
 
 const IG = "https://www.instagram.com/sorteo_ojeda_/reel/";
@@ -142,8 +143,10 @@ const SORTEOS_ANTERIORES = [
     titulo: "Sorteo 5 premios: KTM 390",
     fecha: "Noviembre 2025",
     video: IG + "DQhuRuOkXXO/",
-    foto: "assets/ganadores/ktm.jpg",
-    fotoVideo: IG + "DQmYgtBEf8n/",
+    fotos: [
+      { src: "assets/ganadores/ktm.jpg", link: IG + "DQmYgtBEf8n/", alt: "Entrega de la KTM 390 a @diegonicolas.c" },
+      { src: "assets/ganadores/axel-1.jpg", alt: "Entrega de la Honda XR 150 a @olderburgeraxel" }
+    ],
     ganadores: [
       { premio: "🏍️ KTM 390", ig: "diegonicolas.c" },
       { premio: "🏍️ Honda XR 150", ig: "olderburgeraxel" },
@@ -225,19 +228,38 @@ const SORTEOS_VISIBLES = 3;
       tarjeta.dataset.extra = "si";
     }
 
-    if (sorteo.foto) {
-      const enlaceFoto = document.createElement("a");
-      enlaceFoto.className = "ganadores-foto";
-      enlaceFoto.href = sorteo.fotoVideo || sorteo.video || "#";
-      enlaceFoto.target = "_blank";
-      enlaceFoto.rel = "noopener";
-      const img = document.createElement("img");
-      img.src = sorteo.foto;
-      img.alt = `Entrega del sorteo ${sorteo.titulo}`;
-      img.loading = "lazy";
-      img.decoding = "async";
-      enlaceFoto.appendChild(img);
-      tarjeta.appendChild(enlaceFoto);
+    // Una foto (foto) o varias lado a lado (fotos)
+    const fotos =
+      sorteo.fotos ||
+      (sorteo.foto
+        ? [{ src: sorteo.foto, link: sorteo.fotoVideo || sorteo.video }]
+        : []);
+
+    if (fotos.length) {
+
+      const tira = document.createElement("div");
+      tira.className = "ganadores-fotos";
+      tira.style.gridTemplateColumns = `repeat(${fotos.length}, 1fr)`;
+
+      fotos.forEach((f) => {
+        const caja = document.createElement(f.link ? "a" : "div");
+        caja.className = "ganadores-foto";
+        if (f.link) {
+          caja.href = f.link;
+          caja.target = "_blank";
+          caja.rel = "noopener";
+        }
+        const img = document.createElement("img");
+        img.src = f.src;
+        img.alt = f.alt || `Entrega del sorteo ${sorteo.titulo}`;
+        img.loading = "lazy";
+        img.decoding = "async";
+        caja.appendChild(img);
+        tira.appendChild(caja);
+      });
+
+      tarjeta.appendChild(tira);
+
     }
 
     const encabezado =
