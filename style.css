@@ -6077,3 +6077,26 @@ a.ganador-quien:hover {
 .ganadores-video:hover {
   background: rgba(225, 48, 108, .3);
 }
+
+/* Foto de la entrega arriba de la tarjeta de ganadores */
+.ganadores-foto {
+  display: block;
+  margin: -16px -16px 14px;
+  height: 230px;
+  overflow: hidden;
+  border-radius: 14px 14px 0 0;
+  background: #111;
+}
+
+.ganadores-foto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+  transition: transform .3s ease;
+}
+
+.ganadores-foto:hover img {
+  transform: scale(1.03);
+}

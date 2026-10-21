@@ -8,6 +8,7 @@
 //   ig: usuario de Instagram SIN @ (se muestra con link a su perfil)
 //   nombre: si no hay usuario (o la cuenta ya no existe), se muestra el nombre sin link
 // video (opcional): link a la publicación del sorteo en Instagram
+// foto (opcional): imagen de la entrega; al tocarla abre fotoVideo (o video)
 // Los sorteos van del más reciente al más viejo.
 
 const IG = "https://www.instagram.com/sorteo_ojeda_/reel/";
@@ -17,6 +18,8 @@ const SORTEOS_ANTERIORES = [
     titulo: "Yamaha MT-07",
     fecha: "Octubre 2026",
     video: IG + "Dek8dFfkc-c/",
+    foto: "assets/ganadores/mt07.jpg",
+    fotoVideo: IG + "DelG-xYROIP/",
     ganadores: [
       { premio: "🏍️ Yamaha MT-07", ig: "e.speed420" },
       { premio: "💵 $50.000", ig: "alcarazgaston" },
@@ -92,6 +95,7 @@ const SORTEOS_ANTERIORES = [
     titulo: "iPhone 16 Pro Max y express",
     fecha: "Marzo 2026",
     video: IG + "DV2B2xGEd1k/",
+    foto: "assets/ganadores/iphone.jpg",
     ganadores: [
       { premio: "📱 iPhone 16 Pro Max", ig: "yonii_irizarre" },
       { premio: "💵 $50.000", ig: "elianitazramirez" },
@@ -138,6 +142,8 @@ const SORTEOS_ANTERIORES = [
     titulo: "Sorteo 5 premios: KTM 390",
     fecha: "Noviembre 2025",
     video: IG + "DQhuRuOkXXO/",
+    foto: "assets/ganadores/ktm.jpg",
+    fotoVideo: IG + "DQmYgtBEf8n/",
     ganadores: [
       { premio: "🏍️ KTM 390", ig: "diegonicolas.c" },
       { premio: "🏍️ Honda XR 150", ig: "olderburgeraxel" },
@@ -215,6 +221,21 @@ const SORTEOS_VISIBLES = 3;
     if (indice >= SORTEOS_VISIBLES) {
       tarjeta.hidden = true;
       tarjeta.dataset.extra = "si";
+    }
+
+    if (sorteo.foto) {
+      const enlaceFoto = document.createElement("a");
+      enlaceFoto.className = "ganadores-foto";
+      enlaceFoto.href = sorteo.fotoVideo || sorteo.video || "#";
+      enlaceFoto.target = "_blank";
+      enlaceFoto.rel = "noopener";
+      const img = document.createElement("img");
+      img.src = sorteo.foto;
+      img.alt = `Entrega del sorteo ${sorteo.titulo}`;
+      img.loading = "lazy";
+      img.decoding = "async";
+      enlaceFoto.appendChild(img);
+      tarjeta.appendChild(enlaceFoto);
     }
 
     const encabezado =
