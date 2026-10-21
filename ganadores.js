@@ -187,6 +187,10 @@ const SORTEOS_ANTERIORES = [
     titulo: "Tornado 293cc + PS5",
     fecha: "Julio 2025",
     video: IG + "DMDZlhks2eO/",
+    fotos: [
+      { src: "assets/ganadores/tornado-llaves.jpg", link: "https://www.instagram.com/sorteo_ojeda_/p/DQZcNDyEe4I/", alt: "Entrega de las llaves de la Tornado 293cc a @miguel.ibanez.50309 en Corrientes" },
+      { src: "assets/ganadores/tornado-entrega.jpg", link: "https://www.instagram.com/sorteo_ojeda_/p/DQZcNDyEe4I/", alt: "@miguel.ibanez.50309 con la Tornado 293cc que ganó" }
+    ],
     ganadores: [
       { premio: "🏍️ Tornado 293cc (entregada en Corrientes)", ig: "miguel.ibanez.50309" },
       { premio: "🎮 PlayStation 5", ig: "daan_blanco" },
