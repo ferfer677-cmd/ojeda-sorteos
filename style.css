@@ -5879,3 +5879,181 @@ body.participaciones-cerradas .participar-btn.boton-proximo {
 body.participaciones-cerradas .chances .packs-grid::before {
   content: "🔒 PARTICIPACIONES CERRADAS — 🔥 ¡ATENTOS AL PRÓXIMO SORTEO!";
 }
+
+/* =====================================================
+   GANADORES ANTERIORES (ganadores.js)
+===================================================== */
+
+.ganadores {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 16px 30px;
+  text-align: center;
+}
+
+.ganadores-etiqueta {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 6px 14px;
+
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+
+  color: #111;
+  background: #ffcc00;
+  border-radius: 999px;
+}
+
+.ganadores h2 {
+  margin: 0 0 8px;
+
+  font-family: 'Oswald', sans-serif;
+  font-size: 30px;
+  line-height: 1.15;
+  text-transform: uppercase;
+
+  color: #fff;
+}
+
+.ganadores h2 #ganadoresTotal {
+  color: #ffcc00;
+}
+
+.ganadores-subtitulo {
+  margin: 0 auto 22px;
+  max-width: 520px;
+
+  font-size: 14px;
+  line-height: 1.5;
+
+  color: #aaa;
+}
+
+.ganadores-lista {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  text-align: left;
+}
+
+@media (min-width: 768px) {
+  .ganadores-lista {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.ganadores-sorteo {
+  padding: 16px;
+
+  background: linear-gradient(170deg, #171717, #0b0b0b);
+  border: 1px solid #2c2c2c;
+  border-radius: 14px;
+}
+
+.ganadores-sorteo[hidden] {
+  display: none;
+}
+
+.ganadores-sorteo header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.ganadores-sorteo h3 {
+  margin: 0;
+
+  font-family: 'Oswald', sans-serif;
+  font-size: 18px;
+  letter-spacing: .3px;
+
+  color: #fff;
+}
+
+.ganadores-sorteo header span {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: #888;
+}
+
+.ganadores-sorteo ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ganadores-sorteo li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 7px 0;
+
+  font-size: 14px;
+
+  border-bottom: 1px dashed #222;
+}
+
+.ganadores-sorteo li:last-child {
+  border-bottom: 0;
+}
+
+.ganador-premio {
+  color: #ddd;
+}
+
+.ganador-quien {
+  font-weight: 800;
+  color: #bbb;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+a.ganador-quien {
+  color: #ffcc00;
+  text-decoration: none;
+}
+
+a.ganador-quien:hover {
+  text-decoration: underline;
+}
+
+.ganadores-ver-mas {
+  margin-top: 16px;
+  padding: 12px 22px;
+
+  font-size: 15px;
+  font-weight: 800;
+
+  color: #fff;
+  background: #222;
+  border: 1px solid #3a3a3a;
+  border-radius: 12px;
+
+  cursor: pointer;
+}
+
+.ganadores-ver-mas[hidden] {
+  display: none;
+}
+
+.ganadores-instagram {
+  display: block;
+  margin: 16px auto 0;
+  max-width: 420px;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  color: #ddd;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
