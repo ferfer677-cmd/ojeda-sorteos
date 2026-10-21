@@ -89,6 +89,9 @@ const SORTEOS_ANTERIORES = [
     titulo: "Suzuki AX 100 y más",
     fecha: "Mayo y junio 2026",
     video: IG + "DYYWyv5kYQM/",
+    fotos: [
+      { src: "assets/ganadores/ax100-eiras.jpg", link: IG + "DYYWyv5kYQM/", alt: "@gabrieleiras72 en el taller el día que retiró su Suzuki AX 100" }
+    ],
     ganadores: [
       { premio: "🏍️ Suzuki AX 100", ig: "gabrieleiras72" },
       { premio: "💵 $100.000", ig: "gamamercado_" },
