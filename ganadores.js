@@ -156,8 +156,10 @@ const SORTEOS_ANTERIORES = [
     titulo: "Moto a elección u $8.000.000",
     fecha: "Septiembre 2025",
     video: IG + "DOhWxh7kVcz/",
+    foto: "assets/ganadores/bariloche.jpg",
+    fotoVideo: "https://www.instagram.com/sorteo_ojeda_/p/DZi0xDfEQK5/",
     ganadores: [
-      { premio: "🏍️ Premio mayor (entregado en Bariloche)", ig: "mabroos_" },
+      { premio: "🏍️ Honda XR (entregada en Bariloche)", ig: "mabroos_" },
       { premio: "💵 $150.000", ig: "ayrtonrod29" }
     ]
   },
