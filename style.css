@@ -6114,3 +6114,8 @@ a.ganador-quien:hover {
   margin: 0;
   border-radius: 0;
 }
+
+/* Ranking oculto cuando no hay participantes (script.js) */
+.ranking-live[hidden] {
+  display: none !important;
+}

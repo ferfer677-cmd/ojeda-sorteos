@@ -2094,6 +2094,15 @@ async function cargarRanking() {
 
     container.innerHTML = "";
 
+    // Sin participantes (sorteo nuevo o ranking reiniciado):
+    // no mostrar la sección vacía
+    const seccionRanking =
+      document.getElementById("ranking");
+
+    if (seccionRanking) {
+      seccionRanking.hidden = top.length === 0;
+    }
+
     top.forEach(
       (item, index) => {
 

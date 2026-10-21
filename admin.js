@@ -20,7 +20,8 @@ import {
   query,
   where,
   orderBy,
-  limit
+  limit,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 import {
@@ -219,6 +220,34 @@ async function actualizarRankingPublico() {
     );
 
   }
+
+}
+
+// =====================================================
+// VACIAR RANKING (al borrar todo el sorteo)
+// =====================================================
+
+async function vaciarRanking() {
+
+  const snapshot =
+    await getDocs(collection(db, "ranking"));
+
+  // De a 400 por tanda (Firestore acepta hasta 500)
+  const docs = snapshot.docs;
+
+  for (let i = 0; i < docs.length; i += 400) {
+    const tanda = writeBatch(db);
+    docs.slice(i, i + 400).forEach((d) => tanda.delete(d.ref));
+    await tanda.commit();
+  }
+
+  // Top 5 público vacío: la página oculta el ranking
+  await setDoc(
+    doc(db, "publico", "ranking"),
+    { top: [], actualizado: serverTimestamp() }
+  );
+
+  return docs.length;
 
 }
 
@@ -2139,8 +2168,15 @@ if (borrarTodo) {
         // Vaciar "Ver mis números"
         await actualizarTodasLasConsultas();
 
+        // Vaciar el ranking (si no, el top 5 sigue mostrando
+        // las chances del sorteo anterior)
+        const borradosRanking =
+          await vaciarRanking();
+
         alert(
-          "✅ Todos los participantes fueron eliminados."
+          `✅ Todos los participantes fueron eliminados.
+
+Ranking reiniciado (${borradosRanking} entradas borradas).`
         );
 
 
