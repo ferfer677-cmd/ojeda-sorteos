@@ -72,8 +72,11 @@ const SORTEOS_ANTERIORES = [
   {
     titulo: "Tornado 250 + $900.000",
     fecha: "Julio 2026",
+    fotos: [
+      { src: "assets/ganadores/tornado250-eraso.jpg", alt: "@fran_eraso con la Honda Tornado 250 que ganó" }
+    ],
     ganadores: [
-      { premio: "🏍️ Honda Tornado 250", nombre: "Francisco Eraso" },
+      { premio: "🏍️ Honda Tornado 250", ig: "fran_eraso" },
       { premio: "💵 $100.000", nombre: "Juan Cruz Díaz" },
       { premio: "💵 $100.000", nombre: "Gerson Gómez" },
       { premio: "💵 $100.000", nombre: "Leandro Puig" },
