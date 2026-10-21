@@ -56,11 +56,14 @@ const SORTEOS_ANTERIORES = [
     ]
   },
   {
-    titulo: "Sorteo de agosto",
+    titulo: "Honda Titan 283cc",
     fecha: "Agosto 2026",
     video: IG + "DcUz4rexwpf/",
+    fotos: [
+      { src: "assets/ganadores/titan-1.jpg", link: IG + "DcUz4rexwpf/", alt: "Entrega de la Honda Titan 283cc a @diego_aguirrec" }
+    ],
     ganadores: [
-      { premio: "🏆 Ganador del sorteo", ig: "diego_aguirrec" }
+      { premio: "🏍️ Honda Titan 283cc", ig: "diego_aguirrec" }
     ]
   },
   {
