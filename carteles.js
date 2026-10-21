@@ -63,3 +63,8 @@ window.Carteles = {
   }
 
 };
+
+
+// Canal de WhatsApp (cartel del próximo sorteo y botón principal)
+window.OJEDA_WHATSAPP =
+  "https://whatsapp.com/channel/0029Vb5dDFT0bIdhfmabL11s";

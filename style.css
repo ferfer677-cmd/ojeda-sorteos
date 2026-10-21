@@ -5847,3 +5847,35 @@ body.participaciones-cerradas .participar-btn {
   color: #fff3c4;
   box-shadow: 0 0 20px rgba(255, 204, 0, .3);
 }
+
+/* =====================================================
+   SORTEO TERMINADO: CARTEL Y BOTÓN "PRÓXIMO SORTEO"
+===================================================== */
+
+/* Botón verde WhatsApp en el cartel */
+.cierre-card .proximo-cta {
+  background: linear-gradient(135deg, #25d366, #128c4a);
+  border-color: #5be38f;
+  box-shadow: 0 8px 25px rgba(37, 211, 102, .45);
+}
+
+.cierre-card.proximo-card .cierre-titulo {
+  font-size: 28px;
+}
+
+.cierre-card.proximo-card .cierre-texto strong {
+  color: #5be38f;
+}
+
+/* Botón principal de la página cuando las compras están cerradas */
+body.participaciones-cerradas .participar-btn.boton-proximo {
+  background: linear-gradient(135deg, #25d366, #128c4a);
+  border-color: #5be38f;
+  box-shadow: 0 8px 25px rgba(37, 211, 102, .35);
+  animation: none;
+}
+
+/* Aviso sobre las tarjetas de precios */
+body.participaciones-cerradas .chances .packs-grid::before {
+  content: "🔒 PARTICIPACIONES CERRADAS — 🔥 ¡ATENTOS AL PRÓXIMO SORTEO!";
+}

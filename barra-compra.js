@@ -10,8 +10,8 @@
   // ====================================================
 
   const MENSAJE_CERRADO =
-    "🔒 Las participaciones cerraron a las 21:30 hs.\n\n" +
-    "¡Seguí el sorteo en vivo a las 22 hs en nuestro Instagram!";
+    "🔒 Las participaciones de este sorteo están cerradas.\n\n" +
+    "¡Estate atento al próximo! Unite al canal de WhatsApp para enterarte primero.";
 
   // Todo lo que abre el formulario de compra
   const SELECTOR_COMPRA = [
@@ -30,8 +30,13 @@
     document
       .querySelectorAll(".participar-btn")
       .forEach((boton) => {
-        boton.textContent = "🔒 PARTICIPACIONES CERRADAS";
-        boton.setAttribute("href", "#ranking");
+        // Con las compras cerradas, el botón principal lleva
+        // al canal de WhatsApp para enterarse del próximo sorteo
+        boton.textContent = "📲 ENTERATE DEL PRÓXIMO SORTEO";
+        boton.setAttribute("href", window.OJEDA_WHATSAPP);
+        boton.setAttribute("target", "_blank");
+        boton.setAttribute("rel", "noopener");
+        boton.classList.add("boton-proximo");
       });
 
     // Cerrar el formulario si estaba abierto
@@ -62,14 +67,14 @@
         return;
       }
 
-      e.preventDefault();
-      e.stopImmediatePropagation();
-
-      // El botón principal lleva al ranking sin cartel
+      // El botón principal abre el canal de WhatsApp (su link normal)
       if (objetivo.classList.contains("participar-btn")) {
-        document.getElementById("ranking")?.scrollIntoView({ behavior: "smooth" });
+        e.stopImmediatePropagation();
         return;
       }
+
+      e.preventDefault();
+      e.stopImmediatePropagation();
 
       alert(MENSAJE_CERRADO);
 

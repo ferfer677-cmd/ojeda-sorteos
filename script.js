@@ -517,12 +517,12 @@ function updateCountdown() {
 
   if (countdownLabel) {
     countdownLabel.innerText =
-      "🏆 SORTEO EN VIVO";
+      "🏁 SORTEO FINALIZADO";
   }
 
   if (drawDate) {
     drawDate.innerText =
-      "🏆 VIERNES 16 DE OCTUBRE — 22:00 HS";
+      "¡Gracias por participar! 🔥 Atentos al próximo sorteo";
   }
 
   actualizarValores(0);
