@@ -1,16 +1,22 @@
 // ======================================================
 // GANADORES ANTERIORES
 // ======================================================
-// Datos tomados de las historias destacadas de @sorteo_ojeda_.
+// Datos tomados de las historias destacadas y publicaciones de
+// @sorteo_ojeda_ (usuarios verificados en Instagram el 21/10/2026).
+//
 // Para agregar un ganador: sumar una línea en "ganadores" del sorteo.
 //   ig: usuario de Instagram SIN @ (se muestra con link a su perfil)
 //   nombre: si no hay usuario (o la cuenta ya no existe), se muestra el nombre sin link
+// video (opcional): link a la publicación del sorteo en Instagram
 // Los sorteos van del más reciente al más viejo.
+
+const IG = "https://www.instagram.com/sorteo_ojeda_/reel/";
 
 const SORTEOS_ANTERIORES = [
   {
     titulo: "Yamaha MT-07",
     fecha: "Octubre 2026",
+    video: IG + "Dek8dFfkc-c/",
     ganadores: [
       { premio: "🏍️ Yamaha MT-07", ig: "e.speed420" },
       { premio: "💵 $50.000", ig: "alcarazgaston" },
@@ -20,24 +26,37 @@ const SORTEOS_ANTERIORES = [
     ]
   },
   {
+    titulo: "Honda Falcon 400 y más",
+    fecha: "Septiembre 2026",
+    video: IG + "DdK00veEWz-/",
+    ganadores: [
+      { premio: "🏍️ Honda Falcon 400", ig: "fazzari_motos" },
+      { premio: "🔧 Combo Total impacto + pistola de calor", ig: "facu_frias99" },
+      { premio: "🔧 Amoladora", ig: "lucas_obreque_" },
+      { premio: "🔧 Destornillador eléctrico", ig: "ariel_duhart23" },
+      { premio: "🎒 Mochila Total", ig: "lii_bava" },
+      { premio: "💵 $50.000", ig: "nahuel_acosta30" },
+      { premio: "💵 $50.000", ig: "mati.benvenuto" }
+    ]
+  },
+  {
     titulo: "Sorteos express",
     fecha: "Septiembre y octubre 2026",
+    video: IG + "Ddz1K5sxJFH/",
     ganadores: [
       { premio: "💵 $100.000", ig: "santy.soria83" },
       { premio: "💵 $50.000", ig: "lucas.kwist" },
       { premio: "💵 $50.000", ig: "enriqueadry" },
-      { premio: "💵 $50.000", ig: "gustachaura" }
+      { premio: "💵 $50.000", ig: "gustachaura" },
+      { premio: "🎁 Sorteo express", ig: "santiagomartinezpastor" }
     ]
   },
   {
-    titulo: "Honda Falcon 400 y más",
-    fecha: "Septiembre 2026",
+    titulo: "Sorteo de agosto",
+    fecha: "Agosto 2026",
+    video: IG + "DcUz4rexwpf/",
     ganadores: [
-      { premio: "🏍️ Honda Falcon 400", ig: "fazzari_motos" },
-      { premio: "🔧 Miniatornillador + mango", ig: "ariel_duhart23" },
-      { premio: "🎒 Mochila Total", ig: "lii_bava" },
-      { premio: "🔧 Combo Total", ig: "facu_frias99" },
-      { premio: "💵 $50.000", ig: "mati.benvenuto" }
+      { premio: "🏆 Ganador del sorteo", ig: "diego_aguirrec" }
     ]
   },
   {
@@ -57,11 +76,12 @@ const SORTEOS_ANTERIORES = [
     ]
   },
   {
-    titulo: "Sorteos de mitad de año",
+    titulo: "Suzuki AX 100 y más",
     fecha: "Mayo y junio 2026",
+    video: IG + "DYYWyv5kYQM/",
     ganadores: [
-      { premio: "🏍️ Moto AX 100", ig: "gabrieleiras72" },
-      { premio: "🎁 Premio sorteo AX 100", ig: "gamamercado" },
+      { premio: "🏍️ Suzuki AX 100", ig: "gabrieleiras72" },
+      { premio: "💵 $100.000", ig: "gamamercado_" },
       { premio: "🔧 Kit Total", ig: "dougras.777" },
       { premio: "💵 Hasta $200.000", ig: "bnjasanchez" },
       { premio: "💵 $90.000", nombre: "Ganador/a" },
@@ -69,27 +89,91 @@ const SORTEOS_ANTERIORES = [
     ]
   },
   {
-    titulo: "CF Moto 400 y 9 premios más",
-    fecha: "Febrero 2026",
+    titulo: "iPhone 16 Pro Max y express",
+    fecha: "Marzo 2026",
+    video: IG + "DV2B2xGEd1k/",
     ganadores: [
-      { premio: "🏍️ CF Moto 400", ig: "diegoomercil" },
-      { premio: "💵 $1.000.000", ig: "adrigonzalez788" },
-      { premio: "💵 $500.000", ig: "genatravaglia" },
-      { premio: "💵 $100.000", nombre: "Ganador/a" },
-      { premio: "🎮 PlayStation 5", ig: "luduena_ampa" },
-      { premio: "📽️ Proyector", nombre: "Ganador/a" },
-      { premio: "🧰 Caja de herramientas Total", ig: "benja_romero_0" },
-      { premio: "👕 Buzo", ig: "josemamani493" }
-    ]
-  },
-  {
-    titulo: "Más sorteos de principio de año",
-    fecha: "Febrero a abril 2026",
-    ganadores: [
-      { premio: "📱 iPhone 16 Pro Max", nombre: "Entregado" },
+      { premio: "📱 iPhone 16 Pro Max", ig: "yonii_irizarre" },
       { premio: "💵 $50.000", ig: "elianitazramirez" },
       { premio: "💵 $50.000", ig: "cami.tear" },
       { premio: "💵 $50.000", ig: "nico_lacanna" }
+    ]
+  },
+  {
+    titulo: "Sorteo 10 premios: CF Moto 400",
+    fecha: "Febrero 2026",
+    video: IG + "DU6GSgEEVEH/",
+    ganadores: [
+      { premio: "🏍️ CF Moto NK 400", ig: "diegoomercil" },
+      { premio: "📱 iPhone 16 Pro", nombre: "Santino Benjamín Rolón" },
+      { premio: "🎮 PlayStation 5", ig: "luduena_ampa" },
+      { premio: "💵 $1.000.000", ig: "adrigonzalez788" },
+      { premio: "💵 $500.000", ig: "genatravaglia" },
+      { premio: "🧰 Caja de herramientas Total", nombre: "Derlys Rodríguez" },
+      { premio: "💵 $100.000", nombre: "Ganador/a" },
+      { premio: "📽️ Proyector", ig: "mauroolea20" },
+      { premio: "👕 Buzo del taller", ig: "josemamani493" },
+      { premio: "🪛 Set de destornilladores Total", ig: "benja_romero_0" }
+    ]
+  },
+  {
+    titulo: "Sorteos express",
+    fecha: "Febrero 2026",
+    video: IG + "DUo9-FtkTUv/",
+    ganadores: [
+      { premio: "💵 $180.000", ig: "_matiias17" },
+      { premio: "🎁 Sorteo express", ig: "el_retoke07" }
+    ]
+  },
+  {
+    titulo: "Sorteos de diciembre",
+    fecha: "Diciembre 2025",
+    video: IG + "DSG4MSvkaOM/",
+    ganadores: [
+      { premio: "💵 $100.000", ig: "milagro.rg" },
+      { premio: "🎁 Sorteo de fiestas", ig: "maxipavone" }
+    ]
+  },
+  {
+    titulo: "Sorteo 5 premios: KTM 390",
+    fecha: "Noviembre 2025",
+    video: IG + "DQhuRuOkXXO/",
+    ganadores: [
+      { premio: "🏍️ KTM 390", ig: "diegonicolas.c" },
+      { premio: "🏍️ Honda XR 150", ig: "olderburgeraxel" },
+      { premio: "💵 $500.000", ig: "leo.aguilar60" },
+      { premio: "💵 $250.000", ig: "ivangarcia21_" },
+      { premio: "💵 $100.000", ig: "leanr.lopez" }
+    ]
+  },
+  {
+    titulo: "Moto a elección u $8.000.000",
+    fecha: "Septiembre 2025",
+    video: IG + "DOhWxh7kVcz/",
+    ganadores: [
+      { premio: "🏍️ Premio mayor (entregado en Bariloche)", ig: "mabroos_" },
+      { premio: "💵 $150.000", ig: "ayrtonrod29" }
+    ]
+  },
+  {
+    titulo: "Sorteos de agosto",
+    fecha: "Agosto 2025",
+    video: IG + "DN9W3OzEX0m/",
+    ganadores: [
+      { premio: "📱 iPhone", ig: "slv.agust1n" },
+      { premio: "🛵 Mini moto eléctrica", ig: "floritdl" },
+      { premio: "💵 $50.000", ig: "tapa_74" },
+      { premio: "💵 $50.000", ig: "kevluucero" }
+    ]
+  },
+  {
+    titulo: "Tornado 293cc + PS5",
+    fecha: "Julio 2025",
+    video: IG + "DMDZlhks2eO/",
+    ganadores: [
+      { premio: "🏍️ Tornado 293cc (entregada en Corrientes)", ig: "miguel.ibanez.50309" },
+      { premio: "🎮 PlayStation 5", ig: "daan_blanco" },
+      { premio: "💵 $50.000", ig: "rolhajose" }
     ]
   }
 ];
@@ -117,7 +201,7 @@ const SORTEOS_VISIBLES = 3;
     SORTEOS_ANTERIORES.reduce((n, s) => n + s.ganadores.length, 0);
 
   if (contador) {
-    // Redondeado para abajo a la decena: "+40"
+    // Redondeado para abajo a la decena: "+60"
     contador.textContent = `+${Math.floor(total / 10) * 10}`;
   }
 
@@ -184,6 +268,17 @@ const SORTEOS_VISIBLES = 3;
     });
 
     tarjeta.appendChild(lista);
+
+    if (sorteo.video) {
+      const video = document.createElement("a");
+      video.className = "ganadores-video";
+      video.href = sorteo.video;
+      video.target = "_blank";
+      video.rel = "noopener";
+      video.textContent = "▶ Ver el video del sorteo";
+      tarjeta.appendChild(video);
+    }
+
     contenedor.appendChild(tarjeta);
 
   });
