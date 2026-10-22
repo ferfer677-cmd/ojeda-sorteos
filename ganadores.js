@@ -208,8 +208,14 @@ const SORTEOS_ANTERIORES = [
     titulo: "Más motos entregadas",
     fecha: "Sorteos anteriores",
     ganadores: [
-      { premio: "🏍️ Honda Titan KS", ig: "santii.camarasa", ciudad: "San Pedro, Buenos Aires" },
       { premio: "🏍️ Honda Twister 293cc", ig: "lagus.293", ciudad: "Victoria, Entre Ríos" }
+    ]
+  },
+  {
+    titulo: "Honda CG Titan KS",
+    fecha: "Marzo 2025",
+    ganadores: [
+      { premio: "🏍️ Honda CG Titan KS", ig: "santii.camarasa", ciudad: "San Pedro, Buenos Aires" }
     ]
   }
 ];
