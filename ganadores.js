@@ -212,10 +212,10 @@ const SORTEOS_ANTERIORES = [
     ]
   },
   {
-    titulo: "Honda CG Titan KS",
+    titulo: "Honda CG Titan KS Inyección",
     fecha: "Marzo 2025",
     ganadores: [
-      { premio: "🏍️ Honda CG Titan KS", ig: "santii.camarasa", ciudad: "San Pedro, Buenos Aires" }
+      { premio: "🏍️ Honda CG Titan KS Inyección", ig: "santii.camarasa", ciudad: "San Pedro, Buenos Aires" }
     ]
   }
 ];
