@@ -205,8 +205,11 @@ const SORTEOS_ANTERIORES = [
     ]
   },
   {
-    titulo: "Más motos entregadas",
-    fecha: "Sorteos anteriores",
+    titulo: "Honda Twister 293cc",
+    fecha: "Mayo 2025",
+    fotos: [
+      { src: "assets/ganadores/twister-lagus.jpg", link: "https://www.instagram.com/sorteo_ojeda_/p/DKLI6PzJ7ZJ/", alt: "Entrega de la Twister 293cc a @lagus.293 en Victoria, Entre Ríos" }
+    ],
     ganadores: [
       { premio: "🏍️ Honda Twister 293cc", ig: "lagus.293", ciudad: "Victoria, Entre Ríos" }
     ]
@@ -214,8 +217,16 @@ const SORTEOS_ANTERIORES = [
   {
     titulo: "Honda CG Titan KS Inyección",
     fecha: "Marzo 2025",
+    video: IG + "DHzWPtnJtqF/",
+    fotos: [
+      { src: "assets/ganadores/cg-titan-camarasa.jpg", link: "https://www.instagram.com/sorteo_ojeda_/p/DJw9R2Pp0dN/", alt: "Entrega de la CG Titan KS a @santii.camarasa en su casa" }
+    ],
     ganadores: [
-      { premio: "🏍️ Honda CG Titan KS Inyección", ig: "santii.camarasa", ciudad: "San Pedro, Buenos Aires" }
+      { premio: "🏍️ Honda CG Titan KS Inyección", ig: "santii.camarasa", ciudad: "San Pedro, Buenos Aires" },
+      { premio: "🪖 Casco", ig: "g.hunttter" },
+      { premio: "💵 $50.000", ig: "carlitoscamerucci" },
+      { premio: "💵 $50.000", ig: "huugsk" },
+      { premio: "💵 $50.000", ig: "mateo_gonzalez66" }
     ]
   }
 ];
