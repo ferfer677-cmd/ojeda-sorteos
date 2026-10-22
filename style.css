@@ -6026,6 +6026,13 @@ a.ganador-quien:hover {
   text-decoration: underline;
 }
 
+.ganador-ciudad {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: #8a8a8a;
+}
+
 .ganadores-ver-mas {
   margin-top: 16px;
   padding: 12px 22px;

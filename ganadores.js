@@ -6,6 +6,7 @@
 //
 // Para agregar un ganador: sumar una línea en "ganadores" del sorteo.
 //   ig: usuario de Instagram SIN @ (se muestra con link a su perfil)
+//   ciudad (opcional): se muestra debajo del premio con 📍
 //   nombre: si no hay usuario (o la cuenta ya no existe), se muestra el nombre sin link
 // video (opcional): link a la publicación del sorteo en Instagram
 // foto (opcional): imagen de la entrega; al tocarla abre fotoVideo (o video)
@@ -22,7 +23,7 @@ const SORTEOS_ANTERIORES = [
     foto: "assets/ganadores/mt07.jpg",
     fotoVideo: IG + "DelG-xYROIP/",
     ganadores: [
-      { premio: "🏍️ Yamaha MT-07", ig: "e.speed420" },
+      { premio: "🏍️ Yamaha MT-07", ig: "e.speed420", ciudad: "San Luis capital" },
       { premio: "💵 $50.000", ig: "alcarazgaston" },
       { premio: "💵 $50.000", ig: "matilattanzio" },
       { premio: "💵 $50.000", ig: "romero_david19" },
@@ -37,7 +38,7 @@ const SORTEOS_ANTERIORES = [
       { src: "assets/ganadores/falcon-fazzari.jpg", link: IG + "DdK00veEWz-/", alt: "@fazzari_motos con la Honda Falcon 400 que ganó" }
     ],
     ganadores: [
-      { premio: "🏍️ Honda Falcon 400", ig: "fazzari_motos" },
+      { premio: "🏍️ Honda Falcon 400", ig: "fazzari_motos", ciudad: "Santa Fe" },
       { premio: "🔧 Combo Total impacto + pistola de calor", ig: "facu_frias99" },
       { premio: "🔧 Amoladora", ig: "lucas_obreque_" },
       { premio: "🔧 Destornillador eléctrico", ig: "ariel_duhart23" },
@@ -66,7 +67,7 @@ const SORTEOS_ANTERIORES = [
       { src: "assets/ganadores/titan-1.jpg", link: IG + "DcUz4rexwpf/", alt: "Entrega de la Honda Titan 283cc a @diego_aguirrec" }
     ],
     ganadores: [
-      { premio: "🏍️ Honda Titan 283cc", ig: "diego_aguirrec" }
+      { premio: "🏍️ Honda Titan 283cc", ig: "diego_aguirrec", ciudad: "Lobería, Buenos Aires" }
     ]
   },
   {
@@ -76,7 +77,7 @@ const SORTEOS_ANTERIORES = [
       { src: "assets/ganadores/tornado250-eraso.jpg", alt: "@fran_eraso con la Honda Tornado 250 que ganó" }
     ],
     ganadores: [
-      { premio: "🏍️ Honda Tornado 250", ig: "fran_eraso" },
+      { premio: "🏍️ Honda Tornado 250", ig: "fran_eraso", ciudad: "Lobería, Buenos Aires" },
       { premio: "💵 $100.000", nombre: "Juan Cruz Díaz" },
       { premio: "💵 $100.000", nombre: "Gerson Gómez" },
       { premio: "💵 $100.000", nombre: "Leandro Puig" },
@@ -96,7 +97,7 @@ const SORTEOS_ANTERIORES = [
       { src: "assets/ganadores/ax100-eiras.jpg", link: IG + "DYYWyv5kYQM/", alt: "@gabrieleiras72 en el taller el día que retiró su Suzuki AX 100" }
     ],
     ganadores: [
-      { premio: "🏍️ Suzuki AX 100", ig: "gabrieleiras72" },
+      { premio: "🏍️ Suzuki AX 100", ig: "gabrieleiras72", ciudad: "Canning, Buenos Aires" },
       { premio: "💵 $100.000", ig: "gamamercado_" },
       { premio: "🔧 Kit Total", ig: "dougras.777" },
       { premio: "💵 Hasta $200.000", ig: "bnjasanchez" },
@@ -121,7 +122,7 @@ const SORTEOS_ANTERIORES = [
     fecha: "Febrero 2026",
     video: IG + "DU6GSgEEVEH/",
     ganadores: [
-      { premio: "🏍️ CF Moto NK 400", ig: "diegoomercil" },
+      { premio: "🏍️ CF Moto NK 400", ig: "diegoomercil", ciudad: "Santa Fe" },
       { premio: "📱 iPhone 16 Pro", nombre: "Santino Benjamín Rolón" },
       { premio: "🎮 PlayStation 5", ig: "luduena_ampa" },
       { premio: "💵 $1.000.000", ig: "adrigonzalez788" },
@@ -160,8 +161,8 @@ const SORTEOS_ANTERIORES = [
       { src: "assets/ganadores/axel-1.jpg", alt: "Entrega de la Honda XR 150 a @olderburgeraxel" }
     ],
     ganadores: [
-      { premio: "🏍️ KTM 390", ig: "diegonicolas.c" },
-      { premio: "🏍️ Honda XR 150", ig: "olderburgeraxel" },
+      { premio: "🏍️ KTM 390", ig: "diegonicolas.c", ciudad: "Mar del Plata, Buenos Aires" },
+      { premio: "🏍️ Honda XR 150", ig: "olderburgeraxel", ciudad: "Chaco" },
       { premio: "💵 $500.000", ig: "leo.aguilar60" },
       { premio: "💵 $250.000", ig: "ivangarcia21_" },
       { premio: "💵 $100.000", ig: "leanr.lopez" }
@@ -174,7 +175,7 @@ const SORTEOS_ANTERIORES = [
     foto: "assets/ganadores/bariloche.jpg",
     fotoVideo: "https://www.instagram.com/sorteo_ojeda_/p/DZi0xDfEQK5/",
     ganadores: [
-      { premio: "🏍️ Honda XR (entregada en Bariloche)", ig: "mabroos_" },
+      { premio: "🏍️ Honda XR", ig: "mabroos_", ciudad: "Bariloche, Río Negro" },
       { premio: "💵 $150.000", ig: "ayrtonrod29" }
     ]
   },
@@ -198,9 +199,17 @@ const SORTEOS_ANTERIORES = [
       { src: "assets/ganadores/tornado-entrega.jpg", link: "https://www.instagram.com/sorteo_ojeda_/p/DQZcNDyEe4I/", alt: "@miguel.ibanez.50309 con la Tornado 293cc que ganó" }
     ],
     ganadores: [
-      { premio: "🏍️ Tornado 293cc (entregada en Corrientes)", ig: "miguel.ibanez.50309" },
+      { premio: "🏍️ Tornado 293cc", ig: "miguel.ibanez.50309", ciudad: "Corrientes" },
       { premio: "🎮 PlayStation 5", ig: "daan_blanco" },
       { premio: "💵 $50.000", ig: "rolhajose" }
+    ]
+  },
+  {
+    titulo: "Más motos entregadas",
+    fecha: "Sorteos anteriores",
+    ganadores: [
+      { premio: "🏍️ Honda Titan KS", ig: "santii.camarasa", ciudad: "San Pedro, Buenos Aires" },
+      { premio: "🏍️ Honda Twister 293cc", ig: "lagus.293", ciudad: "Victoria, Entre Ríos" }
     ]
   }
 ];
@@ -323,7 +332,18 @@ const SORTEOS_VISIBLES = 3;
 
       quien.classList.add("ganador-quien");
 
-      item.append(premio, quien);
+      // Premio y, si está cargada, la ciudad debajo
+      let izquierda = premio;
+
+      if (g.ciudad) {
+        izquierda = document.createElement("div");
+        const ciudad = document.createElement("span");
+        ciudad.className = "ganador-ciudad";
+        ciudad.textContent = `📍 ${g.ciudad}`;
+        izquierda.append(premio, ciudad);
+      }
+
+      item.append(izquierda, quien);
       lista.appendChild(item);
 
     });
