@@ -7,7 +7,8 @@
       "firestore.rules",
       "storage.rules",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "bocetos/**"
     ],
     "headers": [
       {

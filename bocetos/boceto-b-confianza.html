@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boceto B · Claro y confiable</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ==================================================
+   BOCETO B: CLARO Y CONFIABLE
+   Fondo claro, tarjetas blancas, verde de "compra segura".
+   Se parece a una tienda online: transmite seriedad.
+================================================== */
+
+:root {
+  --fondo: #f3f4f7;
+  --tarjeta: #ffffff;
+  --borde: #e3e5ea;
+  --texto: #111827;
+  --suave: #6b7280;
+  --verde: #00a650;
+  --verde-osc: #008a43;
+  --naranja: #ff6a00;
+  --oscuro: #0f172a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  color: var(--texto);
+  background: var(--fondo);
+  padding-bottom: 92px;
+}
+
+h1, h2, h3 {
+  font-family: 'Poppins', sans-serif;
+  line-height: 1.15;
+}
+
+.contenedor {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ===== Cabecera ===== */
+
+.cabecera {
+  padding: 12px 16px;
+  text-align: center;
+  background: var(--oscuro);
+}
+
+.cabecera img { height: 22px; }
+
+.aviso {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  color: #fff;
+  background: var(--naranja);
+}
+
+/* ===== Tarjeta principal (producto) ===== */
+
+.producto {
+  margin-top: 16px;
+  overflow: hidden;
+  background: var(--tarjeta);
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(15,23,42,.08);
+}
+
+.producto-foto {
+  position: relative;
+}
+
+.producto-foto img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.etiqueta-vivo {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(220,38,38,.92);
+  border-radius: 999px;
+}
+
+.miniaturas {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px 0;
+}
+
+.miniaturas img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid var(--borde);
+}
+
+.miniaturas img:first-child { border-color: var(--verde); }
+
+.producto-cuerpo { padding: 14px 18px 20px; }
+
+.producto h1 {
+  margin: 0 0 4px;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.producto-sub {
+  margin: 0 0 14px;
+  font-size: 14px;
+  color: var(--suave);
+}
+
+.precio-linea {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.precio-linea b {
+  font-family: 'Poppins', sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.precio-linea s { color: var(--suave); }
+
+.descuento {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--verde);
+}
+
+.datos {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.datos li {
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.datos li span { font-size: 18px; }
+.datos li small { display: block; color: var(--suave); }
+
+.boton {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  color: #fff;
+  background: var(--verde);
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.boton:hover { background: var(--verde-osc); }
+
+.boton-sec {
+  display: block;
+  margin-top: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  color: var(--verde-osc);
+  background: #e9f8f0;
+  border-radius: 12px;
+}
+
+/* ===== Cuenta regresiva ===== */
+
+.cuenta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: var(--oscuro);
+  color: #fff;
+  border-radius: 14px;
+}
+
+.cuenta p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.cuenta-cajas { display: flex; gap: 6px; }
+
+.cuenta-cajas div {
+  min-width: 44px;
+  padding: 6px 4px;
+  text-align: center;
+  background: rgba(255,255,255,.1);
+  border-radius: 8px;
+}
+
+.cuenta-cajas b {
+  display: block;
+  font-family: 'Poppins', sans-serif;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cuenta-cajas small { font-size: 9px; opacity: .7; }
+
+/* ===== Secciones ===== */
+
+section {
+  margin-top: 16px;
+  padding: 20px 18px;
+  background: var(--tarjeta);
+  border-radius: 18px;
+}
+
+h2 {
+  margin: 0 0 4px;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.bajada {
+  margin: 0 0 16px;
+  font-size: 14px;
+  color: var(--suave);
+}
+
+/* ===== Packs (grilla 2 columnas) ===== */
+
+.packs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.pack {
+  position: relative;
+  padding: 16px 10px 14px;
+  font: inherit;
+  text-align: center;
+  color: var(--texto);
+  background: #fff;
+  border: 2px solid var(--borde);
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.pack[aria-pressed="true"] {
+  border-color: var(--verde);
+  background: #f2fbf6;
+  box-shadow: 0 0 0 3px rgba(0,166,80,.15);
+}
+
+.pack-destacado {
+  grid-column: 1 / -1;
+  padding-top: 24px;
+}
+
+.pack-cinta {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--naranja);
+  border-radius: 999px;
+}
+
+.pack-cantidad {
+  display: block;
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.pack s {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--suave);
+}
+
+.pack b {
+  display: block;
+  font-family: 'Poppins', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.pack-unitario {
+  display: block;
+  font-size: 12px;
+  color: var(--verde-osc);
+  font-weight: 600;
+}
+
+.pack-destacado b { font-size: 28px; }
+
+.clave {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.clave input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  font: inherit;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+}
+
+.clave button {
+  padding: 0 16px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--verde-osc);
+  background: #e9f8f0;
+  border: 0;
+  border-radius: 10px;
+}
+
+.seguro {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin: 14px 0 0;
+  font-size: 12px;
+  color: var(--suave);
+}
+
+/* ===== Pasos ===== */
+
+.pasos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  text-align: center;
+}
+
+.pasos div {
+  padding: 12px 6px;
+  font-size: 12px;
+  line-height: 1.35;
+  background: var(--fondo);
+  border-radius: 12px;
+}
+
+.pasos b {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  margin: 0 auto 6px;
+  font-family: 'Poppins', sans-serif;
+  color: #fff;
+  background: var(--verde);
+  border-radius: 50%;
+}
+
+/* ===== Ganadores (reseñas) ===== */
+
+.ganador {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.ganador:last-child { border-bottom: 0; }
+
+.ganador img {
+  flex: none;
+  width: 76px;
+  height: 76px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.ganador strong { font-size: 14px; }
+
+.verificado {
+  margin-left: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--verde-osc);
+}
+
+.ganador p { margin: 2px 0 0; font-size: 13px; color: var(--suave); }
+.ganador .premio { color: var(--texto); font-weight: 600; }
+
+.contador-ganadores {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 12px 14px;
+  background: #e9f8f0;
+  border-radius: 12px;
+}
+
+.contador-ganadores b {
+  font-family: 'Poppins', sans-serif;
+  font-size: 30px;
+  color: var(--verde-osc);
+}
+
+.contador-ganadores span { font-size: 13px; line-height: 1.3; }
+
+/* ===== Preguntas ===== */
+
+details { border-bottom: 1px solid var(--borde); }
+details:last-of-type { border-bottom: 0; }
+
+summary {
+  padding: 14px 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+details p {
+  margin: 0;
+  padding: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--suave);
+}
+
+/* ===== Barra fija ===== */
+
+.barra {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: #fff;
+  box-shadow: 0 -6px 24px rgba(15,23,42,.1);
+}
+
+.barra .contenedor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+}
+
+.barra-info { flex: 1; font-size: 12px; color: var(--suave); }
+.barra-info b { display: block; font-family: 'Poppins', sans-serif; font-size: 18px; color: var(--texto); }
+
+.barra .boton { width: auto; padding: 13px 22px; }
+
+.pie {
+  margin: 24px 0 0;
+  font-size: 12px;
+  text-align: center;
+  color: var(--suave);
+}
+</style>
+</head>
+
+<body>
+
+<div class="cabecera">
+  <img src="../assets/logo.png" alt="Ojeda Preparación">
+</div>
+
+<div class="aviso">
+  🔥 50% OFF en todos los packs · cierra en <b id="urgencia">--</b>
+</div>
+
+<main class="contenedor">
+
+  <!-- ===== TARJETA DEL PREMIO ===== -->
+  <article class="producto">
+    <div class="producto-foto">
+      <img src="../assets/premios/IMG_3948.jpeg" alt="Yamaha MT-07 enfierrada">
+      <span class="etiqueta-vivo">● Sorteo en vivo</span>
+    </div>
+    <div class="miniaturas">
+      <img src="../assets/premios/IMG_3948.jpeg" alt="">
+      <img src="../assets/premios/IMG_4883.jpeg" alt="">
+      <img src="../assets/premios/IMG_3961.jpeg" alt="">
+      <img src="../assets/premios/IMG_4005.jpeg" alt="">
+    </div>
+    <div class="producto-cuerpo">
+      <h1>Yamaha MT-07 enfierrada</h1>
+      <p class="producto-sub">Sorteo a nivel país · Ojeda Preparación</p>
+
+      <div class="precio-linea"><b>Desde $5.000</b><s>$10.000</s></div>
+      <span class="descuento">50% OFF por tiempo limitado</span>
+
+      <ul class="datos">
+        <li><span>📅</span><div>Viernes 13 de noviembre, 22:00 hs<small>En vivo por Instagram @sorteo_ojeda_</small></div></li>
+        <li><span>🚚</span><div>Transferencia de la moto incluida<small>La retirás en Tandil o coordinamos la entrega</small></div></li>
+        <li><span>🏆</span><div>+70 ganadores reales<small>Todos etiquetados en Instagram</small></div></li>
+      </ul>
+
+      <a class="boton" href="#chances">Elegir mis chances</a>
+      <a class="boton-sec" href="#">Ya compré: ver mis números</a>
+    </div>
+  </article>
+
+  <div class="cuenta">
+    <p>Las compras<br>cierran en</p>
+    <div class="cuenta-cajas">
+      <div><b id="d">00</b><small>DÍAS</small></div>
+      <div><b id="h">00</b><small>HS</small></div>
+      <div><b id="m">00</b><small>MIN</small></div>
+      <div><b id="s">00</b><small>SEG</small></div>
+    </div>
+  </div>
+
+  <!-- ===== PACKS ===== -->
+  <section id="chances">
+    <h2>Elegí tus chances</h2>
+    <p class="bajada">Cuantas más chances, más números para ganar.</p>
+
+    <div class="packs">
+      <button class="pack pack-destacado" data-c="30" data-p="38.000" aria-pressed="true">
+        <span class="pack-cinta">⭐ La más elegida · Ahorrás $38.000</span>
+        <span class="pack-cantidad">30 chances</span>
+        <s>$76.000</s>
+        <b>$38.000</b>
+        <span class="pack-unitario">$1.267 por chance</span>
+      </button>
+      <button class="pack" data-c="1" data-p="5.000" aria-pressed="false">
+        <span class="pack-cantidad">1 chance</span><s>$10.000</s><b>$5.000</b>
+        <span class="pack-unitario">$5.000 c/u</span>
+      </button>
+      <button class="pack" data-c="3" data-p="10.000" aria-pressed="false">
+        <span class="pack-cantidad">3 chances</span><s>$20.000</s><b>$10.000</b>
+        <span class="pack-unitario">$3.333 c/u</span>
+      </button>
+      <button class="pack" data-c="10" data-p="18.000" aria-pressed="false">
+        <span class="pack-cantidad">10 chances</span><s>$36.000</s><b>$18.000</b>
+        <span class="pack-unitario">$1.800 c/u</span>
+      </button>
+      <button class="pack" data-c="50" data-p="50.000" aria-pressed="false">
+        <span class="pack-cantidad">50 chances</span><s>$100.000</s><b>$50.000</b>
+        <span class="pack-unitario">$1.000 c/u</span>
+      </button>
+      <button class="pack pack-destacado" data-c="100" data-p="75.000" aria-pressed="false" style="padding-top:16px">
+        <span class="pack-cantidad">👑 100 chances</span><s>$150.000</s><b>$75.000</b>
+        <span class="pack-unitario">$750 por chance · el mejor precio</span>
+      </button>
+    </div>
+
+    <div class="clave">
+      <input placeholder="¿Tenés palabra clave?" aria-label="Palabra clave">
+      <button type="button">Aplicar</button>
+    </div>
+
+    <p class="seguro"><span>🔒 Pago por transferencia</span><span>🇦🇷 Todo el país</span></p>
+  </section>
+
+  <!-- ===== PASOS ===== -->
+  <section>
+    <h2>¿Cómo participo?</h2>
+    <p class="bajada">Tarda menos de 2 minutos.</p>
+    <div class="pasos">
+      <div><b>1</b>Elegí tus chances</div>
+      <div><b>2</b>Transferí y subí el comprobante</div>
+      <div><b>3</b>Recibí tus números</div>
+    </div>
+  </section>
+
+  <!-- ===== GANADORES ===== -->
+  <section>
+    <h2>Ganadores reales</h2>
+    <div class="contador-ganadores"><b>+70</b><span>personas ya ganaron motos, iPhones, PlayStation y efectivo en nuestros sorteos.</span></div>
+
+    <div class="ganador"><img src="../assets/ganadores/falcon-fazzari.jpg" alt=""><div><strong>@fazzari_motos</strong><span class="verificado">✔ Entregado</span><p class="premio">Honda Falcon 400</p><p>📍 Santa Fe · Septiembre 2026</p></div></div>
+    <div class="ganador"><img src="../assets/ganadores/titan-1.jpg" alt=""><div><strong>@diego_aguirrec</strong><span class="verificado">✔ Entregado</span><p class="premio">Honda Titan 283cc</p><p>📍 Lobería, Buenos Aires · Agosto 2026</p></div></div>
+    <div class="ganador"><img src="../assets/ganadores/tornado250-eraso.jpg" alt=""><div><strong>@fran_eraso</strong><span class="verificado">✔ Entregado</span><p class="premio">Honda Tornado 250</p><p>📍 Lobería, Buenos Aires · Julio 2026</p></div></div>
+    <div class="ganador"><img src="../assets/ganadores/ktm.jpg" alt=""><div><strong>@diegonicolas.c</strong><span class="verificado">✔ Entregado</span><p class="premio">KTM 390</p><p>📍 Mar del Plata · Noviembre 2025</p></div></div>
+  </section>
+
+  <!-- ===== PREGUNTAS ===== -->
+  <section>
+    <h2>Preguntas frecuentes</h2>
+    <details open><summary>Ya compré, ¿cómo sé si estoy participando?</summary><p>Si pudiste subir el comprobante, ya estás participando. Tus números aparecen en minutos (a veces unas horas) cuando se aprueba el pago.</p></details>
+    <details><summary>¿Puedo comprar más de una vez?</summary><p>Sí, las veces que quieras. Tus números se acumulan con tu DNI.</p></details>
+    <details><summary>Si gano, ¿cómo recibo la moto?</summary><p>Primero se pone a tu nombre y después coordinamos la entrega en todo el país.</p></details>
+  </section>
+
+  <p class="pie">Términos y condiciones · © 2026 Ojeda Preparación</p>
+
+</main>
+
+<!-- ===== BARRA FIJA ===== -->
+<div class="barra">
+  <div class="contenedor">
+    <div class="barra-info"><span id="barraC">30 chances</span><b>$<span id="barraP">38.000</span></b></div>
+    <a class="boton" href="#chances">Participar</a>
+  </div>
+</div>
+
+<script>
+  // ==================================================
+  // Cuenta regresiva y elección de pack (solo boceto)
+  // ==================================================
+  const cierre = new Date("2026-11-13T21:30:00-03:00");
+  const dosDig = (n) => String(n).padStart(2, "0");
+
+  function tick() {
+    const ms = Math.max(0, cierre - new Date());
+    const d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24,
+          m = Math.floor(ms / 6e4) % 60, s = Math.floor(ms / 1e3) % 60;
+    document.getElementById("d").textContent = dosDig(d);
+    document.getElementById("h").textContent = dosDig(h);
+    document.getElementById("m").textContent = dosDig(m);
+    document.getElementById("s").textContent = dosDig(s);
+    document.getElementById("urgencia").textContent = `${d}d ${dosDig(h)}h`;
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  document.querySelectorAll(".pack").forEach((p) => {
+    p.addEventListener("click", () => {
+      document.querySelectorAll(".pack").forEach((x) => x.setAttribute("aria-pressed", "false"));
+      p.setAttribute("aria-pressed", "true");
+      document.getElementById("barraC").textContent =
+        p.dataset.c + (p.dataset.c === "1" ? " chance" : " chances");
+      document.getElementById("barraP").textContent = p.dataset.p;
+    });
+  });
+</script>
+
+</body>
+</html>
