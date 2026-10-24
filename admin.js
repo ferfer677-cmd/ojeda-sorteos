@@ -2034,6 +2034,33 @@ if (borrarTodo) {
     "click",
     async () => {
 
+      // Antes de borrar: guardar los compradores para Meta
+      // (después del borrado ya no se pueden recuperar)
+      if (
+        confirm(
+          "Antes de borrar: ¿querés descargar los compradores para Meta?
+
+" +
+          "Aceptar = descargar el archivo ahora
+" +
+          "Cancelar = seguir sin descargar"
+        )
+      ) {
+
+        try {
+          await exportarParaMeta();
+        } catch (error) {
+          alert(
+            "❌ No se pudo exportar para Meta, así que no se borra nada.
+
+" +
+            error.message
+          );
+          return;
+        }
+
+      }
+
       const texto =
         prompt(
           "Escribí BORRAR para eliminar TODOS los participantes."
@@ -2620,6 +2647,84 @@ function celdaCsv(valor) {
 }
 
 
+// Descarga el CSV. Devuelve true si se descargó.
+async function exportarParaMeta() {
+
+  const participantes =
+    await obtenerParticipantes();
+
+  // Una persona = un DNI: se suma todo lo que gastó
+  const personas = new Map();
+
+  participantes.forEach(({ datos }) => {
+
+    if (datos.estado !== "Pagado") {
+      return;
+    }
+
+    const clave =
+      dniDe(datos) || telefonoParaMeta(datos.telefono);
+
+    if (!clave) {
+      return;
+    }
+
+    const persona =
+      personas.get(clave) || {
+        phone: telefonoParaMeta(datos.telefono),
+        fn: textoParaMeta(datos.nombre),
+        ln: textoParaMeta(datos.apellido),
+        country: "ar",
+        value: 0
+      };
+
+    persona.value += precioDeCompra(datos);
+
+    personas.set(clave, persona);
+
+  });
+
+  const filas =
+    [...personas.values()].filter((p) => p.phone || (p.fn && p.ln));
+
+  if (!filas.length) {
+    alert("No hay compras aprobadas para exportar.");
+    return false;
+  }
+
+  const columnas = ["phone", "fn", "ln", "country", "value"];
+
+  const csv = [
+    columnas.join(","),
+    ...filas.map((fila) => columnas.map((c) => celdaCsv(fila[c])).join(","))
+  ].join("\n");
+
+  const archivo =
+    new Blob([csv], { type: "text/csv;charset=utf-8" });
+
+  const enlace = document.createElement("a");
+  enlace.href = URL.createObjectURL(archivo);
+  enlace.download =
+    `meta-compradores-${new Date().toISOString().slice(0, 10)}.csv`;
+  enlace.click();
+  URL.revokeObjectURL(enlace.href);
+
+  const sinTelefono =
+    filas.filter((f) => !f.phone).length;
+
+  alert(
+    `✅ Archivo listo: ${filas.length} compradores.` +
+    (sinTelefono
+      ? `\n\n${sinTelefono} sin teléfono válido (van solo con nombre y apellido).`
+      : "") +
+    "\n\nSubilo en Meta → Públicos → tu público de compradores → Agregar clientes."
+  );
+
+  return true;
+
+}
+
+
 if (botonExportarMeta) {
 
   botonExportarMeta.addEventListener("click", async () => {
@@ -2628,74 +2733,7 @@ if (botonExportarMeta) {
 
     try {
 
-      const participantes =
-        await obtenerParticipantes();
-
-      // Una persona = un DNI: se suma todo lo que gastó
-      const personas = new Map();
-
-      participantes.forEach(({ datos }) => {
-
-        if (datos.estado !== "Pagado") {
-          return;
-        }
-
-        const clave =
-          dniDe(datos) || telefonoParaMeta(datos.telefono);
-
-        if (!clave) {
-          return;
-        }
-
-        const persona =
-          personas.get(clave) || {
-            phone: telefonoParaMeta(datos.telefono),
-            fn: textoParaMeta(datos.nombre),
-            ln: textoParaMeta(datos.apellido),
-            country: "ar",
-            value: 0
-          };
-
-        persona.value += precioDeCompra(datos);
-
-        personas.set(clave, persona);
-
-      });
-
-      const filas =
-        [...personas.values()].filter((p) => p.phone || (p.fn && p.ln));
-
-      if (!filas.length) {
-        alert("No hay compras aprobadas para exportar.");
-        return;
-      }
-
-      const columnas = ["phone", "fn", "ln", "country", "value"];
-
-      const csv = [
-        columnas.join(","),
-        ...filas.map((fila) => columnas.map((c) => celdaCsv(fila[c])).join(","))
-      ].join("\n");
-
-      const archivo =
-        new Blob([csv], { type: "text/csv;charset=utf-8" });
-
-      const enlace = document.createElement("a");
-      enlace.href = URL.createObjectURL(archivo);
-      enlace.download =
-        `meta-compradores-${new Date().toISOString().slice(0, 10)}.csv`;
-      enlace.click();
-      URL.revokeObjectURL(enlace.href);
-
-      const sinTelefono =
-        filas.filter((f) => !f.phone).length;
-
-      alert(
-        `✅ Archivo listo: ${filas.length} compradores.` +
-        (sinTelefono
-          ? `\n\n${sinTelefono} sin teléfono válido (van solo con nombre y apellido).`
-          : "")
-      );
+      await exportarParaMeta();
 
     } catch (error) {
 
