@@ -48,6 +48,24 @@ if (referido) {
 
 
 // ======================================================
+// PÍXEL DE META (Facebook / Instagram)
+// ======================================================
+// Avisa a Meta cuando alguien elige un pack (InitiateCheckout)
+// y cuando envía el comprobante (Purchase, con el monto),
+// para optimizar las campañas hacia compradores.
+
+function eventoMeta(evento, datos) {
+  try {
+    if (typeof window.fbq === "function") {
+      window.fbq("track", evento, { currency: "ARS", ...datos });
+    }
+  } catch (error) {
+    console.warn("No se pudo enviar el evento a Meta:", error);
+  }
+}
+
+
+// ======================================================
 // TODO EL SISTEMA
 // ======================================================
 
@@ -161,6 +179,15 @@ const preciosConDescuento = {
   50: 25000,
   100: 37500
 };
+
+// Precio del pack según si hay palabra clave activa
+function precioDelPack(chances) {
+  return (
+    descuentoPalabraClaveActivo
+      ? preciosConDescuento[chances]
+      : preciosNormales[chances]
+  ) || 0;
+}
 
 function actualizarPreciosDescuento() {
 
@@ -397,6 +424,12 @@ if (modal) {
   modal.classList.add("show");
   document.body.classList.add("modal-open");
 }
+
+            eventoMeta("InitiateCheckout", {
+              value: precioDelPack(cantidad),
+              num_items: cantidad,
+              content_name: `${cantidad} chances`
+            });
 
           }
         );
@@ -985,6 +1018,18 @@ multiplicadorPromo:
               );
 
             }
+
+
+            // ------------------------------------------
+            // PÍXEL DE META: COMPRA
+            // ------------------------------------------
+
+            eventoMeta("Purchase", {
+              value: precioDelPack(chancesSeleccionadas),
+              num_items: chancesSeleccionadas,
+              content_name: `${chancesSeleccionadas} chances`,
+              content_category: codigoPromoActivo || "sin clave"
+            });
 
 
             // ------------------------------------------

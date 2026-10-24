@@ -2565,3 +2565,150 @@ if (btnRevisarComprobantes && resultadoRevision) {
   );
 
 }
+
+
+// =====================================================
+// EXPORTAR PARA META (público personalizado)
+// =====================================================
+// Arma un CSV para subir en Meta → Públicos → Lista de clientes.
+// Solo pagos aprobados, una fila por persona (DNI) con el total
+// que gastó (value), así se puede crear un público similar
+// basado en valor. No incluye DNI ni Instagram.
+
+const botonExportarMeta =
+  document.getElementById("exportarMeta");
+
+
+// Teléfono argentino en formato internacional: 549 + área + número
+// ("2494 15 123456" → "5492494123456"). "" si no se puede armar.
+function telefonoParaMeta(telefono) {
+
+  let digitos =
+    String(telefono || "").replace(/\D/g, "");
+
+  if (digitos.startsWith("549")) {
+    digitos = digitos.slice(3);
+  } else if (digitos.startsWith("54")) {
+    digitos = digitos.slice(2);
+  }
+
+  digitos = digitos.replace(/^0+/, "");
+
+  // Sacar el "15" que va después del código de área
+  if (digitos.length === 12) {
+    for (const largoArea of [2, 3, 4]) {
+      if (digitos.substr(largoArea, 2) === "15") {
+        digitos = digitos.slice(0, largoArea) + digitos.slice(largoArea + 2);
+        break;
+      }
+    }
+  }
+
+  return digitos.length === 10 ? `549${digitos}` : "";
+
+}
+
+
+function textoParaMeta(texto) {
+  return String(texto || "").trim().toLowerCase();
+}
+
+
+function celdaCsv(valor) {
+  const texto = String(valor ?? "");
+  return /[",\n]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto;
+}
+
+
+if (botonExportarMeta) {
+
+  botonExportarMeta.addEventListener("click", async () => {
+
+    botonExportarMeta.disabled = true;
+
+    try {
+
+      const participantes =
+        await obtenerParticipantes();
+
+      // Una persona = un DNI: se suma todo lo que gastó
+      const personas = new Map();
+
+      participantes.forEach(({ datos }) => {
+
+        if (datos.estado !== "Pagado") {
+          return;
+        }
+
+        const clave =
+          dniDe(datos) || telefonoParaMeta(datos.telefono);
+
+        if (!clave) {
+          return;
+        }
+
+        const persona =
+          personas.get(clave) || {
+            phone: telefonoParaMeta(datos.telefono),
+            fn: textoParaMeta(datos.nombre),
+            ln: textoParaMeta(datos.apellido),
+            country: "ar",
+            value: 0
+          };
+
+        persona.value += precioDeCompra(datos);
+
+        personas.set(clave, persona);
+
+      });
+
+      const filas =
+        [...personas.values()].filter((p) => p.phone || (p.fn && p.ln));
+
+      if (!filas.length) {
+        alert("No hay compras aprobadas para exportar.");
+        return;
+      }
+
+      const columnas = ["phone", "fn", "ln", "country", "value"];
+
+      const csv = [
+        columnas.join(","),
+        ...filas.map((fila) => columnas.map((c) => celdaCsv(fila[c])).join(","))
+      ].join("\n");
+
+      const archivo =
+        new Blob([csv], { type: "text/csv;charset=utf-8" });
+
+      const enlace = document.createElement("a");
+      enlace.href = URL.createObjectURL(archivo);
+      enlace.download =
+        `meta-compradores-${new Date().toISOString().slice(0, 10)}.csv`;
+      enlace.click();
+      URL.revokeObjectURL(enlace.href);
+
+      const sinTelefono =
+        filas.filter((f) => !f.phone).length;
+
+      alert(
+        `✅ Archivo listo: ${filas.length} compradores.` +
+        (sinTelefono
+          ? `\n\n${sinTelefono} sin teléfono válido (van solo con nombre y apellido).`
+          : "")
+      );
+
+    } catch (error) {
+
+      console.error("ERROR EXPORTANDO PARA META:", error);
+
+      alert("❌ No se pudo exportar.\n\n" + error.message);
+
+    } finally {
+
+      botonExportarMeta.disabled = false;
+
+    }
+
+  });
+
+}
