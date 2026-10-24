@@ -129,10 +129,17 @@ if (successBtn && successModal) {
   let codigoPromoActivo = "";
 
   // ==================================================
-// DESCUENTO POR PALABRA CLAVE - 70% OFF ("ULTIMO", 16/10/2026)
+// DESCUENTO POR PALABRA CLAVE - 50% OFF (sorteo MT-07, 13/11/2026)
 // ==================================================
+// Las dos dan el mismo descuento. Cada una se anuncia en un portal
+// distinto: la compra guarda cuál se usó (codigoPromo) y el admin
+// muestra cuántas entradas trajo cada una.
+// "ULTIMO" (70% OFF) se dio de baja el 24/10/2026.
 
-const PALABRA_DESCUENTO = "ULTIMO";
+const PALABRAS_DESCUENTO = ["50", "MENOS"];
+
+// La palabra que activó el descuento ("" = sin descuento)
+let palabraClaveActiva = "";
 
 let descuentoPalabraClaveActivo = false;
 
@@ -145,14 +152,14 @@ const preciosNormales = {
   100: 75000
 };
 
-// 30% del precio normal (70% OFF)
+// Mitad del precio normal (50% OFF)
 const preciosConDescuento = {
-  1: 1500,
-  3: 3000,
-  10: 5400,
-  30: 11400,
-  50: 15000,
-  100: 22500
+  1: 2500,
+  3: 5000,
+  10: 9000,
+  30: 19000,
+  50: 25000,
+  100: 37500
 };
 
 function actualizarPreciosDescuento() {
@@ -210,16 +217,18 @@ if (btnAplicarDescuento) {
     // Los códigos "MITAD" (50% OFF) y "ENTERO" (oferta secreta)
     // se dieron de baja el 16/10/2026.
 
-    if (codigo === PALABRA_DESCUENTO) {
+    if (PALABRAS_DESCUENTO.includes(codigo)) {
+      palabraClaveActiva = codigo;
       descuentoPalabraClaveActivo = true;
       actualizarPreciosDescuento();
 
       if (mensaje) {
-        mensaje.innerText = "✅ ¡CÓDIGO ACTIVADO! TENÉS 70% OFF EN TODAS LAS CHANCES.";
-        mensaje.style.color = "#00ff66";
+        mensaje.innerText = "✅ ¡PALABRA CLAVE ACTIVADA! TENÉS 50% OFF EN TODAS LAS CHANCES.";
+        mensaje.style.color = "#008a43";
       }
 
     } else {
+      palabraClaveActiva = "";
       descuentoPalabraClaveActivo = false;
       actualizarPreciosDescuento();
 
@@ -227,7 +236,7 @@ if (btnAplicarDescuento) {
 
       if (mensaje) {
         mensaje.innerText = "❌ PALABRA CLAVE INCORRECTA.";
-        mensaje.style.color = "#ff3333";
+        mensaje.style.color = "#dc2626";
       }
     }
   });
@@ -370,10 +379,11 @@ ofertaEnteroOverlay?.addEventListener("click", (e) => {
             chancesSeleccionadas =
               cantidad;
 
-            codigoPromoActivo = "";
+            // La palabra clave queda guardada en la compra (codigoPromo)
+            codigoPromoActivo = palabraClaveActiva;
 
             packSeleccionado =
-              `${descuentoPalabraClaveActivo ? `${PALABRA_DESCUENTO} 70% OFF • ` : ""}${packName} • ${cantidad} CHANCE${cantidad === 1 ? "" : "S"} • ${packPrice}`;
+              `${descuentoPalabraClaveActivo ? `CLAVE ${palabraClaveActiva} 50% OFF • ` : ""}${packName} • ${cantidad} CHANCE${cantidad === 1 ? "" : "S"} • ${packPrice}`;
 
 
             if (selectedPack) {
@@ -1110,10 +1120,12 @@ multiplicadorPromo:
 
 
     // ==================================================
-    // NOTIFICACIONES EN VIVO
+    // NOTIFICACIONES EN VIVO ("Fulano compró...")
     // ==================================================
+    // Desactivadas el 24/10/2026 (página más limpia).
+    // Para volver a mostrarlas, descomentar la línea.
 
-    iniciarNotificacionesEnVivo();
+    // iniciarNotificacionesEnVivo();
 
   }
 );

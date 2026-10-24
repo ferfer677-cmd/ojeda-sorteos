@@ -87,6 +87,9 @@ const statPendientes =
 const statPagados =
   document.getElementById("statPagados");
 
+const statClaves =
+  document.getElementById("statClaves");
+
 const aprobarTodos =
   document.getElementById("aprobarTodos");
 
@@ -1019,12 +1022,22 @@ async function cargarParticipantes(
 
     let porAprobar = 0;
 
+    // Entradas por palabra clave (de qué portal vino cada compra)
+    const porPalabraClave = {};
+
 
     participantes.forEach(
       ({ datos }) => {
 
         const precio =
           precioDeCompra(datos);
+
+        const clave =
+          (datos.codigoPromo || "").toString().trim().toUpperCase();
+
+        if (clave) {
+          porPalabraClave[clave] = (porPalabraClave[clave] || 0) + 1;
+        }
 
         if (datos.estado === "Pagado") {
           recaudacion += precio;
@@ -1222,6 +1235,12 @@ async function cargarParticipantes(
             <h3>${esc(datos.nombre)} ${esc(datos.apellido)}</h3>
 
             <p class="card-pack">${esc(datos.pack) || "-"}</p>
+
+            ${
+              datos.codigoPromo
+                ? `<span class="card-clave">🔑 Palabra clave: ${esc(datos.codigoPromo)}</span>`
+                : ""
+            }
 
             <dl class="card-datos">
               <div><dt>DNI</dt><dd>${esc(datos.dni) || "-"}${datos.dniNormalizado ? "" : " ⚠️"}</dd></div>
@@ -1649,6 +1668,27 @@ await actualizarConsulta(
         porAprobar > 0
           ? `+ $${porAprobar.toLocaleString("es-AR")} por aprobar`
           : "Nada por aprobar";
+
+    }
+
+
+    if (statClaves) {
+
+      const claves =
+        Object.entries(porPalabraClave)
+          .sort((a, b) => b[1] - a[1]);
+
+      const sinClave =
+        participantes.length -
+        claves.reduce((n, [, cantidad]) => n + cantidad, 0);
+
+      statClaves.textContent =
+        claves.length
+          ? [
+              ...claves.map(([clave, cantidad]) => `"${clave}": ${cantidad}`),
+              `sin clave: ${sinClave}`
+            ].join(" · ")
+          : "Todavía nadie usó una palabra clave";
 
     }
 

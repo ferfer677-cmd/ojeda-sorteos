@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="admin.css?v=2">
+<link rel="stylesheet" href="admin.css?v=3">
 </head>
 
 <body>
@@ -71,6 +71,11 @@
         <b id="totalParticipantes">0</b>
       </div>
 
+      <div class="stat stat-claves">
+        <small>🔑 Compras por palabra clave (de dónde entraron)</small>
+        <span id="statClaves">-</span>
+      </div>
+
     </section>
 
 
@@ -123,7 +128,7 @@
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-<script type="module" src="admin.js?v=6"></script>
+<script type="module" src="admin.js?v=7"></script>
 
 <!-- Pestañas Pendientes / Aprobados -->
 <script>

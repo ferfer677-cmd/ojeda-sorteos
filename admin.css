@@ -159,6 +159,27 @@ button:disabled { opacity: .6; cursor: wait; }
 
 .stat-plata b { color: var(--verde-osc); }
 
+.stat-claves { grid-column: 1 / -1; }
+
+.stat-claves span {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--texto);
+}
+
+.card-clave {
+  display: inline-block;
+  margin: -4px 0 8px;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 6px;
+}
+
 
 /* ===== Acciones ===== */
 
