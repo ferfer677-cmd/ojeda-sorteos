@@ -78,6 +78,15 @@ const totalParticipantes =
 const recaudacionTotal =
   document.getElementById("recaudacionTotal");
 
+const recaudacionPendiente =
+  document.getElementById("recaudacionPendiente");
+
+const statPendientes =
+  document.getElementById("statPendientes");
+
+const statPagados =
+  document.getElementById("statPagados");
+
 const aprobarTodos =
   document.getElementById("aprobarTodos");
 
@@ -883,6 +892,74 @@ function mostrarFecha(
 
 
 // =====================================================
+// TEXTO SEGURO
+// =====================================================
+// Los datos los escribe el comprador: se muestran como texto,
+// nunca como HTML (así nadie puede meter código en el panel).
+
+function esc(valor) {
+  return String(valor ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+
+// =====================================================
+// PRECIO DE UNA COMPRA
+// =====================================================
+// El precio real con el que se compró (queda escrito en "pack");
+// si no, precioFinal; si no, por cantidad de chances.
+
+function precioDeCompra(datos) {
+
+  let precio = 0;
+
+  // Precio que quedó guardado dentro del pack. Ejemplos:
+  // "50 CHANCES • $35.000"
+  // "PROMO EXCLUSIVA • 50 CHANCES • $11.999"
+  if (datos.pack) {
+
+    const coincidenciaPrecio =
+      datos.pack.toString().match(/\$\s*([\d.]+)/);
+
+    if (coincidenciaPrecio) {
+      precio = Number(coincidenciaPrecio[1].replace(/\./g, ""));
+    }
+
+  }
+
+  // Si el pack no tenía el precio escrito, usa precioFinal
+  if (!precio || !Number.isFinite(precio)) {
+    precio = Number(datos.precioFinal) > 0
+      ? Number(datos.precioFinal)
+      : 0;
+  }
+
+  // Respaldo para promociones viejas
+  if (!precio && datos.codigoPromo === "SUPER50") {
+    precio = 11999;
+  }
+
+  if (!precio && datos.codigoPromo === "SUPER100") {
+    precio = 14999;
+  }
+
+  // Último respaldo: por cantidad de chances
+  if (!precio) {
+    precio = precioPorChances(
+      Number(datos.chancesFinales) || cantidadPorPack(datos.pack)
+    );
+  }
+
+  return precio;
+
+}
+
+
+// =====================================================
 // CARGAR PARTICIPANTES
 // =====================================================
 
@@ -935,109 +1012,24 @@ async function cargarParticipantes(
 
 
     // =================================================
-    // RECAUDACIÓN TOTAL
-    // SOLO PAGOS APROBADOS
+    // RECAUDACIÓN: APROBADOS Y POR APROBAR
     // =================================================
 
     let recaudacion = 0;
 
+    let porAprobar = 0;
+
 
     participantes.forEach(
-      (participante) => {
+      ({ datos }) => {
 
-        const datos =
-          participante.datos;
+        const precio =
+          precioDeCompra(datos);
 
-
-        if (
-          datos.estado === "Pagado"
-        ) {
-
-      let precio = 0;
-
-// =============================================
-// PRECIO REAL DE LA COMPRA
-// =============================================
-
-if (datos.pack) {
-
-  const textoPack = datos.pack.toString();
-
-  // Busca el precio que quedó guardado dentro del pack.
-  // Ejemplo:
-  // "50 CHANCES • $35.000"
-  // "50 CHANCES • $14.000"
-  // "PROMO EXCLUSIVA • 50 CHANCES • $11.999"
-
-  const coincidenciaPrecio =
-    textoPack.match(/\$\s*([\d.]+)/);
-
-  if (coincidenciaPrecio) {
-
-    precio = Number(
-      coincidenciaPrecio[1]
-        .replace(/\./g, "")
-    );
-
-  }
-
-}
-
-// Si el pack no tenía el precio escrito,
-// usa precioFinal guardado en Firebase.
-
-if (
-  !precio ||
-  !Number.isFinite(precio)
-) {
-
-  if (
-    Number(datos.precioFinal) > 0
-  ) {
-
-    precio =
-      Number(datos.precioFinal);
-
-  }
-
-}
-
-// Último respaldo para promociones.
-
-if (
-  !precio &&
-  datos.codigoPromo === "SUPER50"
-) {
-
-  precio = 11999;
-
-}
-
-if (
-  !precio &&
-  datos.codigoPromo === "SUPER100"
-) {
-
-  precio = 14999;
-
-}
-
-// Último respaldo por cantidad de chances.
-
-if (!precio) {
-
-  const chances =
-    Number(datos.chancesFinales) ||
-    cantidadPorPack(datos.pack);
-
-  precio =
-    precioPorChances(chances);
-
-}
-
-recaudacion += precio;
-
-
+        if (datos.estado === "Pagado") {
+          recaudacion += precio;
+        } else {
+          porAprobar += precio;
         }
 
       }
@@ -1197,159 +1189,65 @@ recaudacion += precio;
 
 
         card.className =
-          "card";
+          `card ${datos.estado === "Pagado" ? "card-pagado" : "card-pendiente"}`;
 
+
+        // Comprobante: miniatura (imagen) o link (PDF)
+        const url =
+          datos.comprobanteURL
+            ? esc(datos.comprobanteURL)
+            : "";
+
+        const esPdf =
+          /\.pdf($|\?)/i.test(datos.comprobantePath || datos.comprobanteURL || "");
+
+        const comprobanteHTML =
+          !url
+            ? `<div class="card-comprobante sin">📄<br>Sin comprobante</div>`
+            : esPdf
+              ? `<a class="card-comprobante pdf" href="${url}" target="_blank" rel="noopener">📄<br>Ver PDF</a>`
+              : `<a class="card-comprobante" href="${url}" target="_blank" rel="noopener" title="Ver en grande">
+                   <img src="${url}" alt="Comprobante" loading="lazy">
+                 </a>`;
+
+        const instagram =
+          (datos.instagram || "").toString().replace(/^@+/, "").trim();
 
         card.innerHTML = `
 
-        <h3>
-  ${datos.nombre || ""}
-  ${datos.apellido || ""}
-</h3>
+          ${comprobanteHTML}
 
-<p>
-  <strong>DNI:</strong>
-  ${datos.dni || "-"}
-</p>
+          <div class="card-info">
 
-<p>
-  <strong>DNI NORMALIZADO:</strong>
-  ${datos.dniNormalizado || "❌ NO EXISTE"}
-</p>
+            <h3>${esc(datos.nombre)} ${esc(datos.apellido)}</h3>
 
-          <p>
-            <strong>Teléfono:</strong>
-            ${datos.telefono || "-"}
-          </p>
+            <p class="card-pack">${esc(datos.pack) || "-"}</p>
 
-          <p>
-            <strong>Instagram:</strong>
-            ${datos.instagram || "-"}
-          </p>
+            <dl class="card-datos">
+              <div><dt>DNI</dt><dd>${esc(datos.dni) || "-"}${datos.dniNormalizado ? "" : " ⚠️"}</dd></div>
+              <div><dt>Teléfono</dt><dd>${esc(datos.telefono) || "-"}</dd></div>
+              <div><dt>Instagram</dt><dd>${
+                instagram
+                  ? `<a href="https://instagram.com/${encodeURIComponent(instagram)}" target="_blank" rel="noopener">@${esc(instagram)}</a>`
+                  : "-"
+              }</dd></div>
+              <div><dt>Chances</dt><dd>${esc(datos.chancesFinales) || 0}</dd></div>
+              <div><dt>Fecha</dt><dd>${esc(mostrarFecha(datos.fecha))}</dd></div>
+            </dl>
 
-          <p>
-            <strong>Pack:</strong>
-            ${datos.pack || "-"}
-          </p>
+            <p class="card-numeros"><strong>Números:</strong> ${esc(numerosHTML)}</p>
 
-          <p>
-            <strong>Chances:</strong>
-            ${datos.chancesFinales || 0}
-          </p>
-
-          <p>
-            <strong>Estado:</strong>
-            ${datos.estado || "-"}
-          </p>
-
-          <p>
-            <strong>Fecha:</strong>
-            ${mostrarFecha(datos.fecha)}
-          </p>
-
-          <p>
-            <strong>Números:</strong><br>
-            ${numerosHTML}
-          </p>
-
-
-          ${
-            datos.comprobanteURL
-
-            ? `
-
-              <div class="comprobante-admin">
-
-                <p>
-                  <strong>
-                    📄 COMPROBANTE
-                  </strong>
-                </p>
-
-                <a
-                  href="${datos.comprobanteURL}"
-                  target="_blank"
-                  rel="noopener"
-                >
-
-                  <img
-                    src="${datos.comprobanteURL}"
-                    alt="Comprobante"
-                    class="comprobante-preview"
-                    loading="lazy"
-                    style="
-                      display:block;
-                      width:260px;
-                      height:300px;
-                      max-width:260px;
-                      max-height:300px;
-                      object-fit:cover;
-                      margin:10px auto;
-                      border-radius:8px;
-                      cursor:pointer;
-                    "
-                  >
-
-                </a>
-
-                <p>
-
-                  <a
-                    href="${datos.comprobanteURL}"
-                    target="_blank"
-                    rel="noopener"
-                  >
-                    🔍 VER EN GRANDE
-                  </a>
-
-                </p>
-
-              </div>
-
-            `
-
-            : `
-
-              <p>
-                📄 Sin comprobante
-              </p>
-
-            `
-          }
-
+          </div>
 
           <div class="admin-actions">
 
             ${
               datos.estado !== "Pagado"
-
-              ? `
-
-                <button
-                  class="aprobar-btn"
-                  type="button"
-                >
-                  ✅ APROBAR PAGO
-                </button>
-
-              `
-
-              : `
-
-                <p>
-                  ✅ PAGO APROBADO
-                </p>
-
-              `
+                ? `<button class="aprobar-btn" type="button">✅ APROBAR PAGO</button>`
+                : `<span class="aprobado-sello">✅ Aprobado</span>`
             }
 
-
-            <button
-              class="eliminar-btn"
-              type="button"
-            >
-              🗑 ELIMINAR
-            </button>
+            <button class="eliminar-btn" type="button">🗑 Eliminar</button>
 
           </div>
 
@@ -1712,7 +1610,7 @@ await actualizarConsulta(
     if (tituloPendientes) {
 
       tituloPendientes.textContent =
-        `PAGOS PENDIENTES (${cantidadPendientes})`;
+        `Pendientes (${cantidadPendientes})`;
 
     }
 
@@ -1720,21 +1618,15 @@ await actualizarConsulta(
     if (tituloPagados) {
 
       tituloPagados.textContent =
-        `PAGOS APROBADOS (${cantidadPagados})`;
+        `Aprobados (${cantidadPagados})`;
 
     }
 
 
     if (totalParticipantes) {
 
-      totalParticipantes.innerHTML = `
-
-        <div>
-          PARTICIPANTES ÚNICOS:
-          ${dniUnicos.size}
-        </div>
-
-      `;
+      totalParticipantes.textContent =
+        dniUnicos.size.toLocaleString("es-AR");
 
     }
 
@@ -1745,14 +1637,31 @@ await actualizarConsulta(
 
     if (recaudacionTotal) {
 
-      recaudacionTotal.innerHTML = `
+      recaudacionTotal.textContent =
+        `$${recaudacion.toLocaleString("es-AR")}`;
 
-        <div>
-          💰 RECAUDACIÓN:
-          $${recaudacion.toLocaleString("es-AR")}
-        </div>
+    }
 
-      `;
+
+    if (recaudacionPendiente) {
+
+      recaudacionPendiente.textContent =
+        porAprobar > 0
+          ? `+ $${porAprobar.toLocaleString("es-AR")} por aprobar`
+          : "Nada por aprobar";
+
+    }
+
+
+    // Totales (sin el filtro del buscador)
+    if (statPendientes) {
+      statPendientes.textContent =
+        participantes.filter(({ datos }) => datos.estado !== "Pagado").length;
+    }
+
+    if (statPagados) {
+      statPagados.textContent =
+        participantes.filter(({ datos }) => datos.estado === "Pagado").length;
 
     }
 
@@ -2433,8 +2342,7 @@ function mostrarRevision(todos, total) {
   const caja =
     document.createElement("div");
 
-  caja.style.cssText =
-    "margin:16px 0;padding:14px;border:1px solid #444;border-radius:12px;background:#151515;text-align:left;";
+  caja.className = "revision-caja";
 
   const titulo =
     document.createElement("h3");
@@ -2458,8 +2366,7 @@ function mostrarRevision(todos, total) {
     const fila =
       document.createElement("div");
 
-    fila.style.cssText =
-      "padding:8px 0;border-top:1px solid #2a2a2a;font-size:14px;";
+    fila.className = "revision-fila";
 
     const linea1 =
       document.createElement("div");
@@ -2472,7 +2379,7 @@ function mostrarRevision(todos, total) {
     const linea2 =
       document.createElement("div");
 
-    linea2.style.color = "#aaa";
+    linea2.className = "revision-detalle";
 
     linea2.textContent =
       `DNI ${datos.dni || "-"} · ${datos.estado || "-"} · ${datos.pack || "-"}`;
@@ -2501,13 +2408,11 @@ function mostrarRevision(todos, total) {
     const detalle =
       document.createElement("details");
 
-    detalle.style.cssText =
-      "margin-top:14px;padding-top:10px;border-top:1px solid #444;";
+    detalle.className = "revision-sin-ruta";
 
     const resumen =
       document.createElement("summary");
 
-    resumen.style.cssText = "cursor:pointer;font-weight:700;";
 
     const pagadas =
       sinRuta.filter((p) => p.datos.estado === "Pagado").length;
@@ -2522,8 +2427,7 @@ function mostrarRevision(todos, total) {
       const fila =
         document.createElement("div");
 
-      fila.style.cssText =
-        "padding:6px 0;border-top:1px solid #2a2a2a;font-size:13px;";
+      fila.className = "revision-fila chica";
 
       fila.textContent =
         `${datos.nombre || ""} ${datos.apellido || ""} · DNI ${datos.dni || "-"} · ${datos.estado || "-"} · ${datos.pack || "-"} `;
@@ -2534,7 +2438,6 @@ function mostrarRevision(todos, total) {
         link.target = "_blank";
         link.rel = "noopener";
         link.textContent = "ver comprobante";
-        link.style.color = "#ffcc00";
         fila.appendChild(link);
       }
 
@@ -2549,8 +2452,8 @@ function mostrarRevision(todos, total) {
   const cerrar =
     document.createElement("button");
 
-  cerrar.textContent = "CERRAR";
-  cerrar.style.marginTop = "10px";
+  cerrar.textContent = "Cerrar";
+  cerrar.className = "boton-sec";
   cerrar.addEventListener("click", () => {
     resultadoRevision.innerHTML = "";
   });

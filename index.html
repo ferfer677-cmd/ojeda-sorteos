@@ -9,9 +9,20 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>Ojeda Preparación | Sorteo</title>
+  <title>Sorteo Yamaha MT-07 | Ojeda Preparación</title>
 
-  <link rel="stylesheet" href="style.css?v=20261101">
+  <meta
+    name="description"
+    content="Sorteo en vivo de una Yamaha MT-07 a nivel país. Participá desde $5.000. +70 ganadores reales."
+  >
+
+  <meta name="theme-color" content="#0f172a">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="estilo.css?v=1">
 
   <!-- META PIXEL -->
   <script>
@@ -39,330 +50,272 @@
 
 <body>
 
-  <!-- NOTIFICACIONES DE COMPRAS -->
+<!-- ==================================================
+     AVISO DE COMPRA RECIENTE (lo maneja script.js)
+================================================== -->
+
 <div id="purchaseNotification" class="purchase-notification">
 
-  <div class="purchase-notification-icon">
-    🎟️
-  </div>
+  <div class="purchase-notification-icon">🎟️</div>
 
   <div class="purchase-notification-content">
-
-    <strong id="purchaseNotificationName">
-      Nueva compra
-    </strong>
-
-    <span id="purchaseNotificationPack">
-      Compró chances
-    </span>
-
-    <small>
-      Hace unos segundos
-    </small>
-
-  </div>
-
-</div>
-
-<!-- ==================================================
-     MENU / BARRA SUPERIOR
-================================================== -->
-
-<div class="top-ticker">
-
-  <div class="ticker-track">
-
-    <span>
-      🏍️ OJEDA PREPARACIÓN • +60 GANADORES REALES •
-      🔥 SORTEOS EN VIVO • 📲 INSTAGRAM OFICIAL •
-    </span>
-
-    <span>
-      🏍️ OJEDA PREPARACIÓN • +60 GANADORES REALES •
-      🔥 SORTEOS EN VIVO • 📲 INSTAGRAM OFICIAL •
-    </span>
-
+    <strong id="purchaseNotificationName">Nueva compra</strong>
+    <span id="purchaseNotificationPack">Compró chances</span>
+    <small>Hace unos segundos</small>
   </div>
 
 </div>
 
 
 <!-- ==================================================
-     HERO
+     CABECERA
 ================================================== -->
 
-<section class="hero">
+<header class="cabecera">
+  <img src="assets/logo.png" alt="Ojeda Preparación" width="1021" height="178">
+</header>
 
- 
+<!-- El texto lo actualiza el script del final según OJEDA_CIERRE -->
+<div class="aviso" id="avisoSuperior">
+  🔥 Sorteo en vivo · Participá desde $5.000
+</div>
 
 
-  <!-- =================================================
-       CARRUSEL DE BANNERS (fotos reales + textos en código)
-       Para cambiar fecha o textos, editar acá.
-       Pasa solo cada 3 s (banner-carrusel.js).
-  ================================================== -->
-  <div class="banner-carrusel" aria-roledescription="carrusel" aria-label="Sorteo Yamaha MT-07">
+<main class="contenedor">
 
-    <div class="banner-pista">
+<!-- ==================================================
+     PREMIO (tarjeta principal)
+     Fecha y textos: editar acá. Fotos: OJEDA_FOTOS en carteles.js
+================================================== -->
 
-      <!-- Banners hechos con IA (ChatGPT). Para el próximo sorteo,
-           reemplazar las imágenes en assets/ (1600x900 y 800x450). -->
+<article class="producto">
 
-      <div class="banner banner-imagen" aria-roledescription="diapositiva" aria-label="1 de 4">
-        <img src="assets/banner-ia-1-premio-800.jpg"
-             srcset="assets/banner-ia-1-premio-800.jpg 800w, assets/banner-ia-1-premio.jpg 1600w"
-             sizes="(max-width: 900px) 100vw, 900px"
-             width="1600" height="900"
-             fetchpriority="high"
-             alt="Sorteo Yamaha MT-07. El ganador elige original o enfierrada. Viernes 16/10, 22 hs. A nivel país.">
-      </div>
+  <a class="producto-foto" href="#premios" aria-label="Ver todas las fotos del premio">
+    <img
+      id="premioFoto"
+      src="assets/premios/IMG_3948.jpeg"
+      alt="Yamaha MT-07 del sorteo"
+      width="400"
+      height="400"
+      fetchpriority="high"
+    >
+    <span class="etiqueta-vivo">● Sorteo en vivo</span>
+    <span class="etiqueta-fotos">📷 Ver fotos</span>
+  </a>
 
-      <div class="banner banner-imagen" aria-roledescription="diapositiva" aria-label="2 de 4">
-        <img src="assets/banner-ia-2-pais-800.jpg"
-             srcset="assets/banner-ia-2-pais-800.jpg 800w, assets/banner-ia-2-pais.jpg 1600w"
-             sizes="(max-width: 900px) 100vw, 900px"
-             width="1600" height="900"
-             loading="lazy"
-             alt="Sorteo a nivel país. Participá desde cualquier provincia. Transferencia incluida.">
-      </div>
+  <div class="producto-cuerpo">
 
-      <div class="banner banner-imagen" aria-roledescription="diapositiva" aria-label="3 de 4">
-        <img src="assets/banner-ia-3-envivo-800.jpg"
-             srcset="assets/banner-ia-3-envivo-800.jpg 800w, assets/banner-ia-3-envivo.jpg 1600w"
-             sizes="(max-width: 900px) 100vw, 900px"
-             width="1600" height="900"
-             loading="lazy"
-             alt="No te lo pierdas: sorteo en vivo el viernes 16 de octubre a las 22 hs en Instagram @sorteo_ojeda_.">
-      </div>
+    <h1>Sorteo Yamaha MT-07</h1>
 
-      <div class="banner banner-imagen" aria-roledescription="diapositiva" aria-label="4 de 4">
-        <img src="assets/banner-ia-4-precio-800.jpg"
-             srcset="assets/banner-ia-4-precio-800.jpg 800w, assets/banner-ia-4-precio.jpg 1600w"
-             sizes="(max-width: 900px) 100vw, 900px"
-             width="1600" height="900"
-             loading="lazy"
-             alt="Participá desde $5.000. Cuantas más chances, más posibilidades. Comprá todas las veces que quieras.">
-      </div>
+    <p class="producto-sub">Sorteo a nivel país · Ojeda Preparación</p>
 
+    <div class="precio-linea">
+      <b>Desde $5.000</b>
+      <s>$10.000</s>
     </div>
 
-    <div class="banner-puntos" role="tablist" aria-label="Elegir banner">
-      <button type="button" aria-label="Banner 1"></button>
-      <button type="button" aria-label="Banner 2"></button>
-      <button type="button" aria-label="Banner 3"></button>
-      <button type="button" aria-label="Banner 4"></button>
-    </div>
+    <span class="descuento">50% OFF en todos los packs</span>
+
+    <ul class="datos">
+      <li>
+        <span aria-hidden="true">📅</span>
+        <div>
+          Viernes 13 de noviembre, 22:00 hs
+          <small>En vivo por Instagram @sorteo_ojeda_</small>
+        </div>
+      </li>
+      <li>
+        <span aria-hidden="true">📄</span>
+        <div>
+          Transferencia de la moto incluida
+          <small>La retirás en Tandil o coordinamos la entrega</small>
+        </div>
+      </li>
+      <li>
+        <span aria-hidden="true">🏆</span>
+        <div>
+          <span class="ganadores-total">+70</span> ganadores reales
+          <small>Todos etiquetados en Instagram</small>
+        </div>
+      </li>
+    </ul>
+
+    <a href="#chances" class="boton participar-btn">🎟️ Elegir mis chances</a>
+
+    <a href="#numeros" class="boton-sec consultar-btn">Ya compré: ver mis números</a>
 
   </div>
 
-  <p class="hero-subtitle">🏆 Sorteo en vivo · Participás desde $5.000</p>
+</article>
 
-  <a href="#chances" class="cta-btn participar-btn">🎟️ QUIERO MI MT-07</a>
 
-  <p class="countdown-label" id="countdownLabel">⏳ EL SORTEO EN VIVO EMPIEZA EN</p>
+<!-- ==================================================
+     CUENTA REGRESIVA (la maneja script.js)
+================================================== -->
+
+<div class="cuenta">
+
+  <p class="countdown-label" id="countdownLabel">⏳ SE CIERRAN LAS COMPRAS EN</p>
 
   <div class="countdown" id="countdown">
     <div class="time-box"><span id="days">00</span><small>DÍAS</small></div>
     <div class="time-box"><span id="hours">00</span><small>HORAS</small></div>
-    <div class="time-box"><span id="minutes">00</span><small>MINUTOS</small></div>
-    <div class="time-box"><span id="seconds">00</span><small>SEGUNDOS</small></div>
+    <div class="time-box"><span id="minutes">00</span><small>MIN</small></div>
+    <div class="time-box"><span id="seconds">00</span><small>SEG</small></div>
   </div>
 
-  <p class="draw-date">🏆 VIERNES 16 DE OCTUBRE — 22:00 HS</p>
+  <p class="draw-date">🔒 Cierre de compras: viernes 13/11 · 21:30 hs</p>
 
-  <a href="#numeros" class="cta-btn consultar-btn">YA COMPRÉ: VER MIS NÚMEROS</a>
+</div>
 
-</section>
 
-<!-- ===============================================
-===
-     DESCUENTO POR PALABRA CLAVE
+<!-- ==================================================
+     PACKS
+     Precios: preciosNormales en script.js (y admin.js)
 ================================================== -->
-
-<!-- Código activo: "ULTIMO" (70% OFF), ver PALABRA_DESCUENTO en script.js -->
-<section class="palabra-clave">
-
-  <p class="palabra-clave-titulo">
-    🔑 ¿Tenés palabra clave? <strong>70% OFF</strong> en todas las chances
-  </p>
-
-  <div class="palabra-clave-form">
-
-    <input
-      type="text"
-      id="codigoDescuento"
-      placeholder="Palabra clave"
-      autocomplete="off"
-      autocapitalize="characters"
-      enterkeyhint="go"
-      aria-label="Palabra clave"
-    >
-
-    <button
-      type="button"
-      id="btnAplicarDescuento"
-    >
-      Aplicar
-    </button>
-
-  </div>
-
-  <div id="mensajeDescuento"></div>
-
-  <p class="palabra-clave-ayuda">
-    ¿No tenés? Pedila por
-    <a href="https://instagram.com/sorteo_ojeda_" target="_blank" rel="noopener">Instagram</a>
-    o unite al
-    <a href="https://whatsapp.com/channel/0029Vb5dDFT0bIdhfmabL11s" target="_blank" rel="noopener">canal de WhatsApp</a>.
-  </p>
-
-</section>
-
 
 <section class="chances" id="chances">
 
-  <div style="
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 35px 20px;
-    text-align: center;
-  ">
+  <h2>Elegí tus chances</h2>
 
-    <h2 style="
-      margin-bottom: 8px;
-    ">
-      🔥 ELEGÍ TUS CHANCES
-    </h2>
+  <p class="bajada">Cuantas más chances, más números para ganar.</p>
 
-    <p style="
-      color: #aaa;
-      margin-bottom: 25px;
-    ">
-      Precios especiales para participar
-    </p>
-<div class="packs-grid">
+  <div class="packs-grid">
 
-<div class="pack-card open-modal" data-chances="1">
-  <h3>UNA PARA PROBAR</h3>
-  <span class="cantidad-chances">1 CHANCE</span>
+    <div class="pack-card open-modal pack-recomendado" data-chances="30" role="button" tabindex="0">
+      <span class="pack-cinta">⭐ La más elegida · Ahorrás $38.000</span>
+      <h3>⭐ LA MÁS ELEGIDA</h3>
+      <span class="cantidad-chances">30 chances</span>
+      <div class="precio-pack">
+        <span class="precio-anterior">$76.000</span>
+        <strong class="precio-actual">$38.000</strong>
+        <span class="precio-unitario">$1.267 por chance</span>
+      </div>
+    </div>
 
-  <div class="precio-pack">
-    <span class="precio-anterior">$10.000</span>
-    <strong class="precio-actual">$5.000</strong>
-    <span class="precio-unitario">$5.000 por chance</span>
+    <div class="pack-card open-modal" data-chances="1" role="button" tabindex="0">
+      <h3>UNA PARA PROBAR</h3>
+      <span class="cantidad-chances">1 chance</span>
+      <div class="precio-pack">
+        <span class="precio-anterior">$10.000</span>
+        <strong class="precio-actual">$5.000</strong>
+        <span class="precio-unitario">$5.000 por chance</span>
+      </div>
+    </div>
+
+    <div class="pack-card open-modal" data-chances="3" role="button" tabindex="0">
+      <h3>PROMO INICIAL</h3>
+      <span class="cantidad-chances">3 chances</span>
+      <div class="precio-pack">
+        <span class="precio-anterior">$20.000</span>
+        <strong class="precio-actual">$10.000</strong>
+        <span class="precio-unitario">$3.333 por chance</span>
+      </div>
+    </div>
+
+    <div class="pack-card open-modal" data-chances="10" role="button" tabindex="0">
+      <h3>POPULAR</h3>
+      <span class="cantidad-chances">10 chances</span>
+      <div class="precio-pack">
+        <span class="precio-anterior">$36.000</span>
+        <strong class="precio-actual">$18.000</strong>
+        <span class="precio-unitario">$1.800 por chance</span>
+      </div>
+    </div>
+
+    <div class="pack-card open-modal" data-chances="50" role="button" tabindex="0">
+      <h3>🔥 PACK GRANDE</h3>
+      <span class="cantidad-chances">50 chances</span>
+      <div class="precio-pack">
+        <span class="precio-anterior">$100.000</span>
+        <strong class="precio-actual">$50.000</strong>
+        <span class="precio-unitario">$1.000 por chance</span>
+      </div>
+    </div>
+
+    <div class="pack-card open-modal pack-ancho" data-chances="100" role="button" tabindex="0">
+      <h3>👑 PACK MÁXIMO</h3>
+      <span class="cantidad-chances">100 chances</span>
+      <div class="precio-pack">
+        <span class="precio-anterior">$150.000</span>
+        <strong class="precio-actual">$75.000</strong>
+        <span class="precio-unitario">$750 por chance</span>
+      </div>
+    </div>
+
   </div>
-</div>
 
-<div class="pack-card open-modal" data-chances="3">
-  <h3>PROMO INICIAL</h3>
-  <span class="cantidad-chances">3 CHANCES</span>
+  <!-- Palabra clave: PALABRA_DESCUENTO en script.js -->
+  <div class="palabra-clave">
 
-  <div class="precio-pack">
-    <span class="precio-anterior">$20.000</span>
-    <strong class="precio-actual">$10.000</strong>
-    <span class="precio-unitario">$3.333 por chance</span>
-  </div>
-</div>
+    <div class="palabra-clave-form">
+      <input
+        type="text"
+        id="codigoDescuento"
+        placeholder="🔑 ¿Tenés palabra clave?"
+        autocomplete="off"
+        autocapitalize="characters"
+        enterkeyhint="go"
+        aria-label="Palabra clave"
+      >
+      <button type="button" id="btnAplicarDescuento">Aplicar</button>
+    </div>
 
-<div class="pack-card open-modal" data-chances="10">
-  <h3>POPULAR</h3>
-  <span class="cantidad-chances">10 CHANCES</span>
+    <div id="mensajeDescuento"></div>
 
-  <div class="precio-pack">
-    <span class="precio-anterior">$36.000</span>
-    <strong class="precio-actual">$18.000</strong>
-    <span class="precio-unitario">$1.800 por chance</span>
-  </div>
-</div>
-
-<div class="pack-card open-modal pack-recomendado" data-chances="30">
-  <h3>⭐ LA MÁS ELEGIDA</h3>
-  <span class="cantidad-chances">30 CHANCES</span>
-
-  <div class="precio-pack">
-    <span class="precio-anterior">$76.000</span>
-    <strong class="precio-actual">$38.000</strong>
-    <span class="precio-unitario">$1.267 por chance</span>
-  </div>
-</div>
-
-<div class="pack-card open-modal" data-chances="50">
-  <h3>🔥 PACK GRANDE</h3>
-  <span class="cantidad-chances">50 CHANCES</span>
-
-  <div class="precio-pack">
-    <span class="precio-anterior">$100.000</span>
-    <strong class="precio-actual">$50.000</strong>
-    <span class="precio-unitario">$1.000 por chance</span>
-  </div>
-</div>
-
-<div class="pack-card open-modal" data-chances="100">
-  <h3>👑 PACK MÁXIMO</h3>
-  <span class="cantidad-chances">100 CHANCES</span>
-
-  <div class="precio-pack">
-    <span class="precio-anterior">$150.000</span>
-    <strong class="precio-actual">$75.000</strong>
-    <span class="precio-unitario">$750 por chance</span>
-  </div>
-</div>
-
-</div>
-
-    <p style="
-      margin-top: 20px;
-      color: #aaa;
-      font-size: 14px;
-    ">
-      🇦🇷 Participá desde todo el país
-      • Transferencia de la moto incluida
+    <p class="palabra-clave-ayuda">
+      ¿No tenés? Pedila por
+      <a href="https://instagram.com/sorteo_ojeda_" target="_blank" rel="noopener">Instagram</a>
+      o en el
+      <a href="https://whatsapp.com/channel/0029Vb5dDFT0bIdhfmabL11s" target="_blank" rel="noopener">canal de WhatsApp</a>.
     </p>
 
   </div>
 
-  <div class="compras-ilimitadas">
-
-
-
-  <div class="compras-texto">
-
-    <strong>
-      ¡COMPRÁ TODAS LAS VECES QUE QUIERAS!
-    </strong>
-
-    <span>
-      Cada compra suma nuevas chances al sorteo
-    </span>
-
-  </div>
-
-</div>
+  <p class="seguro">
+    <span>🔄 Comprá las veces que quieras</span>
+    <span>🇦🇷 Todo el país</span>
+  </p>
 
 </section>
 
+
 <!-- ==================================================
-     GANADORES ANTERIORES (datos en ganadores.js)
+     CÓMO PARTICIPAR
+================================================== -->
+
+<section>
+
+  <h2>¿Cómo participo?</h2>
+
+  <p class="bajada">Tarda menos de 2 minutos.</p>
+
+  <ol class="pasos">
+    <li><b>1</b>Elegí tus chances</li>
+    <li><b>2</b>Transferí y subí el comprobante</li>
+    <li><b>3</b>Recibí tus números</li>
+  </ol>
+
+</section>
+
+
+<!-- ==================================================
+     GANADORES (datos en ganadores.js)
 ================================================== -->
 
 <section class="ganadores" id="ganadores">
 
-  <p class="ganadores-etiqueta">🏆 GANADORES REALES</p>
+  <h2>Ganadores reales</h2>
 
-  <h2>
-    <span id="ganadoresTotal">+40</span> ganadores
-    en nuestros sorteos
-  </h2>
-
-  <p class="ganadores-subtitulo">
-    Todos etiquetados en nuestras historias de Instagram.
-    Tocá cualquier usuario para ver su perfil.
-  </p>
+  <div class="contador-ganadores">
+    <b class="ganadores-total" id="ganadoresTotal">+70</b>
+    <span>personas ya ganaron motos, iPhones, PlayStation y efectivo en nuestros sorteos.</span>
+  </div>
 
   <div class="ganadores-lista" id="ganadoresLista"></div>
 
-  <button type="button" class="ganadores-ver-mas" id="ganadoresVerMas">
-    Ver más ganadores ↓
+  <button type="button" class="boton-sec ganadores-ver-mas" id="ganadoresVerMas">
+    Ver todos los ganadores
   </button>
 
   <a
@@ -376,471 +329,62 @@
 
 </section>
 
+
 <!-- ==================================================
-     RANKING EN VIVO
+     RANKING (se oculta solo si está vacío)
 ================================================== -->
 
-<section
-  class="ranking-live"
-  id="ranking"
->
+<section class="ranking-live" id="ranking" hidden>
 
-  <div class="ranking-badge">
-    🏆 RANKING EN VIVO
-  </div>
+  <h2>🏆 Los que más chances tienen</h2>
 
-
-  <h2>
-    LOS QUE MÁS CHANCES TIENEN
-  </h2>
-
-
-  <p class="ranking-subtitle">
-
-    Ranking actualizado automáticamente
-    con los participantes cuyo pago fue confirmado.
-
-  </p>
-
+  <p class="bajada">Se actualiza con los pagos confirmados.</p>
 
   <div id="rankingContainer"></div>
-
-
-  <p class="ranking-footer">
-
-    Se actualiza automáticamente.
-
-  </p>
 
 </section>
 
 
-
 <!-- ==================================================
-     CONSULTAR NÚMEROS
+     VER NÚMEROS
 ================================================== -->
 
-<section
-  class="consulta-container"
-  id="numeros"
->
+<section class="consulta-container" id="numeros">
 
-  <h1>
-    VER NÚMEROS
-  </h1>
+  <h2>Ver mis números</h2>
 
+  <p class="bajada">Ingresá tu DNI para ver los números de tus compras aprobadas.</p>
 
-  <p>
-
-    Consultá tus números asignados
-    ingresando tu DNI.
-
-  </p>
-
-
-  <input
-    type="text"
-    id="dni"
-    placeholder="Ingresá tu DNI"
-  >
-
-
-  <button
-    id="btnConsultar"
-    type="button"
-  >
-    CONSULTAR NÚMEROS
-  </button>
-
+  <div class="consulta-form">
+    <input
+      type="text"
+      id="dni"
+      placeholder="Tu DNI"
+      inputmode="numeric"
+      autocomplete="off"
+    >
+    <button id="btnConsultar" type="button">Consultar</button>
+  </div>
 
   <div id="resultadoNumeros"></div>
 
 </section>
 
-<!-- ==================================================
-     POPUP SUPER PROMO PARA PARTICIPANTES
-================================================== -->
-
-<div id="superPromoOverlay" class="super-promo-overlay">
-
-  <div class="super-promo">
-
-    <button id="cerrarSuperPromo" class="super-promo-cerrar">
-      ×
-    </button>
-
-    <div class="super-promo-fuego">
-      🔥
-    </div>
-
-    <h2>¡ESPERÁ!</h2>
-
-    <p class="super-promo-subtitulo">
-      Como ya estás participando<br>
-      tenemos una <strong>OFERTA ÚNICA</strong> para vos
-    </p>
-
-    <div class="super-promo-oferta">
-
-      <button
-        class="super-promo-pack"
-        data-promo-chances="50"
-      >
-        <span>50 CHANCES</span>
-        <strong>$14.999</strong>
-      </button>
-
-      <button
-        class="super-promo-pack"
-        data-promo-chances="100"
-      >
-        <span>100 CHANCES</span>
-        <strong>$19.999</strong>
-      </button>
-
-    </div>
-
-    <p class="super-promo-tiempo">
-      ⏳ La promoción dura solo
-    </p>
-
-    <div id="superPromoContador" class="super-promo-contador">
-      02:00
-    </div>
-
-    <p class="super-promo-final">
-      ¡Aumentá tus posibilidades antes de que termine!
-    </p>
-
-  </div>
-
-</div>
 
 <!-- ==================================================
-     GALERÍA
+     FOTOS DEL PREMIO (las carga script.js)
 ================================================== -->
 
-<section class="gallery">
+<section class="gallery" id="premios">
 
-  <h2>
-    PREMIOS
-  </h2>
+  <h2>Fotos del premio</h2>
 
+  <p class="bajada">Tocá una foto para verla en grande.</p>
 
-  <div
-    class="gallery-grid"
-    id="galleryGrid"
-  ></div>
-
-
-
+  <div class="gallery-grid" id="galleryGrid"></div>
 
 </section>
 
-
-
-
-
-<!-- ==================================================
-     WHATSAPP
-================================================== -->
-
-<a
-  class="wp-float"
-  href="https://whatsapp.com/channel/0029Vb5dDFT0bIdhfmabL11s"
-  target="_blank"
-  rel="noopener"
-  aria-label="Canal de WhatsApp"
->
-
-  <span class="wp-icon">
-
-    <svg
-      viewBox="0 0 32 32"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-
-      <path
-        fill="#ffffff"
-        d="M16 3.2C8.93 3.2 3.2 8.93 3.2 16c0 2.26.59 4.48 1.72 6.43L3.2 28.8l6.55-1.71A12.73 12.73 0 0 0 16 28.8c7.07 0 12.8-5.73 12.8-12.8S23.07 3.2 16 3.2Zm0 23.2c-2.01 0-3.98-.54-5.69-1.57l-.41-.25-3.89 1.02 1.04-3.78-.27-.41A10.61 10.61 0 1 1 16 26.4Z"
-      />
-
-      <path
-        fill="#ffffff"
-        d="M21.17 18.25c-.28-.14-1.64-.81-1.9-.9-.25-.09-.44-.14-.63.14-.18.28-.72.9-.88 1.08-.16.19-.33.21-.61.07-.28-.14-1.18-.43-2.24-1.38-.83-.74-1.39-1.65-1.55-1.93-.16-.28-.02-.43.12-.57.13-.13.28-.33.42-.49.14-.16.19-.28.28-.47.09-.19.05-.35-.02-.49-.07-.14-.63-1.52-.86-2.08-.23-.55-.46-.48-.63-.49h-.54c-.19 0-.49.07-.75.35-.26.28-.98.96-.98 2.34s1 2.69 1.14 2.88c.14.19 1.97 3.01 4.77 4.21.67.29 1.19.47 1.6.6.67.21 1.28.18 1.76.11.54-.08 1.67-.68 1.9-1.34.23-.66.23-1.22.16-1.34-.07-.12-.26-.19-.54-.33Z"
-      />
-
-    </svg>
-
-  </span>
-
-  <span class="wp-online"></span>
-
-</a>
-
-
-
-<!-- ==================================================
-     MODAL DE COMPRA
-================================================== -->
-
-<div
-  class="modal"
-  id="purchaseModal"
->
-
-  <div class="modal-content">
-
-
-    <button
-      class="close-modal"
-      id="closeModal"
-      type="button"
-    >
-      ×
-    </button>
-
-
-    <h2>
-      DATOS PARA TRANSFERIR
-    </h2>
-
-
-    <div
-      class="selected-pack"
-      id="selectedPack"
-    >
-      Seleccioná un pack
-    </div>
-
-
-    <!-- ESTE DIV LO NECESITA EL JS ORIGINAL.
-         NO ES UN CÓDIGO PROMOCIONAL VISIBLE. -->
-
-    <div
-      id="promoInfoModal"
-      style="display:none;"
-    ></div>
-
-
-    <!-- DATOS BANCARIOS -->
-
-    <div class="bank-info">
-
-      <p>
-        <strong>
-          ALIAS:
-        </strong>
-
-        repuestos.ojeda
-      </p>
-
-
-      <button
-        type="button"
-        class="copy-btn"
-        id="copyAlias"
-      >
-        COPIAR ALIAS
-      </button>
-
-
-      <p class="bank-spacer">
-
-        <strong>
-          CVU:
-        </strong>
-
-        3840200500000030295274
-
-      </p>
-
-
-      <button
-        type="button"
-        class="copy-btn"
-        id="copyCvu"
-      >
-        COPIAR CVU
-      </button>
-
-    </div>
-
-
-
-    <!-- FORMULARIO -->
-
-    <form
-      class="purchase-form"
-      id="purchaseForm"
-    >
-
-
-      <input
-        type="text"
-        id="nombre"
-        placeholder="Nombre"
-        required
-      >
-
-
-      <input
-        type="text"
-        id="apellido"
-        placeholder="Apellido"
-        required
-      >
-
-
-      <input
-        type="text"
-        id="dniCompra"
-        placeholder="DNI"
-        required
-      >
-
-
-      <input
-        type="tel"
-        id="telefono"
-        placeholder="Teléfono"
-        required
-      >
-
-
-      <input
-        type="text"
-        id="instagram"
-        placeholder="@INSTAGRAM (opcional)"
-      >
-
-
-      <label
-        class="upload-btn"
-        for="comprobante"
-      >
-
-        📷 ADJUNTAR COMPROBANTE
-
-      </label>
-
-
-      <input
-        type="file"
-        id="comprobante"
-        accept="image/*,.pdf"
-        required
-        hidden
-      >
-
-
-      <button
-        type="submit"
-      >
-        ENVIAR COMPROBANTE
-      </button>
-
-
-      <p class="acepta-terminos">
-        Al enviar aceptás los
-        <a href="terminos.html" target="_blank">términos y condiciones</a>.
-      </p>
-
-
-    </form>
-
-  </div>
-
-</div>
-
-
-
-<!-- ==================================================
-     MODAL COMPROBANTE ENVIADO
-================================================== -->
-
-<div
-  class="success-modal"
-  id="successModal"
->
-
-  <div class="success-box">
-
-    <h2>
-      ✅ Comprobante enviado
-    </h2>
-
-
-    <p>
-      Recibimos tu comprobante correctamente.
-    </p>
-
-
-    <button
-      id="successBtn"
-      type="button"
-    >
-      ACEPTAR
-    </button>
-
-  </div>
-
-</div>
-
-
-
-<!-- ==================================================
-     MODAL GALERÍA
-================================================== -->
-
-<div
-  class="image-modal"
-  id="imageModal"
->
-
-  <button
-    class="close-image"
-    id="closeImageModal"
-    type="button"
-  >
-    ×
-  </button>
-
-
-  <button
-    class="gallery-arrow left"
-    id="prevImage"
-    type="button"
-  >
-    ‹
-  </button>
-
-
-  <img
-    id="modalImage"
-    src=""
-    alt="Imagen del premio"
-  >
-
-
-  <button
-    class="gallery-arrow right"
-    id="nextImage"
-    type="button"
-  >
-    ›
-  </button>
-
-
-  <div
-    class="gallery-counter"
-    id="galleryCounter"
-  >
-    1 / 1
-  </div>
-
-</div>
 
 <!-- ==================================================
      PREGUNTAS FRECUENTES
@@ -848,15 +392,13 @@
 
 <section class="faq" id="preguntas">
 
-  <h2>
-    PREGUNTAS FRECUENTES
-  </h2>
+  <h2>Preguntas frecuentes</h2>
 
   <details>
     <summary>Ya compré, ¿cómo sé si estoy participando? No veo mis números</summary>
     <p>
       <strong>Si pudiste subir el comprobante, ya estás participando.</strong>
-      Tus números aparecen en <a href="#numeros">Ver números</a> cuando se aprueba
+      Tus números aparecen en <a href="#numeros">Ver mis números</a> cuando se aprueba
       el pago: suele ser cuestión de minutos, aunque a veces puede tardar unas horas.
       Si el comprobante se subió, el pago se aprueba en el 100% de los casos.<br><br>
       <strong>Si no pudiste subir el comprobante,</strong> mandanos un mensaje por
@@ -875,17 +417,7 @@
 
   <details>
     <summary>¿Puedo comprar chances más de una vez?</summary>
-    <p>
-      Sí, las veces que quieras. Todos tus números se acumulan con tu DNI.
-    </p>
-  </details>
-
-  <details>
-    <summary>¿Cómo veo mis números?</summary>
-    <p>
-      En la sección <a href="#numeros">Ver números</a>, ingresando tu DNI.
-      Aparecen cuando se aprueba tu comprobante de pago.
-    </p>
+    <p>Sí, las veces que quieras. Todos tus números se acumulan con tu DNI.</p>
   </details>
 
   <details>
@@ -893,7 +425,7 @@
     <p>
       En vivo por Instagram en
       <a href="https://instagram.com/sorteo_ojeda_" target="_blank" rel="noopener">@sorteo_ojeda_</a>,
-      el día y la hora que figuran arriba en la cuenta regresiva.
+      el día y la hora que figuran arriba.
     </p>
   </details>
 
@@ -915,56 +447,38 @@
     </p>
   </details>
 
-  <a class="faq-terminos" href="terminos.html">
-    📄 Ver términos y condiciones completos
-  </a>
+  <a class="faq-terminos" href="terminos.html">📄 Ver términos y condiciones completos</a>
 
 </section>
 
+</main>
+
 
 <!-- ==================================================
-     PIE DE PÁGINA: REDES
+     PIE DE PÁGINA
 ================================================== -->
 
 <footer class="pie">
 
-  <p class="pie-titulo">
-    📲 Seguinos para ver el sorteo <strong>EN VIVO</strong>
-  </p>
+  <p class="pie-titulo">📲 Seguinos para ver el sorteo <strong>en vivo</strong></p>
 
   <div class="pie-redes">
 
-    <a
-      class="pie-btn pie-instagram"
-      href="https://instagram.com/sorteo_ojeda_"
-      target="_blank"
-      rel="noopener"
-    >
+    <a class="pie-btn pie-instagram" href="https://instagram.com/sorteo_ojeda_" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="white" stroke-width="2"/>
         <circle cx="12" cy="12" r="4.2" fill="none" stroke="white" stroke-width="2"/>
         <circle cx="17.4" cy="6.7" r="1.2" fill="white"/>
       </svg>
-      <span>
-        <small>Instagram</small>
-        <b>@sorteo_ojeda_</b>
-      </span>
+      <span><small>Instagram</small><b>@sorteo_ojeda_</b></span>
     </a>
 
-    <a
-      class="pie-btn pie-whatsapp"
-      href="https://whatsapp.com/channel/0029Vb5dDFT0bIdhfmabL11s"
-      target="_blank"
-      rel="noopener"
-    >
+    <a class="pie-btn pie-whatsapp" href="https://whatsapp.com/channel/0029Vb5dDFT0bIdhfmabL11s" target="_blank" rel="noopener">
       <svg viewBox="0 0 32 32" aria-hidden="true">
         <path fill="#fff" d="M16 3.2C8.93 3.2 3.2 8.93 3.2 16c0 2.26.59 4.48 1.72 6.43L3.2 28.8l6.55-1.71A12.73 12.73 0 0 0 16 28.8c7.07 0 12.8-5.73 12.8-12.8S23.07 3.2 16 3.2Zm0 23.2c-2.01 0-3.98-.54-5.69-1.57l-.41-.25-3.89 1.02 1.04-3.78-.27-.41A10.61 10.61 0 1 1 16 26.4Z"/>
         <path fill="#fff" d="M21.17 18.25c-.28-.14-1.64-.81-1.9-.9-.25-.09-.44-.14-.63.14-.18.28-.72.9-.88 1.08-.16.19-.33.21-.61.07-.28-.14-1.18-.43-2.24-1.38-.83-.74-1.39-1.65-1.55-1.93-.16-.28-.02-.43.12-.57.13-.13.28-.33.42-.49.14-.16.19-.28.28-.47.09-.19.05-.35-.02-.49-.07-.14-.63-1.52-.86-2.08-.23-.55-.46-.48-.63-.49h-.54c-.19 0-.49.07-.75.35-.26.28-.98.96-.98 2.34s1 2.69 1.14 2.88c.14.19 1.97 3.01 4.77 4.21.67.29 1.19.47 1.6.6.67.21 1.28.18 1.76.11.54-.08 1.67-.68 1.9-1.34.23-.66.23-1.22.16-1.34-.07-.12-.26-.19-.54-.33Z"/>
       </svg>
-      <span>
-        <small>Canal de</small>
-        <b>WhatsApp</b>
-      </span>
+      <span><small>Canal de</small><b>WhatsApp</b></span>
     </a>
 
   </div>
@@ -975,123 +489,188 @@
     <a href="#preguntas">Preguntas frecuentes</a>
   </p>
 
-  <p class="pie-legal">
-    © 2026 Ojeda Preparación · Sorteos a nivel país
-  </p>
+  <p class="pie-legal">© 2026 Ojeda Preparación · Tandil, Buenos Aires</p>
 
 </footer>
+
+
+<!-- ==================================================
+     BOTÓN FLOTANTE: CANAL DE WHATSAPP
+================================================== -->
+
+<a class="wp-float" href="https://whatsapp.com/channel/0029Vb5dDFT0bIdhfmabL11s" target="_blank" rel="noopener" aria-label="Canal de WhatsApp">
+  <svg viewBox="0 0 32 32" aria-hidden="true">
+    <path fill="#fff" d="M16 3.2C8.93 3.2 3.2 8.93 3.2 16c0 2.26.59 4.48 1.72 6.43L3.2 28.8l6.55-1.71A12.73 12.73 0 0 0 16 28.8c7.07 0 12.8-5.73 12.8-12.8S23.07 3.2 16 3.2Zm0 23.2c-2.01 0-3.98-.54-5.69-1.57l-.41-.25-3.89 1.02 1.04-3.78-.27-.41A10.61 10.61 0 1 1 16 26.4Z"/>
+    <path fill="#fff" d="M21.17 18.25c-.28-.14-1.64-.81-1.9-.9-.25-.09-.44-.14-.63.14-.18.28-.72.9-.88 1.08-.16.19-.33.21-.61.07-.28-.14-1.18-.43-2.24-1.38-.83-.74-1.39-1.65-1.55-1.93-.16-.28-.02-.43.12-.57.13-.13.28-.33.42-.49.14-.16.19-.28.28-.47.09-.19.05-.35-.02-.49-.07-.14-.63-1.52-.86-2.08-.23-.55-.46-.48-.63-.49h-.54c-.19 0-.49.07-.75.35-.26.28-.98.96-.98 2.34s1 2.69 1.14 2.88c.14.19 1.97 3.01 4.77 4.21.67.29 1.19.47 1.6.6.67.21 1.28.18 1.76.11.54-.08 1.67-.68 1.9-1.34.23-.66.23-1.22.16-1.34-.07-.12-.26-.19-.54-.33Z"/>
+  </svg>
+</a>
+
+
+<!-- ==================================================
+     MODAL DE COMPRA (lo maneja script.js)
+================================================== -->
+
+<div class="modal" id="purchaseModal">
+
+  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="tituloCompra">
+
+    <button class="close-modal" id="closeModal" type="button" aria-label="Cerrar">×</button>
+
+    <h2 id="tituloCompra">Datos para transferir</h2>
+
+    <div class="selected-pack" id="selectedPack">Seleccioná un pack</div>
+
+    <!-- Lo necesita script.js (no es un código visible) -->
+    <div id="promoInfoModal" style="display:none;"></div>
+
+    <ol class="compra-pasos">
+      <li><b>1</b>Transferí el monto del pack</li>
+      <li><b>2</b>Completá tus datos y adjuntá el comprobante</li>
+    </ol>
+
+    <div class="bank-info">
+
+      <div class="bank-fila">
+        <p><small>ALIAS</small>repuestos.ojeda</p>
+        <button type="button" class="copy-btn" id="copyAlias">Copiar</button>
+      </div>
+
+      <div class="bank-fila">
+        <p><small>CVU</small>3840200500000030295274</p>
+        <button type="button" class="copy-btn" id="copyCvu">Copiar</button>
+      </div>
+
+    </div>
+
+    <form class="purchase-form" id="purchaseForm">
+
+      <div class="form-doble">
+        <input type="text" id="nombre" placeholder="Nombre" autocomplete="given-name" required>
+        <input type="text" id="apellido" placeholder="Apellido" autocomplete="family-name" required>
+      </div>
+
+      <input type="text" id="dniCompra" placeholder="DNI" inputmode="numeric" required>
+
+      <input type="tel" id="telefono" placeholder="Teléfono" autocomplete="tel" required>
+
+      <input type="text" id="instagram" placeholder="@Instagram (opcional)">
+
+      <label class="upload-btn" for="comprobante">📷 ADJUNTAR COMPROBANTE</label>
+
+      <input type="file" id="comprobante" accept="image/*,.pdf" required hidden>
+
+      <button type="submit">ENVIAR COMPROBANTE</button>
+
+      <p class="acepta-terminos">
+        Al enviar aceptás los
+        <a href="terminos.html" target="_blank">términos y condiciones</a>.
+      </p>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- ==================================================
+     MODAL COMPROBANTE ENVIADO
+================================================== -->
+
+<div class="success-modal" id="successModal">
+
+  <div class="success-box">
+
+    <div class="success-icono">✅</div>
+
+    <h2>¡Comprobante enviado!</h2>
+
+    <p>
+      Ya estás participando. Tus números aparecen en
+      <strong>Ver mis números</strong> cuando se aprueba el pago
+      (suele tardar minutos).
+    </p>
+
+    <button id="successBtn" type="button">Aceptar</button>
+
+  </div>
+
+</div>
+
+
+<!-- ==================================================
+     MODAL GALERÍA
+================================================== -->
+
+<div class="image-modal" id="imageModal">
+
+  <button class="close-image" id="closeImageModal" type="button" aria-label="Cerrar">×</button>
+
+  <button class="gallery-arrow left" id="prevImage" type="button" aria-label="Anterior">‹</button>
+
+  <img id="modalImage" src="" alt="Foto del premio">
+
+  <button class="gallery-arrow right" id="nextImage" type="button" aria-label="Siguiente">›</button>
+
+  <div class="gallery-counter" id="galleryCounter">1 / 1</div>
+
+</div>
+
 
 <!-- ==================================================
      JAVASCRIPT
 ================================================== -->
 
-<!-- Hora de cierre y "un cartel por vez" (va antes que el resto) -->
-<script src="./carteles.js?v=2"></script>
+<!-- Fecha de cierre, fotos y "un cartel por vez" (va antes que el resto) -->
+<script src="./carteles.js?v=3"></script>
 
-<script
-  type="module"
-  src="./script.js?v=11"
-></script>
+<script type="module" src="./script.js?v=12"></script>
 
-<!-- Cartel de cierre de participaciones (viernes 16/10 21:30) -->
-<script src="./cartel-cierre.js?v=4" defer></script>
+<!-- Cartel de cierre de participaciones -->
+<script src="./cartel-cierre.js?v=5" defer></script>
 
 <!-- Barra de compra fija en celular + bloqueo de compras al cierre -->
-<script src="./barra-compra.js?v=2" defer></script>
+<script src="./barra-compra.js?v=3" defer></script>
 
 <!-- Cartel "atentos al próximo sorteo" (solo con las compras cerradas) -->
 <script src="./cartel-proximo.js?v=1" defer></script>
 
 <!-- Ganadores anteriores -->
-<script src="./ganadores.js?v=14" defer></script>
+<script src="./ganadores.js?v=15" defer></script>
 
-<!-- Carrusel de banners -->
-<script src="./banner-carrusel.js?v=2" defer></script>
+<!-- Aviso de arriba: tiempo que falta para el cierre -->
+<script>
+  (function () {
+    const aviso = document.getElementById("avisoSuperior");
+    if (!aviso || !window.OJEDA_CIERRE) return;
 
+    function actualizarAviso() {
+      const ms = window.OJEDA_CIERRE - new Date();
+      if (ms <= 0) {
+        aviso.textContent = "🏁 Sorteo finalizado · ¡Atentos al próximo!";
+        return;
+      }
+      const dias = Math.floor(ms / 864e5);
+      const horas = Math.floor(ms / 36e5) % 24;
+      const minutos = Math.floor(ms / 6e4) % 60;
+      const falta = dias > 0 ? `${dias}d ${horas}h` : `${horas}h ${minutos}m`;
+      aviso.textContent = `🔥 50% OFF en todos los packs · cierra en ${falta}`;
+    }
 
-<!-- OFERTA SECRETA ENTERO -->
-<div id="ofertaEnteroOverlay" class="oferta-entero-overlay">
-  <div class="oferta-entero-card">
-    <button type="button" id="cerrarOfertaEntero" class="oferta-entero-cerrar">✕</button>
+    actualizarAviso();
+    setInterval(actualizarAviso, 30000);
+  })();
 
-    <h2> TE GUSTA ENTERO GOLOSO?😂 </h2>
-    <p>¡Elegí tu pack promocional!</p>
-
-    <button type="button" class="oferta-entero-pack" data-entero-chances="20">
-      <span>🎟️ 20 CHANCES</span>
-      <strong>$10.000</strong>
-      <small>SELECCIONAR PACK</small>
-    </button>
-
-    <button type="button" class="oferta-entero-pack" data-entero-chances="50">
-      <span>🏆 50 CHANCES</span>
-      <strong>$15.000</strong>
-      <small>SELECCIONAR PACK</small>
-    </button>
-  </div>
-</div>
-
-<style>
-.oferta-entero-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 999999;
-  background: rgba(0,0,0,.88);
-  align-items: center;
-  justify-content: center;
-  padding: 18px;
-}
-.oferta-entero-overlay.activo { display: flex; }
-.oferta-entero-card {
-  position: relative;
-  width: 100%;
-  max-width: 420px;
-  padding: 28px 20px;
-  background: #111;
-  color: white;
-  border: 2px solid #ff2020;
-  border-radius: 18px;
-  text-align: center;
-  box-shadow: 0 0 30px rgba(255,32,32,.35);
-}
-.oferta-entero-card h2 { color: #ff3030; margin-top: 5px; }
-.oferta-entero-cerrar {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  color: white;
-  background: transparent;
-  border: 0;
-  font-size: 22px;
-  cursor: pointer;
-}
-.oferta-entero-pack {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-  margin-top: 14px;
-  padding: 18px 12px;
-  color: white;
-  background: #202020;
-  border: 1px solid #ff3030;
-  border-radius: 12px;
-  cursor: pointer;
-}
-.oferta-entero-pack strong {
-  color: #00ff77;
-  font-size: 30px;
-}
-.oferta-entero-pack small {
-  font-weight: 800;
-  letter-spacing: 1px;
-}
-.oferta-entero-pack:hover {
-  background: #351010;
-}
-</style>
-
+  // Las tarjetas de packs también se eligen con Enter (teclado)
+  document.querySelectorAll(".pack-card[tabindex]").forEach((tarjeta) => {
+    tarjeta.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        tarjeta.click();
+      }
+    });
+  });
+</script>
 
 </body>
 </html>

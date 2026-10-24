@@ -3,84 +3,141 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
 
-<title>Panel Admin</title>
+<title>Panel Admin | Ojeda Sorteos</title>
 
-<link rel="stylesheet" href="admin.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="admin.css?v=2">
 </head>
 
 <body>
 
-<div id="loginAdmin">
+<!-- ==================================================
+     LOGIN
+================================================== -->
 
-  <h1>Panel Administrador</h1>
+<div id="loginAdmin" class="login">
 
-  <button id="btnLogin">
-    Entrar con Google
-  </button>
+  <div class="login-card">
+    <img src="assets/logo.png" alt="Ojeda Preparación" class="login-logo">
+    <h1>Panel de administración</h1>
+    <p>Entrá con la cuenta de Google del admin.</p>
+    <button id="btnLogin" type="button">Entrar con Google</button>
+  </div>
 
 </div>
+
+
+<!-- ==================================================
+     PANEL
+================================================== -->
 
 <div id="panelAdmin" style="display:none;">
 
-<h1>Participantes</h1>
+  <header class="barra-admin">
+    <img src="assets/logo.png" alt="Ojeda Preparación">
+    <span>Panel</span>
+    <a href="./" target="_blank" class="barra-link">Ver página ↗</a>
+    <button id="cerrarSesion" type="button">Salir</button>
+  </header>
 
-<button id="cerrarSesion">
-  CERRAR SESIÓN
-</button>
+  <main class="admin">
 
-<button id="exportarSorteo">
-  EXPORTAR SORTEO
-</button>
+    <!-- ===== RESUMEN ===== -->
+    <section class="stats">
 
-<button id="aprobarTodos">
-  ✅ APROBAR TODOS
-</button>
+      <div class="stat stat-plata">
+        <small>💰 Recaudado (aprobados)</small>
+        <b id="recaudacionTotal">$0</b>
+        <span id="recaudacionPendiente"></span>
+      </div>
 
-<button id="actualizarConsultas">
-  🔄 ACTUALIZAR "VER MIS NÚMEROS"
-</button>
+      <div class="stat">
+        <small>⏳ Pendientes</small>
+        <b id="statPendientes">0</b>
+      </div>
 
-<button id="revisarComprobantes">
-  🧾 REVISAR COMPROBANTES
-</button>
+      <div class="stat">
+        <small>✅ Aprobados</small>
+        <b id="statPagados">0</b>
+      </div>
 
-<button id="borrarTodo">
-  🗑 BORRAR TODO EL SORTEO
-</button>
+      <div class="stat">
+        <small>👤 Participantes únicos</small>
+        <b id="totalParticipantes">0</b>
+      </div>
 
-<div id="resultadoRevision"></div>
-
-<p id="totalParticipantes">
-  Participantes únicos: 0
-</p>
-
-<!-- La recaudación ya no se muestra (sacada el 16/10/2026).
-     Para volver a mostrarla: <p id="recaudacionTotal"></p> -->
+    </section>
 
 
+    <!-- ===== ACCIONES ===== -->
+    <section class="acciones">
 
-<input
-  type="text"
-  id="buscador"
-  placeholder="Buscar por nombre, apellido o DNI"
->
+      <button id="aprobarTodos" type="button" class="accion-principal">✅ APROBAR TODOS</button>
 
-<h2 id="tituloPendientes">
-  Pagos pendientes (0)
-</h2>
-<div id="pendientes"></div>
+      <button id="actualizarConsultas" type="button">🔄 ACTUALIZAR "VER MIS NÚMEROS"</button>
 
-<h2 id="tituloPagados">
-  Pagos aprobados (0)
-</h2>
-<div id="pagados"></div>
+      <button id="revisarComprobantes" type="button">🧾 REVISAR COMPROBANTES</button>
+
+      <button id="exportarSorteo" type="button">📥 EXPORTAR EXCEL</button>
+
+    </section>
+
+    <div id="resultadoRevision"></div>
+
+
+    <!-- ===== LISTA ===== -->
+    <div class="buscador-fijo">
+      <input
+        type="search"
+        id="buscador"
+        placeholder="🔍 Buscar por nombre, apellido o DNI"
+        autocomplete="off"
+      >
+    </div>
+
+    <div class="pestanas" role="tablist">
+      <button type="button" role="tab" id="tituloPendientes" data-lista="pendientes" class="activa">Pendientes (0)</button>
+      <button type="button" role="tab" id="tituloPagados" data-lista="pagados">Aprobados (0)</button>
+    </div>
+
+    <div id="pendientes" class="lista"></div>
+
+    <div id="pagados" class="lista" hidden></div>
+
+
+    <!-- ===== ZONA PELIGROSA ===== -->
+    <details class="peligro">
+      <summary>⚠️ Zona peligrosa</summary>
+      <p>Borra todos los participantes, comprobantes y el ranking. Usalo solo para empezar un sorteo nuevo.</p>
+      <button id="borrarTodo" type="button">🗑 BORRAR TODO EL SORTEO</button>
+    </details>
+
+  </main>
+
+</div>
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-<script type="module" src="admin.js?v=5"></script>
+<script type="module" src="admin.js?v=6"></script>
 
-</div>
+<!-- Pestañas Pendientes / Aprobados -->
+<script>
+  document.querySelectorAll(".pestanas [data-lista]").forEach((pestana) => {
+    pestana.addEventListener("click", () => {
+      document.querySelectorAll(".pestanas [data-lista]").forEach((otra) => {
+        const activa = otra === pestana;
+        otra.classList.toggle("activa", activa);
+        otra.setAttribute("aria-selected", activa);
+        document.getElementById(otra.dataset.lista).hidden = !activa;
+      });
+    });
+  });
+</script>
 
 </body>
 </html>

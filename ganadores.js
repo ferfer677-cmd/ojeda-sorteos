@@ -10,7 +10,9 @@
 //   nombre: si no hay usuario (o la cuenta ya no existe), se muestra el nombre sin link
 // video (opcional): link a la publicación del sorteo en Instagram
 // foto (opcional): imagen de la entrega; al tocarla abre fotoVideo (o video)
-// fotos (opcional): varias fotos lado a lado: [{ src, link, alt }]
+// fotos (opcional): varias fotos: [{ src, link, alt, ganador }]
+//   ganador: a qué ganador de la lista corresponde la foto (0 = el primero)
+// entrega: "pendiente" si el premio todavía no se entregó
 // Los sorteos van del más reciente al más viejo.
 
 const IG = "https://www.instagram.com/sorteo_ojeda_/reel/";
@@ -21,6 +23,7 @@ const SORTEOS_ANTERIORES = [
     fecha: "Octubre 2026",
     video: IG + "Dek8dFfkc-c/",
     foto: "assets/ganadores/mt07.jpg",
+    entrega: "pendiente",
     fotoVideo: IG + "DelG-xYROIP/",
     ganadores: [
       { premio: "🏍️ Yamaha MT-07", ig: "e.speed420", ciudad: "San Luis capital" },
@@ -158,7 +161,7 @@ const SORTEOS_ANTERIORES = [
     video: IG + "DQhuRuOkXXO/",
     fotos: [
       { src: "assets/ganadores/ktm.jpg", link: IG + "DQmYgtBEf8n/", alt: "Entrega de la KTM 390 a @diegonicolas.c" },
-      { src: "assets/ganadores/axel-1.jpg", alt: "Entrega de la Honda XR 150 a @olderburgeraxel" }
+      { src: "assets/ganadores/axel-1.jpg", ganador: 1, alt: "Entrega de la Honda XR 150 a @olderburgeraxel" }
     ],
     ganadores: [
       { premio: "🏍️ KTM 390", ig: "diegonicolas.c", ciudad: "Mar del Plata, Buenos Aires" },
@@ -231,8 +234,8 @@ const SORTEOS_ANTERIORES = [
   }
 ];
 
-// Cuántos sorteos se ven antes de tocar "Ver más"
-const SORTEOS_VISIBLES = 3;
+// Cuántas entregas con foto se ven antes de tocar "Ver todos"
+const ENTREGAS_VISIBLES = 4;
 
 
 (function () {
@@ -243,121 +246,193 @@ const SORTEOS_VISIBLES = 3;
   const botonMas =
     document.getElementById("ganadoresVerMas");
 
-  const contador =
-    document.getElementById("ganadoresTotal");
-
   if (!contenedor) {
     return;
   }
 
+  // ====================================================
+  // CONTADOR "+70" (todos los lugares con .ganadores-total)
+  // ====================================================
+
   const total =
     SORTEOS_ANTERIORES.reduce((n, s) => n + s.ganadores.length, 0);
 
-  if (contador) {
-    // Redondeado para abajo a la decena: "+60"
-    contador.textContent = `+${Math.floor(total / 10) * 10}`;
+  document
+    .querySelectorAll(".ganadores-total")
+    .forEach((el) => {
+      // Redondeado para abajo a la decena: "+70"
+      el.textContent = `+${Math.floor(total / 10) * 10}`;
+    });
+
+
+  function linkInstagram(usuario, clase) {
+    const a = document.createElement("a");
+    a.href = `https://instagram.com/${usuario}`;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.className = clase;
+    a.textContent = `@${usuario}`;
+    return a;
   }
 
-  SORTEOS_ANTERIORES.forEach((sorteo, indice) => {
 
-    const tarjeta =
-      document.createElement("article");
+  function parrafo(texto, clase) {
+    const p = document.createElement("p");
+    if (clase) p.className = clase;
+    p.textContent = texto;
+    return p;
+  }
 
-    tarjeta.className = "ganadores-sorteo";
 
-    if (indice >= SORTEOS_VISIBLES) {
-      tarjeta.hidden = true;
-      tarjeta.dataset.extra = "si";
-    }
+  // ====================================================
+  // ENTREGAS CON FOTO (como reseñas)
+  // ====================================================
 
-    // Una foto (foto) o varias lado a lado (fotos)
+  const entregas = [];
+
+  SORTEOS_ANTERIORES.forEach((sorteo) => {
+
     const fotos =
       sorteo.fotos ||
       (sorteo.foto
         ? [{ src: sorteo.foto, link: sorteo.fotoVideo || sorteo.video }]
         : []);
 
-    if (fotos.length) {
+    // Una reseña por ganador con foto (la primera foto de cada uno)
+    const usados = new Set();
 
-      const tira = document.createElement("div");
-      tira.className = "ganadores-fotos";
-      tira.style.gridTemplateColumns = `repeat(${fotos.length}, 1fr)`;
+    fotos.forEach((foto) => {
 
-      fotos.forEach((f) => {
-        const caja = document.createElement(f.link ? "a" : "div");
-        caja.className = "ganadores-foto";
-        if (f.link) {
-          caja.href = f.link;
-          caja.target = "_blank";
-          caja.rel = "noopener";
-        }
-        const img = document.createElement("img");
-        img.src = f.src;
-        img.alt = f.alt || `Entrega del sorteo ${sorteo.titulo}`;
-        img.loading = "lazy";
-        img.decoding = "async";
-        caja.appendChild(img);
-        tira.appendChild(caja);
+      const indice = foto.ganador || 0;
+
+      if (usados.has(indice) || !sorteo.ganadores[indice]) {
+        return;
+      }
+
+      usados.add(indice);
+
+      entregas.push({
+        sorteo,
+        foto,
+        ganador: sorteo.ganadores[indice]
       });
 
-      tarjeta.appendChild(tira);
+    });
 
+  });
+
+
+  entregas.forEach(({ sorteo, foto, ganador }, indice) => {
+
+    const resena = document.createElement("article");
+    resena.className = "resena";
+
+    if (indice >= ENTREGAS_VISIBLES) {
+      resena.hidden = true;
+      resena.dataset.extra = "si";
     }
 
-    const encabezado =
-      document.createElement("header");
+    const caja = document.createElement(foto.link ? "a" : "div");
+    caja.className = "resena-foto";
+    if (foto.link) {
+      caja.href = foto.link;
+      caja.target = "_blank";
+      caja.rel = "noopener";
+    }
 
-    const titulo =
-      document.createElement("h3");
+    const img = document.createElement("img");
+    img.src = foto.src;
+    img.alt = foto.alt || `Entrega del sorteo ${sorteo.titulo}`;
+    img.loading = "lazy";
+    img.decoding = "async";
+    caja.appendChild(img);
 
+    const texto = document.createElement("div");
+
+    const quien = ganador.ig
+      ? linkInstagram(ganador.ig, "resena-quien")
+      : document.createElement("strong");
+
+    if (!ganador.ig) {
+      quien.textContent = ganador.nombre || "Ganador/a";
+    }
+
+    const sello = document.createElement("span");
+    sello.className = "verificado";
+
+    if (sorteo.entrega === "pendiente") {
+      sello.classList.add("pendiente");
+      sello.textContent = "🕐 Entrega en curso";
+    } else {
+      sello.textContent = "✔ Entregado";
+    }
+
+    // Premio sin el emoji del principio
+    const premio = ganador.premio.replace(/^\W+\s*/u, "");
+
+    const lugar = [ganador.ciudad, sorteo.fecha].filter(Boolean).join(" · ");
+
+    texto.append(quien, sello, parrafo(premio, "premio"), parrafo(`📍 ${lugar}`));
+
+    if (!ganador.ciudad) {
+      texto.lastChild.textContent = sorteo.fecha;
+    }
+
+    resena.append(caja, texto);
+    contenedor.appendChild(resena);
+
+  });
+
+
+  // ====================================================
+  // LISTA COMPLETA, AGRUPADA POR SORTEO (se ve con "Ver todos")
+  // ====================================================
+
+  const todos = document.createElement("div");
+  todos.className = "ganadores-todos";
+  todos.hidden = true;
+
+  SORTEOS_ANTERIORES.forEach((sorteo) => {
+
+    const tarjeta = document.createElement("article");
+    tarjeta.className = "ganadores-sorteo";
+
+    const encabezado = document.createElement("header");
+    const titulo = document.createElement("h3");
     titulo.textContent = sorteo.titulo;
-
-    const fecha =
-      document.createElement("span");
-
+    const fecha = document.createElement("span");
     fecha.textContent = sorteo.fecha;
-
     encabezado.append(titulo, fecha);
     tarjeta.appendChild(encabezado);
 
-    const lista =
-      document.createElement("ul");
+    const lista = document.createElement("ul");
 
     sorteo.ganadores.forEach((g) => {
 
-      const item =
-        document.createElement("li");
+      const item = document.createElement("li");
 
-      const premio =
-        document.createElement("span");
+      const izquierda = document.createElement("div");
 
+      const premio = document.createElement("span");
       premio.className = "ganador-premio";
       premio.textContent = g.premio;
+      izquierda.appendChild(premio);
+
+      if (g.ciudad) {
+        const ciudad = document.createElement("span");
+        ciudad.className = "ganador-ciudad";
+        ciudad.textContent = `📍 ${g.ciudad}`;
+        izquierda.appendChild(ciudad);
+      }
 
       let quien;
 
       if (g.ig) {
-        quien = document.createElement("a");
-        quien.href = `https://instagram.com/${g.ig}`;
-        quien.target = "_blank";
-        quien.rel = "noopener";
-        quien.textContent = `@${g.ig}`;
+        quien = linkInstagram(g.ig, "ganador-quien");
       } else {
         quien = document.createElement("span");
+        quien.className = "ganador-quien";
         quien.textContent = g.nombre || "Ganador/a";
-      }
-
-      quien.classList.add("ganador-quien");
-
-      // Premio y, si está cargada, la ciudad debajo
-      let izquierda = premio;
-
-      if (g.ciudad) {
-        izquierda = document.createElement("div");
-        const ciudad = document.createElement("span");
-        ciudad.className = "ganador-ciudad";
-        ciudad.textContent = `📍 ${g.ciudad}`;
-        izquierda.append(premio, ciudad);
       }
 
       item.append(izquierda, quien);
@@ -377,20 +452,20 @@ const SORTEOS_VISIBLES = 3;
       tarjeta.appendChild(video);
     }
 
-    contenedor.appendChild(tarjeta);
+    todos.appendChild(tarjeta);
 
   });
 
-  if (botonMas) {
+  contenedor.appendChild(todos);
 
-    if (SORTEOS_ANTERIORES.length <= SORTEOS_VISIBLES) {
-      botonMas.hidden = true;
-    }
+
+  if (botonMas) {
 
     botonMas.addEventListener("click", () => {
       contenedor
         .querySelectorAll('[data-extra="si"]')
         .forEach((t) => { t.hidden = false; });
+      todos.hidden = false;
       botonMas.hidden = true;
     });
 

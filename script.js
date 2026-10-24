@@ -417,18 +417,18 @@ const revelationDate =
 // ================================================
 // ETAPA 2
 // Sorteo definitivo
-// Viernes 16 de octubre de 2026 — 22:00 hs
+// Viernes 13 de noviembre de 2026 — 22:00 hs
 // Argentina UTC-3
 // ================================================
 
 const raffleDate =
-  new Date("2026-10-16T22:00:00-03:00");
+  new Date("2026-11-13T22:00:00-03:00");
 
 // Cierre de compras: la misma hora que el cartel emergente
 // (window.OJEDA_CIERRE en carteles.js), así los dos relojes coinciden.
 const closingDate =
   window.OJEDA_CIERRE ||
-  new Date("2026-10-16T21:30:00-03:00");
+  new Date("2026-11-13T21:30:00-03:00");
 
 
 // ==================================================
@@ -471,12 +471,12 @@ function updateCountdown() {
 
     if (countdownLabel) {
       countdownLabel.innerText =
-        "⏳ SE CIERRAN LAS COMPRAS EN";
+        "⏳ LAS COMPRAS CIERRAN EN";
     }
 
     if (drawDate) {
       drawDate.innerText =
-        "🔒 CIERRE DE COMPRAS: VIERNES 16/10 · 21:30 HS\n🏆 SORTEO EN VIVO: 22:00 HS";
+        "🔒 Cierre de compras: viernes 13/11 · 21:30 hs\n🏆 Sorteo en vivo: 22:00 hs";
     }
 
     actualizarValores(
@@ -500,7 +500,7 @@ function updateCountdown() {
 
     if (drawDate) {
       drawDate.innerText =
-        "🏆 VIERNES 16 DE OCTUBRE — 22:00 HS";
+        "🏆 Viernes 13 de noviembre · 22:00 hs";
     }
 
     actualizarValores(
@@ -642,14 +642,14 @@ setInterval(
             );
 
             copyAlias.innerText =
-              "✓ ALIAS COPIADO";
+              "✓ Copiado";
 
 
             setTimeout(
               () => {
 
                 copyAlias.innerText =
-                  "COPIAR ALIAS";
+                  "Copiar";
 
               },
               2000
@@ -693,14 +693,14 @@ setInterval(
             );
 
             copyCvu.innerText =
-              "✓ CVU COPIADO";
+              "✓ Copiado";
 
 
             setTimeout(
               () => {
 
                 copyCvu.innerText =
-                  "COPIAR CVU";
+                  "Copiar";
 
               },
               2000
@@ -1671,17 +1671,51 @@ async function cargarGaleria() {
     gallery.innerHTML = "";
 
 
-    const carpeta =
-      ref(
-        storage,
-        "Premio"
-      );
+    // Fotos publicadas con la página (OJEDA_FOTOS en carteles.js):
+    // miniatura en assets/premios/<nombre>, grande en assets/premios/grandes/<nombre>.
+    // Si la lista está vacía, se usan las de Firebase Storage (carpeta "Premio").
+    const fotosLocales =
+      window.OJEDA_FOTOS || [];
+
+    let fotos;
+
+    if (fotosLocales.length) {
+
+      fotos = fotosLocales.map((nombre) => ({
+        name: nombre,
+        url: `assets/premios/grandes/${encodeURIComponent(nombre)}`
+      }));
+
+    } else {
+
+      const archivos =
+        await listAll(
+          ref(storage, "Premio")
+        );
+
+      fotos = archivos.items;
+
+    }
 
 
-    const archivos =
-      await listAll(
-        carpeta
-      );
+    // Sin fotos: no mostrar la sección vacía ni el "Ver fotos"
+    if (!fotos.length) {
+      document.getElementById("premios")?.setAttribute("hidden", "");
+      document.querySelector(".etiqueta-fotos")?.setAttribute("hidden", "");
+      return;
+    }
+
+
+    // La primera foto también va en la tarjeta del premio
+    // (la grande si está publicada con la página; si no, la miniatura)
+    const fotoPrincipal =
+      document.getElementById("premioFoto");
+
+    if (fotoPrincipal && fotos.length) {
+      fotoPrincipal.src =
+        fotos[0].url ||
+        `assets/premios/${encodeURIComponent(fotos[0].name)}`;
+    }
 
 
     const urls = [];
@@ -1689,10 +1723,11 @@ async function cargarGaleria() {
 
     for (
       const item
-      of archivos.items
+      of fotos
     ) {
 
       const url =
+        item.url ||
         await getDownloadURL(
           item
         );
