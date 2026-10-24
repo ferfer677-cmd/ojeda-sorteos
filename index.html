@@ -18,11 +18,21 @@
 
   <meta name="theme-color" content="#0f172a">
 
+  <!-- Vista previa al compartir el link (WhatsApp, Instagram, Facebook) -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://ojedasorteos.com.ar/">
+  <meta property="og:title" content="Sorteo Yamaha MT-07 + 3 premios de $500.000">
+  <meta property="og:description" content="Viernes 13/11 a las 21 hs, en vivo por Instagram. Participá desde $5.000. +70 ganadores reales.">
+  <meta property="og:image" content="https://ojedasorteos.com.ar/assets/banner-mt07-1.jpg">
+  <meta property="og:image:width" content="1080">
+  <meta property="og:image:height" content="1350">
+  <meta name="twitter:card" content="summary_large_image">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="estilo.css?v=1">
+  <link rel="stylesheet" href="estilo.css?v=3">
 
   <!-- META PIXEL -->
   <script>
@@ -90,18 +100,58 @@
 
 <article class="producto">
 
-  <a class="producto-foto" href="#premios" aria-label="Ver todas las fotos del premio">
-    <img
-      id="premioFoto"
-      src="assets/premios/grandes/IMG_5235.jpg"
-      alt="Yamaha MT-07 del sorteo"
-      width="1200"
-      height="1600"
-      fetchpriority="high"
-    >
-    <span class="etiqueta-vivo">● Sorteo en vivo</span>
-    <span class="etiqueta-fotos">📷 Ver fotos</span>
-  </a>
+  <!-- Banners hechos con ChatGPT (4:5). Para el próximo sorteo, reemplazar
+       assets/banner-mt07-N.jpg (1080 px) y -640.jpg. Pasan solos cada 3 s. -->
+  <div class="banner-carrusel" aria-roledescription="carrusel" aria-label="Sorteo Yamaha MT-07">
+
+    <div class="banner-pista">
+
+      <div class="banner" aria-roledescription="diapositiva" aria-label="1 de 4">
+        <img src="assets/banner-mt07-1-640.jpg"
+             srcset="assets/banner-mt07-1-640.jpg 640w, assets/banner-mt07-1.jpg 1080w"
+             sizes="(max-width: 600px) 100vw, 560px"
+             width="1080" height="1350"
+             fetchpriority="high"
+             alt="Sorteo Yamaha MT-07 más 3 premios de $500.000. Viernes 13/11, 21 hs, en vivo. Sorteo a nivel país.">
+      </div>
+
+      <div class="banner" aria-roledescription="diapositiva" aria-label="2 de 4">
+        <img src="assets/banner-mt07-2-640.jpg"
+             srcset="assets/banner-mt07-2-640.jpg 640w, assets/banner-mt07-2.jpg 1080w"
+             sizes="(max-width: 600px) 100vw, 560px"
+             width="1080" height="1350"
+             loading="lazy"
+             alt="Una MT-07 y $1.500.000 en efectivo: la moto y 3 premios de $500.000. Transferencia de la moto incluida.">
+      </div>
+
+      <div class="banner" aria-roledescription="diapositiva" aria-label="3 de 4">
+        <img src="assets/banner-mt07-3-640.jpg"
+             srcset="assets/banner-mt07-3-640.jpg 640w, assets/banner-mt07-3.jpg 1080w"
+             sizes="(max-width: 600px) 100vw, 560px"
+             width="1080" height="1350"
+             loading="lazy"
+             alt="Participá desde $5.000. Comprá todas las veces que quieras. ¿Tenés palabra clave? 50% OFF.">
+      </div>
+
+      <div class="banner" aria-roledescription="diapositiva" aria-label="4 de 4">
+        <img src="assets/banner-mt07-4-640.jpg"
+             srcset="assets/banner-mt07-4-640.jpg 640w, assets/banner-mt07-4.jpg 1080w"
+             sizes="(max-width: 600px) 100vw, 560px"
+             width="1080" height="1350"
+             loading="lazy"
+             alt="Más de 70 ganadores reales. Todos los sorteos en vivo por Instagram. Viernes 13/11, 21 hs.">
+      </div>
+
+    </div>
+
+    <div class="banner-puntos" role="tablist" aria-label="Elegir banner">
+      <button type="button" aria-label="Banner 1"></button>
+      <button type="button" aria-label="Banner 2"></button>
+      <button type="button" aria-label="Banner 3"></button>
+      <button type="button" aria-label="Banner 4"></button>
+    </div>
+
+  </div>
 
   <div class="producto-cuerpo">
 
@@ -150,6 +200,8 @@
     <a href="#chances" class="boton participar-btn">🎟️ Elegir mis chances</a>
 
     <a href="#numeros" class="boton-sec consultar-btn">Ya compré: ver mis números</a>
+
+    <a href="#premios" class="ver-fotos">📷 Ver las fotos reales de la moto</a>
 
   </div>
 
@@ -307,6 +359,26 @@
 
 
 <!-- ==================================================
+     COMPARTIR (link personal, ver compartirSorteo en script.js)
+================================================== -->
+
+<section class="compartir">
+
+  <h2>🎁 Ganá $50.000 extra</h2>
+
+  <p class="bajada">
+    Compartí el sorteo con tu link personal. Si alguien participa desde
+    tu link, entrás al sorteo de <strong>$50.000</strong>.
+  </p>
+
+  <button type="button" class="boton" data-compartir>📲 Compartir con un amigo</button>
+
+  <p class="compartir-nota">Tu link se activa cuando participás o consultás tus números con tu DNI.</p>
+
+</section>
+
+
+<!-- ==================================================
      GANADORES (datos en ganadores.js)
 ================================================== -->
 
@@ -411,6 +483,15 @@
       <strong>Si no pudiste subir el comprobante,</strong> mandanos un mensaje por
       <a href="https://instagram.com/sorteo_ojeda_" target="_blank" rel="noopener">Instagram</a>
       con el comprobante, tu DNI y tu teléfono, y te lo cargamos a mano.
+    </p>
+  </details>
+
+  <details>
+    <summary>¿Cómo participo por los $50.000 extra?</summary>
+    <p>
+      Después de participar, tocá <strong>Compartir con un amigo</strong> y mandá tu
+      link. Si alguien participa desde tu link, entrás al sorteo de $50.000
+      (más personas desde tu link, más chances). Se sortea el mismo día, en el vivo.
     </p>
   </details>
 
@@ -598,6 +679,12 @@
       (suele tardar minutos).
     </p>
 
+    <div class="success-compartir">
+      <b>🎁 Ganá $50.000 extra</b>
+      <span>Si alguien participa desde tu link, entrás al sorteo de $50.000.</span>
+      <button type="button" data-compartir>📲 Compartir mi link</button>
+    </div>
+
     <button id="successBtn" type="button">Aceptar</button>
 
   </div>
@@ -631,7 +718,7 @@
 <!-- Fecha de cierre, fotos y "un cartel por vez" (va antes que el resto) -->
 <script src="./carteles.js?v=5"></script>
 
-<script type="module" src="./script.js?v=15"></script>
+<script type="module" src="./script.js?v=16"></script>
 
 <!-- Carteles al entrar (cartel-cierre.js y cartel-proximo.js): desactivados
      el 24/10/2026 para que la página sea más limpia. Para volver a
@@ -639,6 +726,9 @@
 
 <!-- Barra de compra fija en celular + bloqueo de compras al cierre -->
 <script src="./barra-compra.js?v=3" defer></script>
+
+<!-- Carrusel de banners -->
+<script src="./banner-carrusel.js?v=2" defer></script>
 
 <!-- Ganadores anteriores -->
 <script src="./ganadores.js?v=15" defer></script>

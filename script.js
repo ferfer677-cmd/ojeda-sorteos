@@ -29,8 +29,9 @@ import {
 const urlParams =
   new URLSearchParams(window.location.search);
 
+// Link personal: ?ref=<DNI de quien compartió> (solo números)
 const referido =
-  urlParams.get("ref");
+  (urlParams.get("ref") || "").replace(/\D/g, "");
 
 if (referido) {
 
@@ -45,6 +46,67 @@ if (referido) {
   );
 
 }
+
+
+// ======================================================
+// COMPARTIR EL SORTEO (link personal)
+// ======================================================
+// Quien ya participó comparte ojedasorteos.com.ar/?ref=<su DNI>.
+// Si alguien compra desde ese link, la compra guarda "referido"
+// y quien compartió entra al sorteo de $50.000 (ver admin).
+
+const LINK_SORTEO = "https://ojedasorteos.com.ar/";
+
+function miDni() {
+  try {
+    return localStorage.getItem("ojedaMiDni") || "";
+  } catch {
+    return "";
+  }
+}
+
+function guardarMiDni(dni) {
+  const limpio = String(dni || "").replace(/\D/g, "");
+  if (!limpio) return;
+  try {
+    localStorage.setItem("ojedaMiDni", limpio);
+  } catch {}
+}
+
+async function compartirSorteo() {
+
+  const dni = miDni();
+
+  const url =
+    dni ? `${LINK_SORTEO}?ref=${dni}` : LINK_SORTEO;
+
+  const texto =
+    "🏍️ Sorteo de una Yamaha MT-07 + 3 premios de $500.000. " +
+    "Viernes 13/11 en vivo. Participá desde $5.000 👇";
+
+  try {
+
+    if (navigator.share) {
+      await navigator.share({ title: "Sorteo Yamaha MT-07", text: texto, url });
+      return;
+    }
+
+    await navigator.clipboard.writeText(`${texto}
+${url}`);
+    alert("✅ Link copiado. Pegalo en WhatsApp, Instagram o donde quieras.");
+
+  } catch (error) {
+    // Cerrar el menú de compartir no es un error
+    if (error?.name !== "AbortError") {
+      prompt("Copiá este link y compartilo:", url);
+    }
+  }
+
+}
+
+document.querySelectorAll("[data-compartir]").forEach((boton) => {
+  boton.addEventListener("click", compartirSorteo);
+});
 
 
 // ======================================================
@@ -1018,6 +1080,10 @@ multiplicadorPromo:
               );
 
             }
+
+
+            // Para el link personal de "Compartir"
+            guardarMiDni(dni);
 
 
             // ------------------------------------------
@@ -2280,6 +2346,8 @@ if (btnConsultar && resultadoNumeros) {
           .toString()
           .trim()
           .replace(/\D/g, "");
+
+      guardarMiDni(dniBuscado);
 
       resultadoNumeros.innerHTML = `
         <p>

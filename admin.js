@@ -90,6 +90,12 @@ const statPagados =
 const statClaves =
   document.getElementById("statClaves");
 
+const statReferidos =
+  document.getElementById("statReferidos");
+
+const sortearReferidos =
+  document.getElementById("sortearReferidos");
+
 const aprobarTodos =
   document.getElementById("aprobarTodos");
 
@@ -911,6 +917,111 @@ function esc(valor) {
 
 
 // =====================================================
+// SORTEO DE $50.000 POR COMPARTIR
+// =====================================================
+// Cada compra APROBADA hecha desde el link de alguien
+// (campo "referido" = DNI de quien compartió) le da 1 chance
+// a esa persona. Tiene que estar participando y no cuenta
+// comprar desde el propio link.
+
+function chancesSorteoReferidos(participantes) {
+
+  const participantePorDni = new Map();
+
+  participantes.forEach(({ datos }) => {
+    const dni = dniDe(datos);
+    if (dni && !participantePorDni.has(dni)) {
+      participantePorDni.set(dni, datos);
+    }
+  });
+
+  const chancesPorDni = new Map();
+  let compras = 0;
+
+  participantes.forEach(({ datos }) => {
+
+    const ref =
+      String(datos.referido || "").replace(/[^0-9]/g, "");
+
+    if (
+      datos.estado !== "Pagado" ||
+      !ref ||
+      ref === dniDe(datos) ||
+      !participantePorDni.has(ref)
+    ) {
+      return;
+    }
+
+    chancesPorDni.set(ref, (chancesPorDni.get(ref) || 0) + 1);
+    compras++;
+
+  });
+
+  const personas =
+    [...chancesPorDni.entries()].map(([dni, chances]) => ({
+      dni,
+      chances,
+      datos: participantePorDni.get(dni)
+    }));
+
+  return { personas, compras };
+
+}
+
+
+if (sortearReferidos) {
+
+  sortearReferidos.addEventListener("click", async () => {
+
+    sortearReferidos.disabled = true;
+
+    try {
+
+      const { personas, compras } =
+        chancesSorteoReferidos(await obtenerParticipantes());
+
+      if (!personas.length) {
+        alert("Todavía nadie compró desde el link de otro participante.");
+        return;
+      }
+
+      if (!confirm(`Hay ${personas.length} personas con ${compras} chances en total.\n\n¿Sortear ahora los $50.000?`)) {
+        return;
+      }
+
+      // Al azar, con tantas chances como compras trajo cada uno
+      let numero = Math.floor(Math.random() * compras);
+      const ganador =
+        personas.find((p) => (numero -= p.chances) < 0);
+
+      const d = ganador.datos;
+
+      alert(
+        "🎉 GANADOR DE LOS $50.000\n\n" +
+        `${d.nombre || ""} ${d.apellido || ""}\n` +
+        `DNI: ${d.dni || ganador.dni}\n` +
+        `Teléfono: ${d.telefono || "-"}\n` +
+        `Instagram: ${d.instagram || "-"}\n\n` +
+        `Tenía ${ganador.chances} de ${compras} chances.`
+      );
+
+    } catch (error) {
+
+      console.error("ERROR SORTEANDO REFERIDOS:", error);
+      alert("❌ No se pudo sortear.\n\n" + error.message);
+
+    } finally {
+
+      sortearReferidos.disabled = false;
+
+    }
+
+  });
+
+}
+
+
+// =====================================================
 // PRECIO DE UNA COMPRA
 // =====================================================
 // El precio real con el que se compró (queda escrito en "pack");
@@ -1024,6 +1135,14 @@ async function cargarParticipantes(
 
     // Entradas por palabra clave (de qué portal vino cada compra)
     const porPalabraClave = {};
+
+    // Nombre de cada participante por DNI (para "vino por el link de...")
+    const nombrePorDni = new Map(
+      participantes.map(({ datos }) => [
+        dniDe(datos),
+        `${datos.nombre || ""} ${datos.apellido || ""}`.trim()
+      ])
+    );
 
 
     participantes.forEach(
@@ -1239,6 +1358,14 @@ async function cargarParticipantes(
             ${
               datos.codigoPromo
                 ? `<span class="card-clave">🔑 Palabra clave: ${esc(datos.codigoPromo)}</span>`
+                : ""
+            }
+
+            ${
+              datos.referido && datos.referido !== dniDe(datos)
+                ? `<span class="card-clave card-ref">🤝 Vino por el link de ${
+                    esc(nombrePorDni.get(datos.referido) || "DNI " + datos.referido)
+                  }</span>`
                 : ""
             }
 
@@ -1668,6 +1795,19 @@ await actualizarConsulta(
         porAprobar > 0
           ? `+ $${porAprobar.toLocaleString("es-AR")} por aprobar`
           : "Nada por aprobar";
+
+    }
+
+
+    if (statReferidos) {
+
+      const { personas, compras } =
+        chancesSorteoReferidos(participantes);
+
+      statReferidos.textContent =
+        compras
+          ? `${compras} compra${compras === 1 ? "" : "s"} aprobada${compras === 1 ? "" : "s"} desde links · ${personas.length} persona${personas.length === 1 ? "" : "s"} en el sorteo de $50.000`
+          : "Todavía nadie compró desde el link de otro";
 
     }
 

@@ -533,3 +533,11 @@ button:disabled { opacity: .6; cursor: wait; }
   color: #cbd5e1;
   white-space: nowrap;
 }
+
+
+/* Compra que vino por el link de otro participante */
+.card-ref {
+  margin-left: 4px;
+  color: #065f46;
+  background: #d1fae5;
+}

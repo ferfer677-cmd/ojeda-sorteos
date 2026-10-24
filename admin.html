@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="admin.css?v=4">
+<link rel="stylesheet" href="admin.css?v=5">
 </head>
 
 <body>
@@ -72,6 +72,11 @@
       </div>
 
       <div class="stat stat-claves">
+        <small>🎁 Sorteo de $50.000 por compartir</small>
+        <span id="statReferidos">-</span>
+      </div>
+
+      <div class="stat stat-claves">
         <small>🔑 Compras por palabra clave (de dónde entraron)</small>
         <span id="statClaves">-</span>
       </div>
@@ -91,6 +96,8 @@
       <button id="exportarSorteo" type="button">📥 EXPORTAR EXCEL</button>
 
       <button id="exportarMeta" type="button">📤 EXPORTAR PARA META</button>
+
+      <button id="sortearReferidos" type="button">🎲 SORTEAR LOS $50.000</button>
 
     </section>
 
@@ -130,7 +137,7 @@
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-<script type="module" src="admin.js?v=10"></script>
+<script type="module" src="admin.js?v=11"></script>
 
 <!-- Visor de comprobantes: se agranda en la misma página -->
 <div class="visor" id="visor" hidden>
