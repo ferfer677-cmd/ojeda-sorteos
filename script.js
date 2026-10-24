@@ -1244,6 +1244,13 @@ multiplicadorPromo:
 
 
     // ==================================================
+    // ÚLTIMAS COMPRAS
+    // ==================================================
+
+    iniciarUltimasCompras();
+
+
+    // ==================================================
     // NOTIFICACIONES EN VIVO ("Fulano compró...")
     // ==================================================
     // Desactivadas el 24/10/2026 (página más limpia).
@@ -2218,6 +2225,123 @@ function nombreRanking(
 // ======================================================
 // CARGAR RANKING
 // ======================================================
+// ======================================================
+// ÚLTIMAS COMPRAS (recuadro fijo en la página)
+// ======================================================
+// Muestra las 3 compras más recientes de "compras_recientes"
+// (nombre abreviado y pack) y se actualiza sola. Del pack se
+// muestra solo la cantidad de chances: así no se ven las
+// palabras clave de cada portal.
+
+const CANTIDAD_ULTIMAS_COMPRAS = 3;
+
+let ultimasCompras = [];
+
+function haceCuanto(fecha) {
+
+  if (!fecha) {
+    return "recién";
+  }
+
+  const minutos =
+    Math.floor((Date.now() - fecha.getTime()) / 60000);
+
+  if (minutos < 1) return "recién";
+  if (minutos < 60) return `hace ${minutos} min`;
+
+  const horas = Math.floor(minutos / 60);
+  if (horas < 24) return `hace ${horas} h`;
+
+  const dias = Math.floor(horas / 24);
+  return dias === 1 ? "hace 1 día" : `hace ${dias} días`;
+
+}
+
+function mostrarUltimasCompras() {
+
+  const seccion =
+    document.getElementById("ultimasCompras");
+
+  const lista =
+    document.getElementById("ultimasComprasLista");
+
+  if (!seccion || !lista) {
+    return;
+  }
+
+  seccion.hidden = ultimasCompras.length === 0;
+
+  lista.innerHTML = "";
+
+  ultimasCompras.forEach((compra) => {
+
+    const chances =
+      Number(String(compra.pack || "").match(/(\d+)\s*CHANCE/i)?.[1]) || 0;
+
+    const item = document.createElement("li");
+
+    const nombre = document.createElement("strong");
+    nombre.textContent = compra.nombre || "Alguien";
+
+    const detalle = document.createElement("span");
+    detalle.textContent =
+      chances ? `${chances} chance${chances === 1 ? "" : "s"}` : "chances";
+
+    const cuando = document.createElement("small");
+    cuando.textContent = haceCuanto(compra.fecha);
+
+    item.append(nombre, detalle, cuando);
+    lista.appendChild(item);
+
+  });
+
+}
+
+function iniciarUltimasCompras() {
+
+  if (!document.getElementById("ultimasCompras")) {
+    return;
+  }
+
+  try {
+
+    onSnapshot(
+      query(
+        collection(db, "compras_recientes"),
+        // Solo las de este sorteo (OJEDA_INICIO en carteles.js)
+        where("fecha", ">=", window.OJEDA_INICIO || new Date(0)),
+        orderBy("fecha", "desc"),
+        limit(CANTIDAD_ULTIMAS_COMPRAS)
+      ),
+      (snapshot) => {
+        ultimasCompras =
+          snapshot.docs.map((documento) => {
+            const datos = documento.data();
+            return {
+              nombre: datos.nombre,
+              pack: datos.pack,
+              fecha: datos.fecha?.toDate?.() || null
+            };
+          });
+        mostrarUltimasCompras();
+      },
+      (error) => {
+        console.warn("No se pudieron leer las últimas compras:", error);
+      }
+    );
+
+    // "hace X min" se actualiza solo
+    setInterval(mostrarUltimasCompras, 60000);
+
+  } catch (error) {
+
+    console.warn("No se pudieron leer las últimas compras:", error);
+
+  }
+
+}
+
+
 // ======================================================
 // PACK MÁS ELEGIDO
 // ======================================================

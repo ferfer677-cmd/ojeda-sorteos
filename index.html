@@ -32,7 +32,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="estilo.css?v=3">
+  <link rel="stylesheet" href="estilo.css?v=4">
 
   <!-- META PIXEL -->
   <script>
@@ -225,6 +225,16 @@
 
   <p class="draw-date">🔒 Cierre de compras: viernes 13/11 · 19:00 hs</p>
 
+</div>
+
+
+<!-- ==================================================
+     ÚLTIMAS COMPRAS (las carga script.js; se oculta si no hay)
+================================================== -->
+
+<div class="ultimas-compras" id="ultimasCompras" hidden>
+  <p class="ultimas-titulo"><span class="punto-vivo"></span> Últimas compras</p>
+  <ul id="ultimasComprasLista"></ul>
 </div>
 
 
@@ -717,9 +727,9 @@
 ================================================== -->
 
 <!-- Fecha de cierre, fotos y "un cartel por vez" (va antes que el resto) -->
-<script src="./carteles.js?v=5"></script>
+<script src="./carteles.js?v=6"></script>
 
-<script type="module" src="./script.js?v=17"></script>
+<script type="module" src="./script.js?v=18"></script>
 
 <!-- Carteles al entrar (cartel-cierre.js y cartel-proximo.js): desactivados
      el 24/10/2026 para que la página sea más limpia. Para volver a

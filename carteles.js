@@ -12,6 +12,12 @@ window.OJEDA_CIERRE =
   new Date("2026-11-13T19:00:00-03:00");
 
 
+// INICIO DEL SORTEO: "Últimas compras" muestra solo compras desde esta fecha
+// (así no aparecen las del sorteo anterior). Cambiarla en cada sorteo nuevo.
+window.OJEDA_INICIO =
+  new Date("2026-10-24T00:00:00-03:00");
+
+
 // FOTOS DEL PREMIO (galería y tarjeta principal)
 // Nombres de archivo: miniatura en assets/premios/, grande en assets/premios/grandes/.
 // La primera es la foto principal. Vacía = se usan las de Firebase Storage.
