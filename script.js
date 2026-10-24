@@ -417,18 +417,18 @@ const revelationDate =
 // ================================================
 // ETAPA 2
 // Sorteo definitivo
-// Viernes 13 de noviembre de 2026 — 22:00 hs
+// Viernes 13 de noviembre de 2026 — 21:00 hs
 // Argentina UTC-3
 // ================================================
 
 const raffleDate =
-  new Date("2026-11-13T22:00:00-03:00");
+  new Date("2026-11-13T21:00:00-03:00");
 
 // Cierre de compras: la misma hora que el cartel emergente
 // (window.OJEDA_CIERRE en carteles.js), así los dos relojes coinciden.
 const closingDate =
   window.OJEDA_CIERRE ||
-  new Date("2026-11-13T21:30:00-03:00");
+  new Date("2026-11-13T19:00:00-03:00");
 
 
 // ==================================================
@@ -464,7 +464,7 @@ function updateCountdown() {
 
 
   // ==================================================
-  // ETAPA 2 — FALTA PARA EL CIERRE DE COMPRAS (21:30)
+  // ETAPA 2 — FALTA PARA EL CIERRE DE COMPRAS (19:00)
   // ==================================================
 
   if (now < closingDate) {
@@ -476,7 +476,7 @@ function updateCountdown() {
 
     if (drawDate) {
       drawDate.innerText =
-        "🔒 Cierre de compras: viernes 13/11 · 21:30 hs\n🏆 Sorteo en vivo: 22:00 hs";
+        "🔒 Cierre de compras: viernes 13/11 · 19:00 hs\n🏆 Sorteo en vivo: 21:00 hs";
     }
 
     actualizarValores(
@@ -500,7 +500,7 @@ function updateCountdown() {
 
     if (drawDate) {
       drawDate.innerText =
-        "🏆 Viernes 13 de noviembre · 22:00 hs";
+        "🏆 Viernes 13 de noviembre · 21:00 hs";
     }
 
     actualizarValores(

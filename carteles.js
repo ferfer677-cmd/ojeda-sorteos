@@ -4,12 +4,12 @@
 // Se carga antes que los demás scripts de index.html.
 //
 // CIERRE DE PARTICIPACIONES:
-// Viernes 13 de noviembre de 2026 — 21:30 hs (Argentina UTC-3).
+// Viernes 13 de noviembre de 2026 — 19:00 hs (Argentina UTC-3).
 // Si la cambiás, cambiala también en firestore.rules y storage.rules
-// (ahí está en hora UTC: 21:30 de Argentina = 00:30 UTC del día siguiente).
+// (ahí está en hora UTC: 19:00 de Argentina = 22:00 UTC).
 
 window.OJEDA_CIERRE =
-  new Date("2026-11-13T21:30:00-03:00");
+  new Date("2026-11-13T19:00:00-03:00");
 
 
 // FOTOS DEL PREMIO (galería y tarjeta principal)
