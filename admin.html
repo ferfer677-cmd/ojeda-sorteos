@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="admin.css?v=3">
+<link rel="stylesheet" href="admin.css?v=4">
 </head>
 
 <body>
@@ -129,6 +129,53 @@
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
 <script type="module" src="admin.js?v=7"></script>
+
+<!-- Visor de comprobantes: se agranda en la misma página -->
+<div class="visor" id="visor" hidden>
+  <a class="visor-nueva" id="visorNueva" target="_blank" rel="noopener">Abrir aparte ↗</a>
+  <button type="button" class="visor-cerrar" id="visorCerrar">✕ Cerrar</button>
+  <img id="visorImagen" alt="Comprobante">
+  <span class="visor-ayuda">Tocá la foto para verla en tamaño real · Esc para cerrar</span>
+</div>
+
+<script>
+  (function () {
+    const visor = document.getElementById("visor");
+    const imagen = document.getElementById("visorImagen");
+
+    function cerrar() {
+      visor.hidden = true;
+      visor.classList.remove("real");
+      imagen.removeAttribute("src");
+      document.body.style.overflow = "";
+    }
+
+    // Tocar una miniatura (las tarjetas se arman después, por eso se escucha en document)
+    document.addEventListener("click", (e) => {
+      const miniatura = e.target.closest(".card-comprobante:not(.pdf):not(.sin)");
+      if (!miniatura) return;
+      e.preventDefault();
+      imagen.src = miniatura.href;
+      document.getElementById("visorNueva").href = miniatura.href;
+      visor.hidden = false;
+      visor.scrollTo(0, 0);
+      document.body.style.overflow = "hidden";
+    });
+
+    imagen.addEventListener("click", () => visor.classList.toggle("real"));
+
+    document.getElementById("visorCerrar").addEventListener("click", cerrar);
+
+    // Tocar el fondo oscuro también cierra
+    visor.addEventListener("click", (e) => {
+      if (e.target === visor) cerrar();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !visor.hidden) cerrar();
+    });
+  })();
+</script>
 
 <!-- Pestañas Pendientes / Aprobados -->
 <script>

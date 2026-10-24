@@ -338,10 +338,12 @@ button:disabled { opacity: .6; cursor: wait; }
   border-radius: 10px;
 }
 
+/* La foto entera, sin recortar */
 .card-comprobante img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  cursor: zoom-in;
 }
 
 .card-comprobante.sin { color: var(--rojo); background: #fef2f2; }
@@ -466,4 +468,68 @@ button:disabled { opacity: .6; cursor: wait; }
 
   .barra-link { display: none; }
 
+}
+
+
+/* ======================================================
+   VISOR DE COMPROBANTES (se abre en la misma página)
+   ====================================================== */
+
+.visor {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  background: rgba(15, 23, 42, .92);
+}
+
+.visor img {
+  display: block;
+  max-width: 96vw;
+  max-height: 92vh;
+  margin: auto;
+  background: #fff;
+  border-radius: 8px;
+  cursor: zoom-in;
+}
+
+/* Tocando la foto se ve en su tamaño real (con scroll) */
+.visor.real { align-items: flex-start; justify-content: flex-start; }
+
+.visor.real img {
+  max-width: none;
+  max-height: none;
+  cursor: zoom-out;
+}
+
+.visor-cerrar,
+.visor-nueva {
+  position: fixed;
+  top: 14px;
+  z-index: 1;
+  padding: 9px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  color: #fff;
+  background: rgba(255, 255, 255, .15);
+  border: 0;
+  border-radius: 999px;
+}
+
+.visor-cerrar { right: 14px; }
+
+.visor-nueva { right: 120px; }
+
+.visor-ayuda {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #cbd5e1;
+  white-space: nowrap;
 }
