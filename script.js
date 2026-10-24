@@ -57,6 +57,9 @@ if (referido) {
 
 const LINK_SORTEO = "https://ojedasorteos.com.ar/";
 
+// Los llena el bloque principal (preciosNormales)
+let preciosNormalesPublicos = {};
+
 function miDni() {
   try {
     return localStorage.getItem("ojedaMiDni") || "";
@@ -231,6 +234,9 @@ const preciosNormales = {
   50: 50000,
   100: 75000
 };
+
+// Para la cinta del pack más elegido (fuera de este bloque)
+preciosNormalesPublicos = preciosNormales;
 
 // Mitad del precio normal (50% OFF)
 const preciosConDescuento = {
@@ -1231,6 +1237,13 @@ multiplicadorPromo:
 
 
     // ==================================================
+    // PACK MÁS ELEGIDO (calculado por el admin)
+    // ==================================================
+
+    cargarPackMasElegido();
+
+
+    // ==================================================
     // NOTIFICACIONES EN VIVO ("Fulano compró...")
     // ==================================================
     // Desactivadas el 24/10/2026 (página más limpia).
@@ -2205,6 +2218,87 @@ function nombreRanking(
 // ======================================================
 // CARGAR RANKING
 // ======================================================
+// ======================================================
+// PACK MÁS ELEGIDO
+// ======================================================
+// El admin publica en "publico/packs" qué pack se compra más
+// (masElegido = cantidad de chances) y con qué porcentaje.
+// Si todavía no hay datos, queda destacado el de 30.
+
+async function cargarPackMasElegido() {
+
+  try {
+
+    const documento =
+      await getDoc(doc(db, "publico", "packs"));
+
+    const { masElegido, porcentaje } =
+      documento.exists() ? documento.data() : {};
+
+    if (masElegido) {
+      destacarPack(Number(masElegido), Number(porcentaje) || 0);
+    }
+
+  } catch (error) {
+
+    console.warn("No se pudo leer el pack más elegido:", error);
+
+  }
+
+}
+
+
+function destacarPack(chances, porcentaje) {
+
+  const grilla =
+    document.querySelector(".packs-grid");
+
+  const elegido =
+    grilla?.querySelector(`.pack-card[data-chances="${chances}"]`);
+
+  if (!grilla || !elegido) {
+    return;
+  }
+
+  // Sacar el destacado actual
+  grilla.querySelectorAll(".pack-card").forEach((tarjeta) => {
+    tarjeta.classList.remove("pack-recomendado", "pack-ancho");
+  });
+
+  grilla.querySelectorAll(".pack-cinta").forEach((cinta) => cinta.remove());
+
+  // Cinta con el porcentaje real y lo que se ahorra
+  const anterior =
+    Number(elegido.querySelector(".precio-anterior")?.textContent.replace(/[^0-9]/g, "")) || 0;
+
+  const ahorro =
+    anterior - (preciosNormalesPublicos[chances] || 0);
+
+  const cinta = document.createElement("span");
+  cinta.className = "pack-cinta";
+  cinta.textContent =
+    `⭐ La más elegida · ${porcentaje}% de las compras` +
+    (ahorro > 0 ? ` · Ahorrás $${ahorro.toLocaleString("es-AR")}` : "");
+
+  elegido.prepend(cinta);
+  elegido.classList.add("pack-recomendado");
+  grilla.prepend(elegido);
+
+  // Las demás, de menor a mayor y de a 2 por fila;
+  // si queda una sola al final, ocupa todo el ancho
+  const resto =
+    [...grilla.querySelectorAll(".pack-card:not(.pack-recomendado)")]
+      .sort((x, y) => Number(x.dataset.chances) - Number(y.dataset.chances));
+
+  resto.forEach((tarjeta) => grilla.appendChild(tarjeta));
+
+  if (resto.length % 2 === 1) {
+    resto[resto.length - 1].classList.add("pack-ancho");
+  }
+
+}
+
+
 async function cargarRanking() {
 
   const container =

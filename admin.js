@@ -917,6 +917,82 @@ function esc(valor) {
 
 
 // =====================================================
+// PACK MÁS ELEGIDO (lo muestra la página)
+// =====================================================
+// Cuenta las compras APROBADAS de cada pack y publica en
+// "publico/packs" solo el resultado (sin datos de nadie).
+// Con menos de MINIMO_COMPRAS_PACK compras no publica nada
+// y la página deja el pack de 30 como destacado.
+
+const PACKS_PAGINA = [1, 3, 10, 30, 50, 100];
+
+const MINIMO_COMPRAS_PACK = 10;
+
+let ultimoPackPublicado = "";
+
+async function publicarPackMasElegido(participantes) {
+
+  const conteo = {};
+  let total = 0;
+
+  participantes.forEach(({ datos }) => {
+
+    if (datos.estado !== "Pagado") {
+      return;
+    }
+
+    const chances =
+      Number(datos.chancesBase) || cantidadPorPack(datos.pack);
+
+    if (!PACKS_PAGINA.includes(chances)) {
+      return;
+    }
+
+    conteo[chances] = (conteo[chances] || 0) + 1;
+    total++;
+
+  });
+
+  let masElegido = null;
+
+  if (total >= MINIMO_COMPRAS_PACK) {
+    masElegido =
+      Number(Object.entries(conteo).sort((x, y) => y[1] - x[1])[0][0]);
+  }
+
+  const porcentaje =
+    masElegido ? Math.round((conteo[masElegido] / total) * 100) : 0;
+
+  // Solo escribir si cambió (el panel recarga la lista seguido)
+  const clave = `${masElegido}-${porcentaje}`;
+
+  if (clave === ultimoPackPublicado) {
+    return;
+  }
+
+  try {
+
+    await setDoc(
+      doc(db, "publico", "packs"),
+      {
+        masElegido,
+        porcentaje,
+        actualizado: serverTimestamp()
+      }
+    );
+
+    ultimoPackPublicado = clave;
+
+  } catch (error) {
+
+    console.error("No se pudo publicar el pack más elegido:", error);
+
+  }
+
+}
+
+
+// =====================================================
 // SORTEO DE $50.000 POR COMPARTIR
 // =====================================================
 // Cada compra APROBADA hecha desde el link de alguien
@@ -1130,6 +1206,9 @@ async function cargarParticipantes(
     // =================================================
 
     let recaudacion = 0;
+
+    // La página destaca el pack que de verdad más se compra
+    publicarPackMasElegido(participantes);
 
     let porAprobar = 0;
 
