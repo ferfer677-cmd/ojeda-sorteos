@@ -2038,11 +2038,8 @@ if (borrarTodo) {
       // (después del borrado ya no se pueden recuperar)
       if (
         confirm(
-          "Antes de borrar: ¿querés descargar los compradores para Meta?
-
-" +
-          "Aceptar = descargar el archivo ahora
-" +
+          "Antes de borrar: ¿querés descargar los compradores para Meta?\n\n" +
+          "Aceptar = descargar el archivo ahora\n" +
           "Cancelar = seguir sin descargar"
         )
       ) {
@@ -2051,9 +2048,7 @@ if (borrarTodo) {
           await exportarParaMeta();
         } catch (error) {
           alert(
-            "❌ No se pudo exportar para Meta, así que no se borra nada.
-
-" +
+            "❌ No se pudo exportar para Meta, así que no se borra nada.\n\n" +
             error.message
           );
           return;
