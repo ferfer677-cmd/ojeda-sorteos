@@ -15,7 +15,26 @@ window.OJEDA_CIERRE =
 // FOTOS DEL PREMIO (galería y tarjeta principal)
 // Nombres de archivo: miniatura en assets/premios/, grande en assets/premios/grandes/.
 // La primera es la foto principal. Vacía = se usan las de Firebase Storage.
-window.OJEDA_FOTOS = [];
+window.OJEDA_FOTOS = [
+  "IMG_5235.jpg",
+  "IMG_5228.jpg",
+  "IMG_5226.jpg",
+  "IMG_5229.jpg",
+  "IMG_5233.jpg",
+  "IMG_5234.jpg",
+  "IMG_5227.jpg",
+  "IMG_5230.jpg",
+  "IMG_5231.jpg",
+  "IMG_5232.jpg",
+  "IMG_5236.jpg",
+  "IMG_5237.jpg",
+  "IMG_5238.jpg",
+  "IMG_5239.jpg",
+  "IMG_5240.jpg",
+  "IMG_5241.jpg",
+  "IMG_5242.jpg",
+  "IMG_5243.jpg"
+];
 
 
 window.participacionesCerradas = function () {
