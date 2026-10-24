@@ -6126,3 +6126,97 @@ a.ganador-quien:hover {
 .ranking-live[hidden] {
   display: none !important;
 }
+
+/* ==================================================
+   PREGUNTAS FRECUENTES Y TÉRMINOS
+================================================== */
+
+.faq {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 16px 20px;
+  text-align: center;
+}
+
+.faq h2 {
+  margin: 0 0 20px;
+  font-family: Oswald, sans-serif;
+  font-size: 30px;
+  color: #fff;
+}
+
+.faq details {
+  margin-bottom: 10px;
+  text-align: left;
+  background: #141414;
+  border: 1px solid #222;
+  border-radius: 12px;
+}
+
+.faq details[open] {
+  border-color: #ffcc00;
+}
+
+.faq summary {
+  position: relative;
+  padding: 15px 44px 15px 16px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  cursor: pointer;
+  list-style: none;
+}
+
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq summary::after {
+  content: "+";
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  transform: translateY(-50%);
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffcc00;
+}
+
+.faq details[open] summary::after {
+  content: "−";
+}
+
+.faq details p {
+  margin: 0;
+  padding: 0 16px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #bbb;
+}
+
+.faq details a,
+.faq-terminos,
+.pie-links a,
+.acepta-terminos a {
+  color: #ffcc00;
+}
+
+.faq-terminos {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.pie-links {
+  margin: 20px 0 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.acepta-terminos {
+  margin: 10px 0 0;
+  font-size: 12px;
+  text-align: center;
+  color: #888;
+}
