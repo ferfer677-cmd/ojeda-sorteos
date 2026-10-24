@@ -23,10 +23,10 @@ service firebase.storage {
     // Solo se puede leer durante 15 minutos después de subirlo
     // (para obtener el link al enviar la compra); después, solo el admin.
     match /comprobantes/{archivo} {
-      // Hasta el cierre: viernes 16/10/2026 21:30 hs Argentina
+      // Hasta el cierre: viernes 13/11/2026 19:00 hs Argentina
       // (mismo número que en firestore.rules)
       allow create: if request.resource.size < 20 * 1024 * 1024
-        && request.time < timestamp.value(1792197000000);
+        && request.time < timestamp.value(1794607200000);
       allow get: if resource.timeCreated > request.time - duration.value(15, "m");
     }
 
