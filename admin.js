@@ -78,6 +78,24 @@ const totalParticipantes =
 const recaudacionTotal =
   document.getElementById("recaudacionTotal");
 
+const recaudacionPendiente =
+  document.getElementById("recaudacionPendiente");
+
+const statPendientes =
+  document.getElementById("statPendientes");
+
+const statPagados =
+  document.getElementById("statPagados");
+
+const statClaves =
+  document.getElementById("statClaves");
+
+const statReferidos =
+  document.getElementById("statReferidos");
+
+const sortearReferidos =
+  document.getElementById("sortearReferidos");
+
 const aprobarTodos =
   document.getElementById("aprobarTodos");
 
@@ -883,6 +901,179 @@ function mostrarFecha(
 
 
 // =====================================================
+// TEXTO SEGURO
+// =====================================================
+// Los datos los escribe el comprador: se muestran como texto,
+// nunca como HTML (así nadie puede meter código en el panel).
+
+function esc(valor) {
+  return String(valor ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+
+// =====================================================
+// SORTEO DE $50.000 POR COMPARTIR
+// =====================================================
+// Cada compra APROBADA hecha desde el link de alguien
+// (campo "referido" = DNI de quien compartió) le da 1 chance
+// a esa persona. Tiene que estar participando y no cuenta
+// comprar desde el propio link.
+
+function chancesSorteoReferidos(participantes) {
+
+  const participantePorDni = new Map();
+
+  participantes.forEach(({ datos }) => {
+    const dni = dniDe(datos);
+    if (dni && !participantePorDni.has(dni)) {
+      participantePorDni.set(dni, datos);
+    }
+  });
+
+  const chancesPorDni = new Map();
+  let compras = 0;
+
+  participantes.forEach(({ datos }) => {
+
+    const ref =
+      String(datos.referido || "").replace(/[^0-9]/g, "");
+
+    if (
+      datos.estado !== "Pagado" ||
+      !ref ||
+      ref === dniDe(datos) ||
+      !participantePorDni.has(ref)
+    ) {
+      return;
+    }
+
+    chancesPorDni.set(ref, (chancesPorDni.get(ref) || 0) + 1);
+    compras++;
+
+  });
+
+  const personas =
+    [...chancesPorDni.entries()].map(([dni, chances]) => ({
+      dni,
+      chances,
+      datos: participantePorDni.get(dni)
+    }));
+
+  return { personas, compras };
+
+}
+
+
+if (sortearReferidos) {
+
+  sortearReferidos.addEventListener("click", async () => {
+
+    sortearReferidos.disabled = true;
+
+    try {
+
+      const { personas, compras } =
+        chancesSorteoReferidos(await obtenerParticipantes());
+
+      if (!personas.length) {
+        alert("Todavía nadie compró desde el link de otro participante.");
+        return;
+      }
+
+      if (!confirm(`Hay ${personas.length} personas con ${compras} chances en total.\n\n¿Sortear ahora los $50.000?`)) {
+        return;
+      }
+
+      // Al azar, con tantas chances como compras trajo cada uno
+      let numero = Math.floor(Math.random() * compras);
+      const ganador =
+        personas.find((p) => (numero -= p.chances) < 0);
+
+      const d = ganador.datos;
+
+      alert(
+        "🎉 GANADOR DE LOS $50.000\n\n" +
+        `${d.nombre || ""} ${d.apellido || ""}\n` +
+        `DNI: ${d.dni || ganador.dni}\n` +
+        `Teléfono: ${d.telefono || "-"}\n` +
+        `Instagram: ${d.instagram || "-"}\n\n` +
+        `Tenía ${ganador.chances} de ${compras} chances.`
+      );
+
+    } catch (error) {
+
+      console.error("ERROR SORTEANDO REFERIDOS:", error);
+      alert("❌ No se pudo sortear.\n\n" + error.message);
+
+    } finally {
+
+      sortearReferidos.disabled = false;
+
+    }
+
+  });
+
+}
+
+
+// =====================================================
+// PRECIO DE UNA COMPRA
+// =====================================================
+// El precio real con el que se compró (queda escrito en "pack");
+// si no, precioFinal; si no, por cantidad de chances.
+
+function precioDeCompra(datos) {
+
+  let precio = 0;
+
+  // Precio que quedó guardado dentro del pack. Ejemplos:
+  // "50 CHANCES • $35.000"
+  // "PROMO EXCLUSIVA • 50 CHANCES • $11.999"
+  if (datos.pack) {
+
+    const coincidenciaPrecio =
+      datos.pack.toString().match(/\$\s*([\d.]+)/);
+
+    if (coincidenciaPrecio) {
+      precio = Number(coincidenciaPrecio[1].replace(/\./g, ""));
+    }
+
+  }
+
+  // Si el pack no tenía el precio escrito, usa precioFinal
+  if (!precio || !Number.isFinite(precio)) {
+    precio = Number(datos.precioFinal) > 0
+      ? Number(datos.precioFinal)
+      : 0;
+  }
+
+  // Respaldo para promociones viejas
+  if (!precio && datos.codigoPromo === "SUPER50") {
+    precio = 11999;
+  }
+
+  if (!precio && datos.codigoPromo === "SUPER100") {
+    precio = 14999;
+  }
+
+  // Último respaldo: por cantidad de chances
+  if (!precio) {
+    precio = precioPorChances(
+      Number(datos.chancesFinales) || cantidadPorPack(datos.pack)
+    );
+  }
+
+  return precio;
+
+}
+
+
+// =====================================================
 // CARGAR PARTICIPANTES
 // =====================================================
 
@@ -935,109 +1126,42 @@ async function cargarParticipantes(
 
 
     // =================================================
-    // RECAUDACIÓN TOTAL
-    // SOLO PAGOS APROBADOS
+    // RECAUDACIÓN: APROBADOS Y POR APROBAR
     // =================================================
 
     let recaudacion = 0;
 
+    let porAprobar = 0;
 
-    participantes.forEach(
-      (participante) => {
+    // Entradas por palabra clave (de qué portal vino cada compra)
+    const porPalabraClave = {};
 
-        const datos =
-          participante.datos;
-
-
-        if (
-          datos.estado === "Pagado"
-        ) {
-
-      let precio = 0;
-
-// =============================================
-// PRECIO REAL DE LA COMPRA
-// =============================================
-
-if (datos.pack) {
-
-  const textoPack = datos.pack.toString();
-
-  // Busca el precio que quedó guardado dentro del pack.
-  // Ejemplo:
-  // "50 CHANCES • $35.000"
-  // "50 CHANCES • $14.000"
-  // "PROMO EXCLUSIVA • 50 CHANCES • $11.999"
-
-  const coincidenciaPrecio =
-    textoPack.match(/\$\s*([\d.]+)/);
-
-  if (coincidenciaPrecio) {
-
-    precio = Number(
-      coincidenciaPrecio[1]
-        .replace(/\./g, "")
+    // Nombre de cada participante por DNI (para "vino por el link de...")
+    const nombrePorDni = new Map(
+      participantes.map(({ datos }) => [
+        dniDe(datos),
+        `${datos.nombre || ""} ${datos.apellido || ""}`.trim()
+      ])
     );
 
-  }
 
-}
+    participantes.forEach(
+      ({ datos }) => {
 
-// Si el pack no tenía el precio escrito,
-// usa precioFinal guardado en Firebase.
+        const precio =
+          precioDeCompra(datos);
 
-if (
-  !precio ||
-  !Number.isFinite(precio)
-) {
+        const clave =
+          (datos.codigoPromo || "").toString().trim().toUpperCase();
 
-  if (
-    Number(datos.precioFinal) > 0
-  ) {
+        if (clave) {
+          porPalabraClave[clave] = (porPalabraClave[clave] || 0) + 1;
+        }
 
-    precio =
-      Number(datos.precioFinal);
-
-  }
-
-}
-
-// Último respaldo para promociones.
-
-if (
-  !precio &&
-  datos.codigoPromo === "SUPER50"
-) {
-
-  precio = 11999;
-
-}
-
-if (
-  !precio &&
-  datos.codigoPromo === "SUPER100"
-) {
-
-  precio = 14999;
-
-}
-
-// Último respaldo por cantidad de chances.
-
-if (!precio) {
-
-  const chances =
-    Number(datos.chancesFinales) ||
-    cantidadPorPack(datos.pack);
-
-  precio =
-    precioPorChances(chances);
-
-}
-
-recaudacion += precio;
-
-
+        if (datos.estado === "Pagado") {
+          recaudacion += precio;
+        } else {
+          porAprobar += precio;
         }
 
       }
@@ -1197,159 +1321,79 @@ recaudacion += precio;
 
 
         card.className =
-          "card";
+          `card ${datos.estado === "Pagado" ? "card-pagado" : "card-pendiente"}`;
 
+
+        // Comprobante: miniatura (imagen) o link (PDF)
+        const url =
+          datos.comprobanteURL
+            ? esc(datos.comprobanteURL)
+            : "";
+
+        const esPdf =
+          /\.pdf($|\?)/i.test(datos.comprobantePath || datos.comprobanteURL || "");
+
+        const comprobanteHTML =
+          !url
+            ? `<div class="card-comprobante sin">📄<br>Sin comprobante</div>`
+            : esPdf
+              ? `<a class="card-comprobante pdf" href="${url}" target="_blank" rel="noopener">📄<br>Ver PDF</a>`
+              : `<a class="card-comprobante" href="${url}" target="_blank" rel="noopener" title="Ver en grande">
+                   <img src="${url}" alt="Comprobante" loading="lazy">
+                 </a>`;
+
+        const instagram =
+          (datos.instagram || "").toString().replace(/^@+/, "").trim();
 
         card.innerHTML = `
 
-        <h3>
-  ${datos.nombre || ""}
-  ${datos.apellido || ""}
-</h3>
+          ${comprobanteHTML}
 
-<p>
-  <strong>DNI:</strong>
-  ${datos.dni || "-"}
-</p>
+          <div class="card-info">
 
-<p>
-  <strong>DNI NORMALIZADO:</strong>
-  ${datos.dniNormalizado || "❌ NO EXISTE"}
-</p>
+            <h3>${esc(datos.nombre)} ${esc(datos.apellido)}</h3>
 
-          <p>
-            <strong>Teléfono:</strong>
-            ${datos.telefono || "-"}
-          </p>
+            <p class="card-pack">${esc(datos.pack) || "-"}</p>
 
-          <p>
-            <strong>Instagram:</strong>
-            ${datos.instagram || "-"}
-          </p>
+            ${
+              datos.codigoPromo
+                ? `<span class="card-clave">🔑 Palabra clave: ${esc(datos.codigoPromo)}</span>`
+                : ""
+            }
 
-          <p>
-            <strong>Pack:</strong>
-            ${datos.pack || "-"}
-          </p>
+            ${
+              datos.referido && datos.referido !== dniDe(datos)
+                ? `<span class="card-clave card-ref">🤝 Vino por el link de ${
+                    esc(nombrePorDni.get(datos.referido) || "DNI " + datos.referido)
+                  }</span>`
+                : ""
+            }
 
-          <p>
-            <strong>Chances:</strong>
-            ${datos.chancesFinales || 0}
-          </p>
+            <dl class="card-datos">
+              <div><dt>DNI</dt><dd>${esc(datos.dni) || "-"}${datos.dniNormalizado ? "" : " ⚠️"}</dd></div>
+              <div><dt>Teléfono</dt><dd>${esc(datos.telefono) || "-"}</dd></div>
+              <div><dt>Instagram</dt><dd>${
+                instagram
+                  ? `<a href="https://instagram.com/${encodeURIComponent(instagram)}" target="_blank" rel="noopener">@${esc(instagram)}</a>`
+                  : "-"
+              }</dd></div>
+              <div><dt>Chances</dt><dd>${esc(datos.chancesFinales) || 0}</dd></div>
+              <div><dt>Fecha</dt><dd>${esc(mostrarFecha(datos.fecha))}</dd></div>
+            </dl>
 
-          <p>
-            <strong>Estado:</strong>
-            ${datos.estado || "-"}
-          </p>
+            <p class="card-numeros"><strong>Números:</strong> ${esc(numerosHTML)}</p>
 
-          <p>
-            <strong>Fecha:</strong>
-            ${mostrarFecha(datos.fecha)}
-          </p>
-
-          <p>
-            <strong>Números:</strong><br>
-            ${numerosHTML}
-          </p>
-
-
-          ${
-            datos.comprobanteURL
-
-            ? `
-
-              <div class="comprobante-admin">
-
-                <p>
-                  <strong>
-                    📄 COMPROBANTE
-                  </strong>
-                </p>
-
-                <a
-                  href="${datos.comprobanteURL}"
-                  target="_blank"
-                  rel="noopener"
-                >
-
-                  <img
-                    src="${datos.comprobanteURL}"
-                    alt="Comprobante"
-                    class="comprobante-preview"
-                    loading="lazy"
-                    style="
-                      display:block;
-                      width:260px;
-                      height:300px;
-                      max-width:260px;
-                      max-height:300px;
-                      object-fit:cover;
-                      margin:10px auto;
-                      border-radius:8px;
-                      cursor:pointer;
-                    "
-                  >
-
-                </a>
-
-                <p>
-
-                  <a
-                    href="${datos.comprobanteURL}"
-                    target="_blank"
-                    rel="noopener"
-                  >
-                    🔍 VER EN GRANDE
-                  </a>
-
-                </p>
-
-              </div>
-
-            `
-
-            : `
-
-              <p>
-                📄 Sin comprobante
-              </p>
-
-            `
-          }
-
+          </div>
 
           <div class="admin-actions">
 
             ${
               datos.estado !== "Pagado"
-
-              ? `
-
-                <button
-                  class="aprobar-btn"
-                  type="button"
-                >
-                  ✅ APROBAR PAGO
-                </button>
-
-              `
-
-              : `
-
-                <p>
-                  ✅ PAGO APROBADO
-                </p>
-
-              `
+                ? `<button class="aprobar-btn" type="button">✅ APROBAR PAGO</button>`
+                : `<span class="aprobado-sello">✅ Aprobado</span>`
             }
 
-
-            <button
-              class="eliminar-btn"
-              type="button"
-            >
-              🗑 ELIMINAR
-            </button>
+            <button class="eliminar-btn" type="button">🗑 Eliminar</button>
 
           </div>
 
@@ -1712,7 +1756,7 @@ await actualizarConsulta(
     if (tituloPendientes) {
 
       tituloPendientes.textContent =
-        `PAGOS PENDIENTES (${cantidadPendientes})`;
+        `Pendientes (${cantidadPendientes})`;
 
     }
 
@@ -1720,21 +1764,15 @@ await actualizarConsulta(
     if (tituloPagados) {
 
       tituloPagados.textContent =
-        `PAGOS APROBADOS (${cantidadPagados})`;
+        `Aprobados (${cantidadPagados})`;
 
     }
 
 
     if (totalParticipantes) {
 
-      totalParticipantes.innerHTML = `
-
-        <div>
-          PARTICIPANTES ÚNICOS:
-          ${dniUnicos.size}
-        </div>
-
-      `;
+      totalParticipantes.textContent =
+        dniUnicos.size.toLocaleString("es-AR");
 
     }
 
@@ -1745,14 +1783,65 @@ await actualizarConsulta(
 
     if (recaudacionTotal) {
 
-      recaudacionTotal.innerHTML = `
+      recaudacionTotal.textContent =
+        `$${recaudacion.toLocaleString("es-AR")}`;
 
-        <div>
-          💰 RECAUDACIÓN:
-          $${recaudacion.toLocaleString("es-AR")}
-        </div>
+    }
 
-      `;
+
+    if (recaudacionPendiente) {
+
+      recaudacionPendiente.textContent =
+        porAprobar > 0
+          ? `+ $${porAprobar.toLocaleString("es-AR")} por aprobar`
+          : "Nada por aprobar";
+
+    }
+
+
+    if (statReferidos) {
+
+      const { personas, compras } =
+        chancesSorteoReferidos(participantes);
+
+      statReferidos.textContent =
+        compras
+          ? `${compras} compra${compras === 1 ? "" : "s"} aprobada${compras === 1 ? "" : "s"} desde links · ${personas.length} persona${personas.length === 1 ? "" : "s"} en el sorteo de $50.000`
+          : "Todavía nadie compró desde el link de otro";
+
+    }
+
+
+    if (statClaves) {
+
+      const claves =
+        Object.entries(porPalabraClave)
+          .sort((a, b) => b[1] - a[1]);
+
+      const sinClave =
+        participantes.length -
+        claves.reduce((n, [, cantidad]) => n + cantidad, 0);
+
+      statClaves.textContent =
+        claves.length
+          ? [
+              ...claves.map(([clave, cantidad]) => `"${clave}": ${cantidad}`),
+              `sin clave: ${sinClave}`
+            ].join(" · ")
+          : "Todavía nadie usó una palabra clave";
+
+    }
+
+
+    // Totales (sin el filtro del buscador)
+    if (statPendientes) {
+      statPendientes.textContent =
+        participantes.filter(({ datos }) => datos.estado !== "Pagado").length;
+    }
+
+    if (statPagados) {
+      statPagados.textContent =
+        participantes.filter(({ datos }) => datos.estado === "Pagado").length;
 
     }
 
@@ -2084,6 +2173,28 @@ if (borrarTodo) {
   borrarTodo.addEventListener(
     "click",
     async () => {
+
+      // Antes de borrar: guardar los compradores para Meta
+      // (después del borrado ya no se pueden recuperar)
+      if (
+        confirm(
+          "Antes de borrar: ¿querés descargar los compradores para Meta?\n\n" +
+          "Aceptar = descargar el archivo ahora\n" +
+          "Cancelar = seguir sin descargar"
+        )
+      ) {
+
+        try {
+          await exportarParaMeta();
+        } catch (error) {
+          alert(
+            "❌ No se pudo exportar para Meta, así que no se borra nada.\n\n" +
+            error.message
+          );
+          return;
+        }
+
+      }
 
       const texto =
         prompt(
@@ -2433,8 +2544,7 @@ function mostrarRevision(todos, total) {
   const caja =
     document.createElement("div");
 
-  caja.style.cssText =
-    "margin:16px 0;padding:14px;border:1px solid #444;border-radius:12px;background:#151515;text-align:left;";
+  caja.className = "revision-caja";
 
   const titulo =
     document.createElement("h3");
@@ -2458,8 +2568,7 @@ function mostrarRevision(todos, total) {
     const fila =
       document.createElement("div");
 
-    fila.style.cssText =
-      "padding:8px 0;border-top:1px solid #2a2a2a;font-size:14px;";
+    fila.className = "revision-fila";
 
     const linea1 =
       document.createElement("div");
@@ -2472,7 +2581,7 @@ function mostrarRevision(todos, total) {
     const linea2 =
       document.createElement("div");
 
-    linea2.style.color = "#aaa";
+    linea2.className = "revision-detalle";
 
     linea2.textContent =
       `DNI ${datos.dni || "-"} · ${datos.estado || "-"} · ${datos.pack || "-"}`;
@@ -2501,13 +2610,11 @@ function mostrarRevision(todos, total) {
     const detalle =
       document.createElement("details");
 
-    detalle.style.cssText =
-      "margin-top:14px;padding-top:10px;border-top:1px solid #444;";
+    detalle.className = "revision-sin-ruta";
 
     const resumen =
       document.createElement("summary");
 
-    resumen.style.cssText = "cursor:pointer;font-weight:700;";
 
     const pagadas =
       sinRuta.filter((p) => p.datos.estado === "Pagado").length;
@@ -2522,8 +2629,7 @@ function mostrarRevision(todos, total) {
       const fila =
         document.createElement("div");
 
-      fila.style.cssText =
-        "padding:6px 0;border-top:1px solid #2a2a2a;font-size:13px;";
+      fila.className = "revision-fila chica";
 
       fila.textContent =
         `${datos.nombre || ""} ${datos.apellido || ""} · DNI ${datos.dni || "-"} · ${datos.estado || "-"} · ${datos.pack || "-"} `;
@@ -2534,7 +2640,6 @@ function mostrarRevision(todos, total) {
         link.target = "_blank";
         link.rel = "noopener";
         link.textContent = "ver comprobante";
-        link.style.color = "#ffcc00";
         fila.appendChild(link);
       }
 
@@ -2549,8 +2654,8 @@ function mostrarRevision(todos, total) {
   const cerrar =
     document.createElement("button");
 
-  cerrar.textContent = "CERRAR";
-  cerrar.style.marginTop = "10px";
+  cerrar.textContent = "Cerrar";
+  cerrar.className = "boton-sec";
   cerrar.addEventListener("click", () => {
     resultadoRevision.innerHTML = "";
   });
@@ -2620,5 +2725,163 @@ if (btnRevisarComprobantes && resultadoRevision) {
 
     }
   );
+
+}
+
+
+// =====================================================
+// EXPORTAR PARA META (público personalizado)
+// =====================================================
+// Arma un CSV para subir en Meta → Públicos → Lista de clientes.
+// Solo pagos aprobados, una fila por persona (DNI) con el total
+// que gastó (value), así se puede crear un público similar
+// basado en valor. No incluye DNI ni Instagram.
+
+const botonExportarMeta =
+  document.getElementById("exportarMeta");
+
+
+// Teléfono argentino en formato internacional: 549 + área + número
+// ("2494 15 123456" → "5492494123456"). "" si no se puede armar.
+function telefonoParaMeta(telefono) {
+
+  let digitos =
+    String(telefono || "").replace(/\D/g, "");
+
+  if (digitos.startsWith("549")) {
+    digitos = digitos.slice(3);
+  } else if (digitos.startsWith("54")) {
+    digitos = digitos.slice(2);
+  }
+
+  digitos = digitos.replace(/^0+/, "");
+
+  // Sacar el "15" que va después del código de área
+  if (digitos.length === 12) {
+    for (const largoArea of [2, 3, 4]) {
+      if (digitos.substr(largoArea, 2) === "15") {
+        digitos = digitos.slice(0, largoArea) + digitos.slice(largoArea + 2);
+        break;
+      }
+    }
+  }
+
+  return digitos.length === 10 ? `549${digitos}` : "";
+
+}
+
+
+function textoParaMeta(texto) {
+  return String(texto || "").trim().toLowerCase();
+}
+
+
+function celdaCsv(valor) {
+  const texto = String(valor ?? "");
+  return /[",\n]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto;
+}
+
+
+// Descarga el CSV. Devuelve true si se descargó.
+async function exportarParaMeta() {
+
+  const participantes =
+    await obtenerParticipantes();
+
+  // Una persona = un DNI: se suma todo lo que gastó
+  const personas = new Map();
+
+  participantes.forEach(({ datos }) => {
+
+    if (datos.estado !== "Pagado") {
+      return;
+    }
+
+    const clave =
+      dniDe(datos) || telefonoParaMeta(datos.telefono);
+
+    if (!clave) {
+      return;
+    }
+
+    const persona =
+      personas.get(clave) || {
+        phone: telefonoParaMeta(datos.telefono),
+        fn: textoParaMeta(datos.nombre),
+        ln: textoParaMeta(datos.apellido),
+        country: "ar",
+        value: 0
+      };
+
+    persona.value += precioDeCompra(datos);
+
+    personas.set(clave, persona);
+
+  });
+
+  const filas =
+    [...personas.values()].filter((p) => p.phone || (p.fn && p.ln));
+
+  if (!filas.length) {
+    alert("No hay compras aprobadas para exportar.");
+    return false;
+  }
+
+  const columnas = ["phone", "fn", "ln", "country", "value"];
+
+  const csv = [
+    columnas.join(","),
+    ...filas.map((fila) => columnas.map((c) => celdaCsv(fila[c])).join(","))
+  ].join("\n");
+
+  const archivo =
+    new Blob([csv], { type: "text/csv;charset=utf-8" });
+
+  const enlace = document.createElement("a");
+  enlace.href = URL.createObjectURL(archivo);
+  enlace.download =
+    `meta-compradores-${new Date().toISOString().slice(0, 10)}.csv`;
+  enlace.click();
+  URL.revokeObjectURL(enlace.href);
+
+  const sinTelefono =
+    filas.filter((f) => !f.phone).length;
+
+  alert(
+    `✅ Archivo listo: ${filas.length} compradores.` +
+    (sinTelefono
+      ? `\n\n${sinTelefono} sin teléfono válido (van solo con nombre y apellido).`
+      : "") +
+    "\n\nSubilo en Meta → Públicos → tu público de compradores → Agregar clientes."
+  );
+
+  return true;
+
+}
+
+
+if (botonExportarMeta) {
+
+  botonExportarMeta.addEventListener("click", async () => {
+
+    botonExportarMeta.disabled = true;
+
+    try {
+
+      await exportarParaMeta();
+
+    } catch (error) {
+
+      console.error("ERROR EXPORTANDO PARA META:", error);
+
+      alert("❌ No se pudo exportar.\n\n" + error.message);
+
+    } finally {
+
+      botonExportarMeta.disabled = false;
+
+    }
+
+  });
 
 }

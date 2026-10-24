@@ -29,8 +29,9 @@ import {
 const urlParams =
   new URLSearchParams(window.location.search);
 
+// Link personal: ?ref=<DNI de quien compartió> (solo números)
 const referido =
-  urlParams.get("ref");
+  (urlParams.get("ref") || "").replace(/\D/g, "");
 
 if (referido) {
 
@@ -44,6 +45,85 @@ if (referido) {
     referido
   );
 
+}
+
+
+// ======================================================
+// COMPARTIR EL SORTEO (link personal)
+// ======================================================
+// Quien ya participó comparte ojedasorteos.com.ar/?ref=<su DNI>.
+// Si alguien compra desde ese link, la compra guarda "referido"
+// y quien compartió entra al sorteo de $50.000 (ver admin).
+
+const LINK_SORTEO = "https://ojedasorteos.com.ar/";
+
+function miDni() {
+  try {
+    return localStorage.getItem("ojedaMiDni") || "";
+  } catch {
+    return "";
+  }
+}
+
+function guardarMiDni(dni) {
+  const limpio = String(dni || "").replace(/\D/g, "");
+  if (!limpio) return;
+  try {
+    localStorage.setItem("ojedaMiDni", limpio);
+  } catch {}
+}
+
+async function compartirSorteo() {
+
+  const dni = miDni();
+
+  const url =
+    dni ? `${LINK_SORTEO}?ref=${dni}` : LINK_SORTEO;
+
+  const texto =
+    "🏍️ Sorteo de una Yamaha MT-07 + 3 premios de $500.000. " +
+    "Viernes 13/11 en vivo. Participá desde $5.000 👇";
+
+  try {
+
+    if (navigator.share) {
+      await navigator.share({ title: "Sorteo Yamaha MT-07", text: texto, url });
+      return;
+    }
+
+    await navigator.clipboard.writeText(`${texto}
+${url}`);
+    alert("✅ Link copiado. Pegalo en WhatsApp, Instagram o donde quieras.");
+
+  } catch (error) {
+    // Cerrar el menú de compartir no es un error
+    if (error?.name !== "AbortError") {
+      prompt("Copiá este link y compartilo:", url);
+    }
+  }
+
+}
+
+document.querySelectorAll("[data-compartir]").forEach((boton) => {
+  boton.addEventListener("click", compartirSorteo);
+});
+
+
+// ======================================================
+// PÍXEL DE META (Facebook / Instagram)
+// ======================================================
+// Avisa a Meta cuando alguien elige un pack (InitiateCheckout)
+// y cuando envía el comprobante (Purchase, con el monto),
+// para optimizar las campañas hacia compradores.
+
+function eventoMeta(evento, datos) {
+  try {
+    if (typeof window.fbq === "function") {
+      window.fbq("track", evento, { currency: "ARS", ...datos });
+    }
+  } catch (error) {
+    console.warn("No se pudo enviar el evento a Meta:", error);
+  }
 }
 
 
@@ -129,10 +209,17 @@ if (successBtn && successModal) {
   let codigoPromoActivo = "";
 
   // ==================================================
-// DESCUENTO POR PALABRA CLAVE - 70% OFF ("ULTIMO", 16/10/2026)
+// DESCUENTO POR PALABRA CLAVE - 50% OFF (sorteo MT-07, 13/11/2026)
 // ==================================================
+// Las dos dan el mismo descuento. Cada una se anuncia en un portal
+// distinto: la compra guarda cuál se usó (codigoPromo) y el admin
+// muestra cuántas entradas trajo cada una.
+// "ULTIMO" (70% OFF) se dio de baja el 24/10/2026.
 
-const PALABRA_DESCUENTO = "ULTIMO";
+const PALABRAS_DESCUENTO = ["50", "MENOS"];
+
+// La palabra que activó el descuento ("" = sin descuento)
+let palabraClaveActiva = "";
 
 let descuentoPalabraClaveActivo = false;
 
@@ -145,15 +232,24 @@ const preciosNormales = {
   100: 75000
 };
 
-// 30% del precio normal (70% OFF)
+// Mitad del precio normal (50% OFF)
 const preciosConDescuento = {
-  1: 1500,
-  3: 3000,
-  10: 5400,
-  30: 11400,
-  50: 15000,
-  100: 22500
+  1: 2500,
+  3: 5000,
+  10: 9000,
+  30: 19000,
+  50: 25000,
+  100: 37500
 };
+
+// Precio del pack según si hay palabra clave activa
+function precioDelPack(chances) {
+  return (
+    descuentoPalabraClaveActivo
+      ? preciosConDescuento[chances]
+      : preciosNormales[chances]
+  ) || 0;
+}
 
 function actualizarPreciosDescuento() {
 
@@ -210,16 +306,18 @@ if (btnAplicarDescuento) {
     // Los códigos "MITAD" (50% OFF) y "ENTERO" (oferta secreta)
     // se dieron de baja el 16/10/2026.
 
-    if (codigo === PALABRA_DESCUENTO) {
+    if (PALABRAS_DESCUENTO.includes(codigo)) {
+      palabraClaveActiva = codigo;
       descuentoPalabraClaveActivo = true;
       actualizarPreciosDescuento();
 
       if (mensaje) {
-        mensaje.innerText = "✅ ¡CÓDIGO ACTIVADO! TENÉS 70% OFF EN TODAS LAS CHANCES.";
-        mensaje.style.color = "#00ff66";
+        mensaje.innerText = "✅ ¡PALABRA CLAVE ACTIVADA! TENÉS 50% OFF EN TODAS LAS CHANCES.";
+        mensaje.style.color = "#008a43";
       }
 
     } else {
+      palabraClaveActiva = "";
       descuentoPalabraClaveActivo = false;
       actualizarPreciosDescuento();
 
@@ -227,7 +325,7 @@ if (btnAplicarDescuento) {
 
       if (mensaje) {
         mensaje.innerText = "❌ PALABRA CLAVE INCORRECTA.";
-        mensaje.style.color = "#ff3333";
+        mensaje.style.color = "#dc2626";
       }
     }
   });
@@ -370,10 +468,11 @@ ofertaEnteroOverlay?.addEventListener("click", (e) => {
             chancesSeleccionadas =
               cantidad;
 
-            codigoPromoActivo = "";
+            // La palabra clave queda guardada en la compra (codigoPromo)
+            codigoPromoActivo = palabraClaveActiva;
 
             packSeleccionado =
-              `${descuentoPalabraClaveActivo ? `${PALABRA_DESCUENTO} 70% OFF • ` : ""}${packName} • ${cantidad} CHANCE${cantidad === 1 ? "" : "S"} • ${packPrice}`;
+              `${descuentoPalabraClaveActivo ? `CLAVE ${palabraClaveActiva} 50% OFF • ` : ""}${packName} • ${cantidad} CHANCE${cantidad === 1 ? "" : "S"} • ${packPrice}`;
 
 
             if (selectedPack) {
@@ -387,6 +486,12 @@ if (modal) {
   modal.classList.add("show");
   document.body.classList.add("modal-open");
 }
+
+            eventoMeta("InitiateCheckout", {
+              value: precioDelPack(cantidad),
+              num_items: cantidad,
+              content_name: `${cantidad} chances`
+            });
 
           }
         );
@@ -417,18 +522,18 @@ const revelationDate =
 // ================================================
 // ETAPA 2
 // Sorteo definitivo
-// Viernes 16 de octubre de 2026 — 22:00 hs
+// Viernes 13 de noviembre de 2026 — 21:00 hs
 // Argentina UTC-3
 // ================================================
 
 const raffleDate =
-  new Date("2026-10-16T22:00:00-03:00");
+  new Date("2026-11-13T21:00:00-03:00");
 
 // Cierre de compras: la misma hora que el cartel emergente
 // (window.OJEDA_CIERRE en carteles.js), así los dos relojes coinciden.
 const closingDate =
   window.OJEDA_CIERRE ||
-  new Date("2026-10-16T21:30:00-03:00");
+  new Date("2026-11-13T19:00:00-03:00");
 
 
 // ==================================================
@@ -464,19 +569,19 @@ function updateCountdown() {
 
 
   // ==================================================
-  // ETAPA 2 — FALTA PARA EL CIERRE DE COMPRAS (21:30)
+  // ETAPA 2 — FALTA PARA EL CIERRE DE COMPRAS (19:00)
   // ==================================================
 
   if (now < closingDate) {
 
     if (countdownLabel) {
       countdownLabel.innerText =
-        "⏳ SE CIERRAN LAS COMPRAS EN";
+        "⏳ LAS COMPRAS CIERRAN EN";
     }
 
     if (drawDate) {
       drawDate.innerText =
-        "🔒 CIERRE DE COMPRAS: VIERNES 16/10 · 21:30 HS\n🏆 SORTEO EN VIVO: 22:00 HS";
+        "🔒 Cierre de compras: viernes 13/11 · 19:00 hs\n🏆 Sorteo en vivo: 21:00 hs";
     }
 
     actualizarValores(
@@ -500,7 +605,7 @@ function updateCountdown() {
 
     if (drawDate) {
       drawDate.innerText =
-        "🏆 VIERNES 16 DE OCTUBRE — 22:00 HS";
+        "🏆 Viernes 13 de noviembre · 21:00 hs";
     }
 
     actualizarValores(
@@ -642,14 +747,14 @@ setInterval(
             );
 
             copyAlias.innerText =
-              "✓ ALIAS COPIADO";
+              "✓ Copiado";
 
 
             setTimeout(
               () => {
 
                 copyAlias.innerText =
-                  "COPIAR ALIAS";
+                  "Copiar";
 
               },
               2000
@@ -693,14 +798,14 @@ setInterval(
             );
 
             copyCvu.innerText =
-              "✓ CVU COPIADO";
+              "✓ Copiado";
 
 
             setTimeout(
               () => {
 
                 copyCvu.innerText =
-                  "COPIAR CVU";
+                  "Copiar";
 
               },
               2000
@@ -977,6 +1082,22 @@ multiplicadorPromo:
             }
 
 
+            // Para el link personal de "Compartir"
+            guardarMiDni(dni);
+
+
+            // ------------------------------------------
+            // PÍXEL DE META: COMPRA
+            // ------------------------------------------
+
+            eventoMeta("Purchase", {
+              value: precioDelPack(chancesSeleccionadas),
+              num_items: chancesSeleccionadas,
+              content_name: `${chancesSeleccionadas} chances`,
+              content_category: codigoPromoActivo || "sin clave"
+            });
+
+
             // ------------------------------------------
             // NOTIFICACIÓN LOCAL
             // ------------------------------------------
@@ -1110,10 +1231,12 @@ multiplicadorPromo:
 
 
     // ==================================================
-    // NOTIFICACIONES EN VIVO
+    // NOTIFICACIONES EN VIVO ("Fulano compró...")
     // ==================================================
+    // Desactivadas el 24/10/2026 (página más limpia).
+    // Para volver a mostrarlas, descomentar la línea.
 
-    iniciarNotificacionesEnVivo();
+    // iniciarNotificacionesEnVivo();
 
   }
 );
@@ -1671,17 +1794,51 @@ async function cargarGaleria() {
     gallery.innerHTML = "";
 
 
-    const carpeta =
-      ref(
-        storage,
-        "Premio"
-      );
+    // Fotos publicadas con la página (OJEDA_FOTOS en carteles.js):
+    // miniatura en assets/premios/<nombre>, grande en assets/premios/grandes/<nombre>.
+    // Si la lista está vacía, se usan las de Firebase Storage (carpeta "Premio").
+    const fotosLocales =
+      window.OJEDA_FOTOS || [];
+
+    let fotos;
+
+    if (fotosLocales.length) {
+
+      fotos = fotosLocales.map((nombre) => ({
+        name: nombre,
+        url: `assets/premios/grandes/${encodeURIComponent(nombre)}`
+      }));
+
+    } else {
+
+      const archivos =
+        await listAll(
+          ref(storage, "Premio")
+        );
+
+      fotos = archivos.items;
+
+    }
 
 
-    const archivos =
-      await listAll(
-        carpeta
-      );
+    // Sin fotos: no mostrar la sección vacía ni el "Ver fotos"
+    if (!fotos.length) {
+      document.getElementById("premios")?.setAttribute("hidden", "");
+      document.querySelector(".etiqueta-fotos")?.setAttribute("hidden", "");
+      return;
+    }
+
+
+    // La primera foto también va en la tarjeta del premio
+    // (la grande si está publicada con la página; si no, la miniatura)
+    const fotoPrincipal =
+      document.getElementById("premioFoto");
+
+    if (fotoPrincipal && fotos.length) {
+      fotoPrincipal.src =
+        fotos[0].url ||
+        `assets/premios/${encodeURIComponent(fotos[0].name)}`;
+    }
 
 
     const urls = [];
@@ -1689,10 +1846,11 @@ async function cargarGaleria() {
 
     for (
       const item
-      of archivos.items
+      of fotos
     ) {
 
       const url =
+        item.url ||
         await getDownloadURL(
           item
         );
@@ -2188,6 +2346,8 @@ if (btnConsultar && resultadoNumeros) {
           .toString()
           .trim()
           .replace(/\D/g, "");
+
+      guardarMiDni(dniBuscado);
 
       resultadoNumeros.innerHTML = `
         <p>

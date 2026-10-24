@@ -1,140 +1,543 @@
-body{
-  font-family: Arial, sans-serif;
-  background:#111;
-  color:white;
-  padding:20px;
+/* ======================================================
+   PANEL ADMIN
+   Mismo estilo claro que la página pública.
+   ====================================================== */
+
+:root {
+  --fondo: #f3f4f7;
+  --tarjeta: #ffffff;
+  --borde: #e3e5ea;
+  --texto: #111827;
+  --suave: #6b7280;
+  --verde: #00a650;
+  --verde-osc: #008a43;
+  --verde-claro: #e9f8f0;
+  --naranja: #ff6a00;
+  --rojo: #dc2626;
+  --oscuro: #0f172a;
 }
 
-.card{
-  background:#1a1a1a;
-  padding:15px;
-  margin-bottom:15px;
-  border-radius:10px;
+* { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', Arial, sans-serif;
+  color: var(--texto);
+  background: var(--fondo);
 }
 
-a{
-  color:#ff6600;
-}
+a { color: var(--verde-osc); }
 
-button{
-  background:#ff6600;
-  border:none;
-  color:white;
-  padding:10px;
-  cursor:pointer;
-  border-radius:6px;
-}
-.comprobante-img{
-width:100%;
-max-width:500px;
-border-radius:10px;
-margin:15px 0;
-display:block;
-}
-
-#buscador{
-  width: 100%;
-  max-width: 500px;
-  padding: 12px;
-  margin: 15px 0 25px;
-  border-radius: 8px;
-  border: 1px solid #333;
-  background: #1a1a1a;
-  color: white;
-  font-size: 16px;
-  box-sizing: border-box;
-}
-
-#loginAdmin{
-  max-width: 450px;
-  margin: 80px auto;
-  text-align: center;
-}
-
-#loginAdmin h1{
-  margin-bottom: 30px;
-}
-
-#passwordAdmin{
-  width: 100%;
-  padding: 14px;
-  font-size: 18px;
-  border-radius: 8px;
-  border: 1px solid #333;
-  background: #1a1a1a;
-  color: white;
-  box-sizing: border-box;
-  margin-bottom: 15px;
-}
-
-#btnLogin{
-  width: 100%;
-  padding: 14px;
-  font-size: 18px;
-  border: none;
-  border-radius: 8px;
-  background: #ff6600;
-  color: white;
+button {
+  font: inherit;
   cursor: pointer;
 }
 
-#btnLogin:hover{
-  opacity: 0.9;
+button:disabled { opacity: .6; cursor: wait; }
+
+
+/* ======================================================
+   LOGIN
+   ====================================================== */
+
+.login {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 16px;
 }
 
-#cerrarSesion{
-  display: block;
-  margin-bottom: 15px;
-}
-#cerrarSesion,
-#exportarSorteo,
-#borrarTodo{
+.login-card {
   width: 100%;
-  max-width: 260px;
-  margin-bottom: 10px;
+  max-width: 380px;
+  padding: 30px 24px;
+  text-align: center;
+  background: var(--tarjeta);
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, .08);
 }
 
-#cerrarSesion{
-  background:#2563eb;
-  color:white;
-  border:none;
-  padding:14px;
-  border-radius:10px;
-  width:100%;
-  margin-bottom:15px;
-  font-weight:700;
+.login-logo {
+  width: 180px;
+  padding: 10px 14px;
+  background: var(--oscuro);
+  border-radius: 10px;
 }
 
-#exportarSorteo{
-  background:#16a34a;
-  color:white;
-  border:none;
-  padding:14px;
-  border-radius:10px;
-  width:100%;
-  margin-bottom:15px;
-  font-weight:700;
+.login-card h1 { margin: 18px 0 6px; font-size: 22px; }
+
+.login-card p { margin: 0 0 20px; color: var(--suave); }
+
+#btnLogin {
+  width: 100%;
+  padding: 14px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--oscuro);
+  border: 0;
+  border-radius: 12px;
 }
 
-#aprobarTodos{
-  background:#22c55e;
-  color:white;
-  border:none;
-  padding:14px;
-  border-radius:10px;
-  width:100%;
-  max-width:390px;
-  margin-bottom:15px;
-  font-weight:700;
+
+/* ======================================================
+   BARRA SUPERIOR
+   ====================================================== */
+
+.barra-admin {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  color: #fff;
+  background: var(--oscuro);
 }
 
-#borrarTodo{
-  background:#dc2626;
-  color:white;
-  border:none;
-  padding:14px;
-  border-radius:10px;
-  width:100%;
-  margin-bottom:30px;
-  font-weight:700;
+.barra-admin img { height: 20px; }
+
+.barra-admin span { flex: 1; font-weight: 700; opacity: .8; }
+
+.barra-link { font-size: 13px; color: #cbd5e1; text-decoration: none; }
+
+#cerrarSesion {
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(255, 255, 255, .12);
+  border: 0;
+  border-radius: 8px;
+}
+
+
+/* ======================================================
+   CONTENIDO
+   ====================================================== */
+
+.admin {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+
+/* ===== Resumen ===== */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.stat {
+  padding: 16px;
+  background: var(--tarjeta);
+  border-radius: 16px;
+}
+
+.stat small {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--suave);
+}
+
+.stat b {
+  display: block;
+  margin-top: 4px;
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.stat span { font-size: 12px; color: var(--suave); }
+
+.stat-plata { background: var(--verde-claro); }
+
+.stat-plata b { color: var(--verde-osc); }
+
+.stat-claves { grid-column: 1 / -1; }
+
+.stat-claves span {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--texto);
+}
+
+.card-clave {
+  display: inline-block;
+  margin: -4px 0 8px;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 6px;
+}
+
+
+/* ===== Acciones ===== */
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.acciones button {
+  padding: 11px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--texto);
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+}
+
+.acciones button:hover { border-color: #cbd5e1; }
+
+.acciones .accion-principal {
+  color: #fff;
+  background: var(--verde);
+  border-color: var(--verde);
+}
+
+
+/* ===== Resultado de "Revisar comprobantes" ===== */
+
+#resultadoRevision:empty { display: none; }
+
+#resultadoRevision {
+  margin-top: 14px;
+  font-size: 14px;
+}
+
+.revision-caja {
+  padding: 16px;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+}
+
+.revision-fila {
+  padding: 9px 0;
+  font-size: 14px;
+  border-top: 1px solid var(--borde);
+}
+
+.revision-fila.chica { font-size: 13px; }
+
+.revision-fila:hover { background: var(--fondo); }
+
+.revision-detalle { color: var(--suave); }
+
+.revision-sin-ruta {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--borde);
+}
+
+.revision-sin-ruta summary { font-weight: 700; cursor: pointer; }
+
+.boton-sec {
+  margin-top: 10px;
+  padding: 9px 16px;
+  font-weight: 700;
+  color: var(--verde-osc);
+  background: var(--verde-claro);
+  border: 0;
+  border-radius: 10px;
+}
+
+
+/* ===== Buscador y pestañas ===== */
+
+.buscador-fijo {
+  position: sticky;
+  top: 41px;
+  z-index: 10;
+  margin-top: 16px;
+  padding: 8px 0;
+  background: var(--fondo);
+}
+
+#buscador {
+  width: 100%;
+  padding: 13px 14px;
+  font: inherit;
+  font-size: 16px;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+}
+
+#buscador:focus { outline: 2px solid var(--verde); outline-offset: -1px; }
+
+.pestanas {
+  display: flex;
+  gap: 6px;
+  margin: 6px 0 12px;
+}
+
+.pestanas button {
+  padding: 10px 16px;
+  font-weight: 700;
+  color: var(--suave);
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+}
+
+.pestanas button.activa {
+  color: #fff;
+  background: var(--oscuro);
+}
+
+
+/* ======================================================
+   TARJETA DE PARTICIPANTE
+   ====================================================== */
+
+.lista {
+  display: grid;
+  gap: 10px;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: 110px 1fr auto;
+  gap: 14px;
+  align-items: start;
+  padding: 14px;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--naranja);
+  border-radius: 14px;
+}
+
+.card-pagado { border-left-color: var(--verde); }
+
+.card-comprobante {
+  display: grid;
+  place-items: center;
+  width: 110px;
+  height: 140px;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  color: var(--suave);
+  background: var(--fondo);
+  border-radius: 10px;
+}
+
+/* La foto entera, sin recortar */
+.card-comprobante img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  cursor: zoom-in;
+}
+
+.card-comprobante.sin { color: var(--rojo); background: #fef2f2; }
+
+.card-info { min-width: 0; }
+
+.card-info h3 { margin: 0; font-size: 17px; }
+
+.card-pack {
+  margin: 2px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--verde-osc);
+}
+
+.card-datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px 14px;
+  margin: 0;
+}
+
+.card-datos div { min-width: 0; }
+
+.card-datos dt { font-size: 11px; font-weight: 600; color: var(--suave); }
+
+.card-datos dd { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
+
+.card-numeros {
+  margin: 10px 0 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  color: var(--suave);
+}
+
+.card-numeros strong { color: var(--texto); }
+
+.admin-actions {
+  display: grid;
+  gap: 8px;
+  min-width: 150px;
+}
+
+.aprobar-btn {
+  padding: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--verde);
+  border: 0;
+  border-radius: 10px;
+}
+
+.aprobado-sello {
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--verde-osc);
+  background: var(--verde-claro);
+  border-radius: 10px;
+}
+
+.eliminar-btn {
+  padding: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rojo);
+  background: transparent;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+}
+
+
+/* ===== Zona peligrosa ===== */
+
+.peligro {
+  margin-top: 30px;
+  padding: 14px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 14px;
+}
+
+.peligro summary { font-weight: 700; color: var(--rojo); cursor: pointer; }
+
+.peligro p { font-size: 13px; color: #7f1d1d; }
+
+#borrarTodo {
+  padding: 12px 16px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--rojo);
+  border: 0;
+  border-radius: 10px;
+}
+
+
+/* ======================================================
+   CELULAR
+   ====================================================== */
+
+@media (max-width: 760px) {
+
+  .stats { grid-template-columns: 1fr 1fr; }
+
+  .stat-plata { grid-column: 1 / -1; }
+
+  .acciones button { flex: 1 1 calc(50% - 8px); }
+
+  .acciones .accion-principal { flex-basis: 100%; }
+
+  .card { grid-template-columns: 84px 1fr; }
+
+  .card-comprobante { width: 84px; height: 110px; }
+
+  .card-datos { grid-template-columns: 1fr 1fr; }
+
+  .admin-actions {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr auto;
+  }
+
+  .barra-link { display: none; }
+
+}
+
+
+/* ======================================================
+   VISOR DE COMPROBANTES (se abre en la misma página)
+   ====================================================== */
+
+.visor {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  background: rgba(15, 23, 42, .92);
+}
+
+.visor img {
+  display: block;
+  max-width: 96vw;
+  max-height: 92vh;
+  margin: auto;
+  background: #fff;
+  border-radius: 8px;
+  cursor: zoom-in;
+}
+
+/* Tocando la foto se ve en su tamaño real (con scroll) */
+.visor.real { align-items: flex-start; justify-content: flex-start; }
+
+.visor.real img {
+  max-width: none;
+  max-height: none;
+  cursor: zoom-out;
+}
+
+.visor-cerrar,
+.visor-nueva {
+  position: fixed;
+  top: 14px;
+  z-index: 1;
+  padding: 9px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  color: #fff;
+  background: rgba(255, 255, 255, .15);
+  border: 0;
+  border-radius: 999px;
+}
+
+.visor-cerrar { right: 14px; }
+
+.visor-nueva { right: 120px; }
+
+.visor-ayuda {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #cbd5e1;
+  white-space: nowrap;
+}
+
+
+/* Compra que vino por el link de otro participante */
+.card-ref {
+  margin-left: 4px;
+  color: #065f46;
+  background: #d1fae5;
 }

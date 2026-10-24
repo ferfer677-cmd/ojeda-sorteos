@@ -26,11 +26,11 @@ service cloud.firestore {
       return request.resource.data[campo] is number;
     }
 
-    // Cierre de participaciones: viernes 16/10/2026 21:30 hs Argentina
-    // (1792197000000 = milisegundos desde 1970, hora UTC).
+    // Cierre de participaciones: viernes 13/11/2026 19:00 hs Argentina
+    // (1794607200000 = milisegundos desde 1970, hora UTC).
     // Para el próximo sorteo, cambiar este número (y OJEDA_CIERRE en carteles.js).
     function abierto() {
-      return request.time < timestamp.value(1792197000000);
+      return request.time < timestamp.value(1794607200000);
     }
 
     // El admin puede todo

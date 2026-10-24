@@ -47,7 +47,7 @@ function crearCartel() {
       </h2>
 
       <p class="cierre-subtitulo">
-        Viernes 16/10 a las <strong>21:30 hs</strong>
+        Viernes 13/11 a las <strong>19:00 hs</strong>
       </p>
 
       <div class="cierre-contador">
