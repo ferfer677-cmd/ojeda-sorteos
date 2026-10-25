@@ -1469,7 +1469,14 @@ async function cargarParticipantes(
             ${
               datos.estado !== "Pagado"
                 ? `<button class="aprobar-btn" type="button">✅ APROBAR PAGO</button>`
-                : `<span class="aprobado-sello">✅ Aprobado</span>`
+                : `<span class="aprobado-sello">✅ Aprobado</span>${
+                    // Si Meta recibió la compra (API de Conversiones, functions/index.js)
+                    datos.metaCapi?.enviado
+                      ? `<span class="meta-sello">📡 Meta ✓${datos.metaCapi.prueba ? " (prueba)" : ""}</span>`
+                      : datos.metaCapi?.error
+                        ? `<span class="meta-sello error" title="${esc(datos.metaCapi.error)}">📡 Meta ✗</span>`
+                        : ""
+                  }`
             }
 
             <button class="eliminar-btn" type="button">🗑 Eliminar</button>

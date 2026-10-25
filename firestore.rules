@@ -26,6 +26,11 @@ service cloud.firestore {
       return request.resource.data[campo] is number;
     }
 
+    // Campo que puede no venir (compras desde una versión vieja de la página)
+    function textoOpcional(campo, maximo) {
+      return !(campo in request.resource.data) || texto(campo, maximo);
+    }
+
     // Cierre de participaciones: viernes 13/11/2026 19:00 hs Argentina
     // (1794607200000 = milisegundos desde 1970, hora UTC).
     // Para el próximo sorteo, cambiar este número (y OJEDA_CIERRE en carteles.js).
@@ -48,7 +53,8 @@ service cloud.firestore {
           "pack", "chancesBase", "chancesFinales",
           "codigoPromo", "precioFinal", "multiplicadorPromo",
           "comprobanteURL", "comprobantePath",
-          "referido", "estado", "fecha"
+          "referido", "estado", "fecha",
+          "metaEventId", "fbc", "fbp", "userAgent", "paginaUrl"
         ])
         && request.resource.data.estado == "Esperando"
         && request.resource.data.fecha == request.time
@@ -64,6 +70,11 @@ service cloud.firestore {
         && texto("comprobantePath", 300)
         && request.resource.data.comprobantePath.matches("comprobantes/.+")
         && texto("referido", 40)
+        && textoOpcional("metaEventId", 60)
+        && textoOpcional("fbc", 300)
+        && textoOpcional("fbp", 120)
+        && textoOpcional("userAgent", 400)
+        && textoOpcional("paginaUrl", 200)
         && numero("chancesBase")
         && numero("chancesFinales")
         && numero("precioFinal")

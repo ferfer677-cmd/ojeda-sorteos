@@ -1,0 +1,13 @@
+{
+  "name": "ojeda-sorteos-functions",
+  "description": "Avisa a Meta (API de Conversiones) cuando se aprueba un pago",
+  "private": true,
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "dependencies": {
+    "firebase-admin": "^14.5.0",
+    "firebase-functions": "^7.4.0"
+  }
+}

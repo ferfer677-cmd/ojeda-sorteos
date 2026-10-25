@@ -119,14 +119,68 @@ document.querySelectorAll("[data-compartir]").forEach((boton) => {
 // y cuando envía el comprobante (Purchase, con el monto),
 // para optimizar las campañas hacia compradores.
 
-function eventoMeta(evento, datos) {
+// idEvento: el mismo ID lo manda el servidor (API de Conversiones)
+// cuando se aprueba el pago, así Meta no cuenta la compra dos veces.
+function eventoMeta(evento, datos, idEvento) {
   try {
     if (typeof window.fbq === "function") {
-      window.fbq("track", evento, { currency: "ARS", ...datos });
+      window.fbq(
+        "track",
+        evento,
+        { currency: "ARS", ...datos },
+        idEvento ? { eventID: idEvento } : undefined
+      );
     }
   } catch (error) {
     console.warn("No se pudo enviar el evento a Meta:", error);
   }
+}
+
+
+// ======================================================
+// DATOS DE META PARA LA API DE CONVERSIONES
+// ======================================================
+// Se guardan con la compra; los usa la Cloud Function
+// (functions/index.js) para avisarle a Meta cuando se aprueba.
+//   fbc: de qué anuncio vino (cookie _fbc o el fbclid de la URL)
+//   fbp: identificador del navegador que pone el Píxel (cookie _fbp)
+
+// Si se entra desde un anuncio, la URL trae ?fbclid=...: se guarda
+// por si el Píxel no llega a crear la cookie _fbc
+(function guardarFbclid() {
+  const fbclid = new URLSearchParams(location.search).get("fbclid");
+  if (!fbclid) return;
+  try {
+    localStorage.setItem("ojedaFbc", `fb.1.${Date.now()}.${fbclid}`);
+  } catch {}
+})();
+
+function leerCookie(nombre) {
+  const par = document.cookie
+    .split("; ")
+    .find((c) => c.startsWith(nombre + "="));
+  return par ? decodeURIComponent(par.slice(nombre.length + 1)) : "";
+}
+
+function datosParaMeta() {
+
+  let fbcGuardado = "";
+  try {
+    fbcGuardado = localStorage.getItem("ojedaFbc") || "";
+  } catch {}
+
+  const idEvento =
+    globalThis.crypto?.randomUUID?.() ||
+    `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+  return {
+    metaEventId: idEvento,
+    fbc: leerCookie("_fbc") || fbcGuardado,
+    fbp: leerCookie("_fbp"),
+    userAgent: navigator.userAgent,
+    paginaUrl: location.origin + location.pathname
+  };
+
 }
 
 
@@ -1022,8 +1076,14 @@ setInterval(
 
             }
 
+            // Identificadores de Meta (mismo ID para el Píxel y el servidor)
+            const meta =
+              datosParaMeta();
+
             const guardado =
               await guardarParticipante({
+
+                ...meta,
 
                 nombre,
 
@@ -1101,7 +1161,7 @@ multiplicadorPromo:
               num_items: chancesSeleccionadas,
               content_name: `${chancesSeleccionadas} chances`,
               content_category: codigoPromoActivo || "sin clave"
-            });
+            }, meta.metaEventId);
 
 
             // ------------------------------------------

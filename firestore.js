@@ -117,6 +117,13 @@ export async function guardarParticipante(datos) {
         // Referido
         referido: corto(datos.referido, 40),
 
+        // Meta (API de Conversiones): se usan al aprobar el pago
+        metaEventId: corto(datos.metaEventId, 60),
+        fbc: corto(datos.fbc, 300),
+        fbp: corto(datos.fbp, 120),
+        userAgent: corto(datos.userAgent, 400),
+        paginaUrl: corto(datos.paginaUrl, 200),
+
         // Estado
         estado: "Esperando",
 
