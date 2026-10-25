@@ -37,6 +37,11 @@ const MAXIMO_ANTIGUEDAD_SEG = 7 * 24 * 60 * 60 - 3600;
 // AYUDAS
 // ======================================================
 
+// Los errores de Meta pueden repetir el token: nunca guardarlo ni mostrarlo
+function sinToken(texto) {
+  return String(texto || "").replace(/EAA[A-Za-z0-9]+/g, "[token oculto]");
+}
+
 function sha256(texto) {
   return crypto.createHash("sha256").update(texto).digest("hex");
 }
@@ -188,7 +193,7 @@ exports.compraAprobadaAMeta = onDocumentUpdated(
       const resultado = await respuesta.json();
 
       if (!respuesta.ok) {
-        throw new Error(resultado?.error?.message || `HTTP ${respuesta.status}`);
+        throw new Error(sinToken(resultado?.error?.message) || `HTTP ${respuesta.status}`);
       }
 
       await referencia.update({
@@ -204,10 +209,12 @@ exports.compraAprobadaAMeta = onDocumentUpdated(
     } catch (error) {
 
       // El pago queda aprobado igual; solo se anota el error para verlo en el admin
-      logger.error("No se pudo enviar la compra a Meta", { id, error: error.message });
+      const mensaje = sinToken(error.message).slice(0, 300);
+
+      logger.error("No se pudo enviar la compra a Meta", { id, error: mensaje });
 
       await referencia.update({
-        metaCapi: { error: String(error.message).slice(0, 300) }
+        metaCapi: { error: mensaje }
       });
 
     }
