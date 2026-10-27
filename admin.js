@@ -389,6 +389,13 @@ async function actualizarConsulta(dni) {
       error
     );
 
+    // Avisar: si no, la persona no ve sus números y nadie se entera
+    alert(
+      `⚠️ No se pudo actualizar "Ver mis números" del DNI ${dni}.\n\n` +
+      'Tocá "ACTUALIZAR VER MIS NÚMEROS" para arreglarlo.\n\n' +
+      `(${error.message})`
+    );
+
   }
 
 }
