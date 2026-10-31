@@ -93,6 +93,18 @@ const statClaves =
 const statOrigen =
   document.getElementById("statOrigen");
 
+const graficoOrigen =
+  document.getElementById("graficoOrigen");
+
+const leyendaOrigen =
+  document.getElementById("leyendaOrigen");
+
+const centroMonto =
+  document.getElementById("centroMonto");
+
+const centroTexto =
+  document.getElementById("centroTexto");
+
 const tituloInstagram =
   document.getElementById("tituloInstagram");
 
@@ -942,24 +954,39 @@ function esc(valor) {
 // ORIGEN DE LA COMPRA
 // =====================================================
 //   anuncio: el link traía la etiqueta de los anuncios (utm_source)
+//   clave:   usó la palabra clave de una red (RED_POR_CLAVE)
+//   whatsapp: entró con el link etiquetado del canal (?utm_source=whatsapp)
 //   link:    vino de Facebook/Instagram sin etiqueta (bio, publicación
 //            o un anuncio sin etiquetar): marca fbc o navegador de la app
 //   otro:    entró de cualquier otra forma
 
 const FUENTES_META = ["meta", "facebook", "fb", "instagram", "ig", "msg", "an"];
 
+// Cada palabra clave se anuncia en una sola red
+const RED_POR_CLAVE = { "50": "instagram", "MENOS": "facebook" };
+
+function redDeClave(datos) {
+  return RED_POR_CLAVE[String(datos.codigoPromo || "").trim().toUpperCase()] || "";
+}
+
 function fuenteCompra(datos) {
   return String(datos.utmSource || "").trim().toLowerCase();
 }
 
 // "instagram", "facebook" o "" si no se puede saber.
-// Primero lo que dice el anuncio; si no, el navegador interno de cada app.
+// Primero la palabra clave, después lo que dice el anuncio
+// y por último el navegador interno de cada app.
 function redCompra(datos) {
+
+  const redClave = redDeClave(datos);
+
+  if (redClave) return redClave;
 
   const fuente = fuenteCompra(datos);
 
   if (fuente === "ig" || fuente === "instagram") return "instagram";
   if (fuente === "fb" || fuente === "facebook") return "facebook";
+  if (fuente === "whatsapp") return "whatsapp";
 
   const navegador = String(datos.userAgent || "");
 
@@ -974,7 +1001,138 @@ function origenCompra(datos) {
   if (FUENTES_META.includes(fuenteCompra(datos))) {
     return "anuncio";
   }
+  if (redDeClave(datos)) {
+    return "clave";
+  }
+  if (fuenteCompra(datos) === "whatsapp") {
+    return "whatsapp";
+  }
   return datos.fbc || redCompra(datos) ? "link" : "otro";
+}
+
+
+// Gráfico redondo: una porción por grupo, proporcional a la plata
+const COLORES_ORIGEN = {
+  instagram: "#C2185B",
+  facebook: "#1877F2",
+  whatsapp: "#00A650",
+  otro: "#7C3AED",
+  sinIdentificar: "#B7791F"
+};
+
+function dibujarGraficoOrigen(segmentos) {
+
+  const total =
+    segmentos.reduce((suma, s) => suma + s.monto, 0);
+
+  const pesos = (monto) =>
+    `$${monto.toLocaleString("es-AR")}`;
+
+  const mostrarCentro = (monto, texto) => {
+    centroMonto.textContent = pesos(monto);
+    centroTexto.textContent = texto;
+  };
+
+  graficoOrigen.innerHTML = "";
+  leyendaOrigen.innerHTML = "";
+
+  mostrarCentro(total, "recaudado");
+
+  const NS = "http://www.w3.org/2000/svg";
+
+  // Fondo: se ve si todavía no hay plata
+  const fondo = document.createElementNS(NS, "circle");
+  fondo.setAttribute("class", "porcion-fondo");
+  fondo.setAttribute("cx", "100");
+  fondo.setAttribute("cy", "100");
+  fondo.setAttribute("r", "78");
+  graficoOrigen.appendChild(fondo);
+
+  const conPlata =
+    segmentos.filter((s) => s.monto > 0);
+
+  // Separación entre porciones (nada si hay una sola)
+  const separacion = conPlata.length > 1 ? 0.7 : 0;
+
+  let acumulado = 0;
+
+  segmentos.forEach((segmento) => {
+
+    const porcentaje =
+      total ? (segmento.monto / total) * 100 : 0;
+
+    const resaltar = () => {
+      mostrarCentro(segmento.monto, segmento.nombre);
+      graficoOrigen.dataset.activo = segmento.clave;
+    };
+
+    const quitar = () => {
+      mostrarCentro(total, "recaudado");
+      delete graficoOrigen.dataset.activo;
+    };
+
+    if (segmento.monto > 0) {
+
+      const porcion = document.createElementNS(NS, "circle");
+      porcion.setAttribute("class", "porcion");
+      porcion.dataset.clave = segmento.clave;
+      porcion.setAttribute("cx", "100");
+      porcion.setAttribute("cy", "100");
+      porcion.setAttribute("r", "78");
+      porcion.setAttribute("pathLength", "100");
+      porcion.setAttribute("stroke", COLORES_ORIGEN[segmento.clave]);
+      porcion.setAttribute(
+        "stroke-dasharray",
+        `${Math.max(porcentaje - separacion, 0.3)} ${100 - Math.max(porcentaje - separacion, 0.3)}`
+      );
+      // Arranca arriba y sigue como las agujas del reloj
+      porcion.setAttribute("stroke-dashoffset", String(25 - acumulado));
+
+      const titulo = document.createElementNS(NS, "title");
+      titulo.textContent =
+        `${segmento.nombre}: ${pesos(segmento.monto)} (${Math.round(porcentaje)}%)`;
+      porcion.appendChild(titulo);
+
+      porcion.addEventListener("mouseenter", resaltar);
+      porcion.addEventListener("mouseleave", quitar);
+
+      graficoOrigen.appendChild(porcion);
+
+      acumulado += porcentaje;
+
+    }
+
+    // Leyenda: color, nombre, compras, plata y porcentaje
+    const fila = document.createElement("li");
+
+    const color = document.createElement("i");
+    color.style.background = COLORES_ORIGEN[segmento.clave];
+
+    const nombre = document.createElement("span");
+    nombre.className = "leyenda-nombre";
+    nombre.textContent = segmento.nombre;
+
+    const compras = document.createElement("small");
+    compras.textContent =
+      `${segmento.compras} compra${segmento.compras === 1 ? "" : "s"}`;
+    nombre.appendChild(compras);
+
+    const monto = document.createElement("b");
+    monto.textContent = pesos(segmento.monto);
+
+    const parte = document.createElement("span");
+    parte.className = "leyenda-parte";
+    parte.textContent = `${Math.round(porcentaje)}%`;
+
+    fila.append(color, nombre, monto, parte);
+
+    fila.addEventListener("mouseenter", resaltar);
+    fila.addEventListener("mouseleave", quitar);
+
+    leyendaOrigen.appendChild(fila);
+
+  });
+
 }
 
 
@@ -1320,6 +1478,7 @@ async function cargarParticipantes(
     const porOrigen = {};
     const porCampana = {};
     const porSinAnuncio = {};
+    const porClaveRed = {};
 
     // Nombre de cada participante por DNI (para "vino por el link de...")
     const nombrePorDni = new Map(
@@ -1357,6 +1516,8 @@ async function cargarParticipantes(
               `${grupoRed}|${datos.utmCampaign || "Sin nombre"}`,
               precio
             );
+          } else if (origen === "clave") {
+            sumarCompra(porClaveRed, grupoRed, precio);
           } else if (origen === "link") {
             sumarCompra(porSinAnuncio, grupoRed, precio);
           }
@@ -1589,6 +1750,10 @@ async function cargarParticipantes(
                 ? `<span class="card-clave card-origen">📣 Anuncio en ${nombreRed}: ${esc(datos.utmCampaign || "sin nombre")}</span>`
                 : origen === "link"
                   ? `<span class="card-clave card-origen">🔗 Desde ${nombreRed}, sin anuncio</span>`
+                  : origen === "clave"
+                    ? `<span class="card-clave card-origen">${red === "instagram" ? "📸" : "📘"} ${nombreRed}</span>`
+                    : origen === "whatsapp"
+                      ? `<span class="card-clave card-origen">💬 WhatsApp</span>`
                   : ""
             }
 
@@ -2079,6 +2244,18 @@ await actualizarConsulta(
 
       const vacio = { compras: 0, monto: 0 };
 
+      if (graficoOrigen) {
+        dibujarGraficoOrigen([
+          { clave: "instagram", nombre: "Instagram" },
+          { clave: "facebook", nombre: "Facebook" },
+          { clave: "whatsapp", nombre: "WhatsApp" },
+          { clave: "otro", nombre: "Otros" },
+          ...(porOrigen.sinIdentificar
+            ? [{ clave: "sinIdentificar", nombre: "Facebook o Instagram" }]
+            : [])
+        ].map((s) => ({ ...s, ...vacio, ...porOrigen[s.clave] })));
+      }
+
       // Total de la red, sus campañas y lo que vino sin anuncio
       const filasRed = (nombre, red) => [
         { nombre, ...(porOrigen[red] || vacio) },
@@ -2090,6 +2267,9 @@ await actualizarConsulta(
             sangria: true,
             ...grupo
           })),
+        ...(porClaveRed[red]
+          ? [{ nombre: "🔑 Con palabra clave", sangria: true, ...porClaveRed[red] }]
+          : []),
         ...(porSinAnuncio[red]
           ? [{ nombre: "Sin anuncio (bio, publicaciones)", sangria: true, ...porSinAnuncio[red] }]
           : [])
@@ -2098,6 +2278,7 @@ await actualizarConsulta(
       mostrarResumen(statOrigen, [
         ...filasRed("📸 Instagram", "instagram"),
         ...filasRed("📘 Facebook", "facebook"),
+        { nombre: "💬 WhatsApp", ...(porOrigen.whatsapp || vacio) },
         ...(porOrigen.sinIdentificar
           ? filasRed("🔗 Facebook o Instagram (sin identificar)", "sinIdentificar")
           : []),

@@ -159,15 +159,6 @@ button:disabled { opacity: .6; cursor: wait; }
 
 .stat-plata b { color: var(--verde-osc); }
 
-.stat-claves { grid-column: 1 / -1; }
-
-.stat-claves span {
-  display: block;
-  margin-top: 4px;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--texto);
-}
 
 .card-clave {
   display: inline-block;
@@ -575,14 +566,13 @@ button:disabled { opacity: .6; cursor: wait; }
 
 .resumen-fila.sangria b { font-size: 13px; }
 
-.resumen-fila span { font-size: 13px; font-weight: 600; color: var(--verde-osc); }
+.resumen-fila span {
+  text-align: right; font-size: 13px; font-weight: 600; color: var(--verde-osc); }
 
 .resumen-fila.sangria { padding-left: 16px; font-size: 13px; }
 
 .resumen-fila.sangria b { font-weight: 500; color: var(--suave); }
 
-.stat-claves #statClaves,
-.stat-claves #statOrigen { margin-top: 4px; }
 
 /* Pestañas Instagram y Facebook: solo las compras de esa red, de las dos listas */
 .solo-instagram .card:not(.card-instagram),
@@ -597,4 +587,145 @@ button:disabled { opacity: .6; cursor: wait; }
   margin-left: 4px;
   color: #1e3a8a;
   background: #dbeafe;
+}
+
+
+/* ======================================================
+   PANELES DEL RESUMEN
+   ====================================================== */
+
+.paneles {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.panel-columna {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.panel {
+  min-width: 0;
+  padding: 18px;
+  background: var(--tarjeta);
+  border-radius: 16px;
+}
+
+.panel h2 { margin: 0 0 4px; font-size: 16px; }
+
+.panel-bajada {
+  margin: 0 0 14px;
+  font-size: 12px;
+  color: var(--suave);
+}
+
+.panel-texto { margin: 8px 0 0; font-size: 14px; font-weight: 600; }
+
+.panel-detalle { margin-top: 14px; }
+
+.panel-detalle summary {
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--verde-osc);
+}
+
+.panel-detalle[open] summary { margin-bottom: 6px; }
+
+
+/* ===== Gráfico redondo ===== */
+
+.grafico-fila {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 20px;
+  align-items: center;
+}
+
+.torta { position: relative; }
+
+.torta svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.porcion,
+.porcion-fondo {
+  fill: none;
+  stroke-width: 34;
+}
+
+.porcion-fondo { stroke: var(--fondo); }
+
+.porcion { cursor: pointer; transition: opacity .15s ease; }
+
+/* Al pasar por una porción, las otras se atenúan */
+#graficoOrigen[data-activo] .porcion { opacity: .35; }
+#graficoOrigen[data-activo="instagram"] .porcion[data-clave="instagram"],
+#graficoOrigen[data-activo="facebook"] .porcion[data-clave="facebook"],
+#graficoOrigen[data-activo="whatsapp"] .porcion[data-clave="whatsapp"],
+#graficoOrigen[data-activo="sinIdentificar"] .porcion[data-clave="sinIdentificar"],
+#graficoOrigen[data-activo="otro"] .porcion[data-clave="otro"] { opacity: 1; }
+
+.torta-centro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 42px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.torta-centro b { font-size: 16px; font-weight: 800; }
+
+.torta-centro small { font-size: 11px; color: var(--suave); }
+
+.leyenda {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.leyenda li {
+  display: grid;
+  grid-template-columns: 12px 1fr auto 36px;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 0;
+  border-top: 1px solid var(--borde);
+}
+
+.leyenda li:first-child { border-top: 0; }
+
+.leyenda i { width: 12px; height: 12px; border-radius: 3px; }
+
+.leyenda-nombre { min-width: 0; font-size: 14px; font-weight: 600; }
+
+.leyenda-nombre small {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--suave);
+}
+
+.leyenda b { font-size: 14px; }
+
+.leyenda-parte { font-size: 13px; text-align: right; color: var(--suave); }
+
+@media (max-width: 760px) {
+
+  .paneles { grid-template-columns: 1fr; }
+
+  .grafico-fila { grid-template-columns: 1fr; }
+
+  .torta { width: 190px; margin: 0 auto; }
+
 }

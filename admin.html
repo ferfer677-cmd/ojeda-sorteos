@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="admin.css?v=9">
+<link rel="stylesheet" href="admin.css?v=11">
 </head>
 
 <body>
@@ -71,19 +71,50 @@
         <b id="totalParticipantes">0</b>
       </div>
 
-      <div class="stat stat-claves">
-        <small>🎁 Sorteo de $50.000 por compartir</small>
-        <span id="statReferidos">-</span>
+    </section>
+
+
+    <!-- ===== ¿DE DÓNDE VIENE LA PLATA? ===== -->
+    <section class="paneles">
+
+      <div class="panel panel-origen">
+
+        <h2>¿De dónde viene la plata?</h2>
+        <p class="panel-bajada">Compras aprobadas. Palabra clave "50" = Instagram · "MENOS" = Facebook.</p>
+
+        <div class="grafico-fila">
+
+          <div class="torta">
+            <svg id="graficoOrigen" viewBox="0 0 200 200" role="img" aria-label="Recaudación por origen; los valores están en la lista de al lado"></svg>
+            <div class="torta-centro">
+              <b id="centroMonto">$0</b>
+              <small id="centroTexto">recaudado</small>
+            </div>
+          </div>
+
+          <ul class="leyenda" id="leyendaOrigen"></ul>
+
+        </div>
+
+        <details class="panel-detalle">
+          <summary>Ver detalle por campaña</summary>
+          <div id="statOrigen">-</div>
+        </details>
+
       </div>
 
-      <div class="stat stat-claves">
-        <small>🔑 Recaudación por palabra clave (aprobados)</small>
-        <div id="statClaves">-</div>
-      </div>
+      <div class="panel-columna">
 
-      <div class="stat stat-claves">
-        <small>📣 Recaudación por origen (aprobados)</small>
-        <div id="statOrigen">-</div>
+        <div class="panel">
+          <h2>🔑 Por palabra clave</h2>
+          <div id="statClaves">-</div>
+        </div>
+
+        <div class="panel">
+          <h2>🎁 Sorteo de $50.000</h2>
+          <p class="panel-texto" id="statReferidos">-</p>
+        </div>
+
       </div>
 
     </section>
@@ -147,7 +178,7 @@
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-<script type="module" src="admin.js?v=16"></script>
+<script type="module" src="admin.js?v=18"></script>
 
 <!-- Visor de comprobantes: se agranda en la misma página -->
 <div class="visor" id="visor" hidden>
