@@ -955,7 +955,6 @@ function esc(valor) {
 // =====================================================
 //   anuncio: el link traía la etiqueta de los anuncios (utm_source)
 //   clave:   usó la palabra clave de una red (RED_POR_CLAVE)
-//   whatsapp: entró con el link etiquetado del canal (?utm_source=whatsapp)
 //   link:    vino de Facebook/Instagram sin etiqueta (bio, publicación
 //            o un anuncio sin etiquetar): marca fbc o navegador de la app
 //   otro:    entró de cualquier otra forma
@@ -986,7 +985,6 @@ function redCompra(datos) {
 
   if (fuente === "ig" || fuente === "instagram") return "instagram";
   if (fuente === "fb" || fuente === "facebook") return "facebook";
-  if (fuente === "whatsapp") return "whatsapp";
 
   const navegador = String(datos.userAgent || "");
 
@@ -1004,9 +1002,6 @@ function origenCompra(datos) {
   if (redDeClave(datos)) {
     return "clave";
   }
-  if (fuenteCompra(datos) === "whatsapp") {
-    return "whatsapp";
-  }
   return datos.fbc || redCompra(datos) ? "link" : "otro";
 }
 
@@ -1015,9 +1010,7 @@ function origenCompra(datos) {
 const COLORES_ORIGEN = {
   instagram: "#C2185B",
   facebook: "#1877F2",
-  whatsapp: "#00A650",
-  otro: "#7C3AED",
-  sinIdentificar: "#B7791F"
+  otro: "#7C3AED"
 };
 
 function dibujarGraficoOrigen(segmentos) {
@@ -1505,17 +1498,17 @@ async function cargarParticipantes(
 
           const origen = origenCompra(datos);
 
-          // Lo que no es de Instagram ni de Facebook se cuenta como WhatsApp
+          // Lo que no es de Instagram ni de Facebook va a "Otros"
           const redDeCompra = redCompra(datos);
 
           const grupoRed =
             origen !== "otro" && (redDeCompra === "instagram" || redDeCompra === "facebook")
               ? redDeCompra
-              : "whatsapp";
+              : "otro";
 
           sumarCompra(porOrigen, grupoRed, precio);
 
-          if (grupoRed === "whatsapp") {
+          if (grupoRed === "otro") {
             // Sin desglose: es un solo grupo
           } else if (origen === "anuncio") {
             sumarCompra(
@@ -1754,15 +1747,13 @@ async function cargarParticipantes(
 
             ${
               origen === "otro" || !(red === "instagram" || red === "facebook")
-                ? `<span class="card-clave card-origen">💬 WhatsApp</span>`
+                ? ""
                 : origen === "anuncio"
                 ? `<span class="card-clave card-origen">📣 Anuncio en ${nombreRed}: ${esc(datos.utmCampaign || "sin nombre")}</span>`
                 : origen === "link"
                   ? `<span class="card-clave card-origen">🔗 Desde ${nombreRed}, sin anuncio</span>`
                   : origen === "clave"
                     ? `<span class="card-clave card-origen">${red === "instagram" ? "📸" : "📘"} ${nombreRed}</span>`
-                    : origen === "whatsapp"
-                      ? `<span class="card-clave card-origen">💬 WhatsApp</span>`
                   : ""
             }
 
@@ -2255,9 +2246,9 @@ await actualizarConsulta(
 
       if (graficoOrigen) {
         dibujarGraficoOrigen([
-          { clave: "instagram", nombre: "Instagram" },
-          { clave: "facebook", nombre: "Facebook" },
-          { clave: "whatsapp", nombre: "WhatsApp" }
+          { clave: "facebook", nombre: "Facebook + clave MENOS" },
+          { clave: "instagram", nombre: "Instagram + clave 50" },
+          { clave: "otro", nombre: "Otros" }
         ].map((s) => ({ ...s, ...vacio, ...porOrigen[s.clave] })));
       }
 
@@ -2281,9 +2272,9 @@ await actualizarConsulta(
       ];
 
       mostrarResumen(statOrigen, [
-        ...filasRed("📸 Instagram", "instagram"),
-        ...filasRed("📘 Facebook", "facebook"),
-        { nombre: "💬 WhatsApp", ...(porOrigen.whatsapp || vacio) }
+        ...filasRed("📘 Facebook + clave MENOS", "facebook"),
+        ...filasRed("📸 Instagram + clave 50", "instagram"),
+        { nombre: "Otros", ...(porOrigen.otro || vacio) }
       ]);
 
     }

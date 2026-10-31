@@ -667,8 +667,6 @@ button:disabled { opacity: .6; cursor: wait; }
 #graficoOrigen[data-activo] .porcion { opacity: .35; }
 #graficoOrigen[data-activo="instagram"] .porcion[data-clave="instagram"],
 #graficoOrigen[data-activo="facebook"] .porcion[data-clave="facebook"],
-#graficoOrigen[data-activo="whatsapp"] .porcion[data-clave="whatsapp"],
-#graficoOrigen[data-activo="sinIdentificar"] .porcion[data-clave="sinIdentificar"],
 #graficoOrigen[data-activo="otro"] .porcion[data-clave="otro"] { opacity: 1; }
 
 .torta-centro {
