@@ -584,12 +584,14 @@ button:disabled { opacity: .6; cursor: wait; }
 .stat-claves #statClaves,
 .stat-claves #statOrigen { margin-top: 4px; }
 
-/* Pestaña Facebook/Instagram: solo esas compras, de las dos listas */
-.solo-fb .card:not(.card-fb) { display: none; }
+/* Pestañas Instagram y Facebook: solo las compras de esa red, de las dos listas */
+.solo-instagram .card:not(.card-instagram),
+.solo-facebook .card:not(.card-facebook) { display: none; }
 
-.fb-vacio { display: none; color: var(--suave); }
+.red-vacio { display: none; color: var(--suave); }
 
-.solo-fb .fb-vacio { display: block; }
+.solo-instagram .vacio-instagram,
+.solo-facebook .vacio-facebook { display: block; }
 
 .card-origen {
   margin-left: 4px;

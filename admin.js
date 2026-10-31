@@ -93,8 +93,14 @@ const statClaves =
 const statOrigen =
   document.getElementById("statOrigen");
 
+const tituloInstagram =
+  document.getElementById("tituloInstagram");
+
 const tituloFacebook =
   document.getElementById("tituloFacebook");
+
+const instagramVacio =
+  document.getElementById("instagramVacio");
 
 const facebookVacio =
   document.getElementById("facebookVacio");
@@ -935,18 +941,40 @@ function esc(valor) {
 // =====================================================
 // ORIGEN DE LA COMPRA
 // =====================================================
-//   anuncio: el link traía la etiqueta de los anuncios (utm_source=meta)
+//   anuncio: el link traía la etiqueta de los anuncios (utm_source)
 //   link:    vino de Facebook/Instagram sin etiqueta (bio, publicación
-//            o un anuncio sin etiquetar): se reconoce por la marca fbc
+//            o un anuncio sin etiquetar): marca fbc o navegador de la app
 //   otro:    entró de cualquier otra forma
 
-const FUENTES_META = ["meta", "facebook", "fb", "instagram", "ig"];
+const FUENTES_META = ["meta", "facebook", "fb", "instagram", "ig", "msg", "an"];
+
+function fuenteCompra(datos) {
+  return String(datos.utmSource || "").trim().toLowerCase();
+}
+
+// "instagram", "facebook" o "" si no se puede saber.
+// Primero lo que dice el anuncio; si no, el navegador interno de cada app.
+function redCompra(datos) {
+
+  const fuente = fuenteCompra(datos);
+
+  if (fuente === "ig" || fuente === "instagram") return "instagram";
+  if (fuente === "fb" || fuente === "facebook") return "facebook";
+
+  const navegador = String(datos.userAgent || "");
+
+  if (/Instagram/i.test(navegador)) return "instagram";
+  if (/FBAN|FBAV|FB_IAB/.test(navegador)) return "facebook";
+
+  return "";
+
+}
 
 function origenCompra(datos) {
-  if (FUENTES_META.includes(String(datos.utmSource || "").trim().toLowerCase())) {
+  if (FUENTES_META.includes(fuenteCompra(datos))) {
     return "anuncio";
   }
-  return datos.fbc ? "link" : "otro";
+  return datos.fbc || redCompra(datos) ? "link" : "otro";
 }
 
 
@@ -1265,6 +1293,8 @@ async function cargarParticipantes(
 
     let cantidadPagados = 0;
 
+    let cantidadInstagram = 0;
+
     let cantidadFacebook = 0;
 
 
@@ -1289,6 +1319,7 @@ async function cargarParticipantes(
     // Compras aprobadas por origen y por campaña
     const porOrigen = {};
     const porCampana = {};
+    const porSinAnuncio = {};
 
     // Nombre de cada participante por DNI (para "vino por el link de...")
     const nombrePorDni = new Map(
@@ -1315,10 +1346,19 @@ async function cargarParticipantes(
 
           const origen = origenCompra(datos);
 
-          sumarCompra(porOrigen, origen, precio);
+          const grupoRed =
+            origen === "otro" ? "otro" : (redCompra(datos) || "sinIdentificar");
+
+          sumarCompra(porOrigen, grupoRed, precio);
 
           if (origen === "anuncio") {
-            sumarCompra(porCampana, datos.utmCampaign || "Sin nombre", precio);
+            sumarCompra(
+              porCampana,
+              `${grupoRed}|${datos.utmCampaign || "Sin nombre"}`,
+              precio
+            );
+          } else if (origen === "link") {
+            sumarCompra(porSinAnuncio, grupoRed, precio);
           }
 
         }
@@ -1488,11 +1528,21 @@ async function cargarParticipantes(
         const origen =
           origenCompra(datos);
 
+        const red =
+          redCompra(datos);
+
+        const nombreRed =
+          red === "instagram" ? "Instagram" : red === "facebook" ? "Facebook" : "Facebook o Instagram";
+
         card.className =
           `card ${datos.estado === "Pagado" ? "card-pagado" : "card-pendiente"}` +
-          (origen === "otro" ? "" : " card-fb");
+          (origen !== "otro" && red ? ` card-${red}` : "");
 
-        if (origen !== "otro") {
+        if (origen !== "otro" && red === "instagram") {
+          cantidadInstagram++;
+        }
+
+        if (origen !== "otro" && red === "facebook") {
           cantidadFacebook++;
         }
 
@@ -1536,9 +1586,9 @@ async function cargarParticipantes(
 
             ${
               origen === "anuncio"
-                ? `<span class="card-clave card-origen">📣 Anuncio: ${esc(datos.utmCampaign || datos.utmSource)}</span>`
+                ? `<span class="card-clave card-origen">📣 Anuncio en ${nombreRed}: ${esc(datos.utmCampaign || "sin nombre")}</span>`
                 : origen === "link"
-                  ? `<span class="card-clave card-origen">🔗 Desde Facebook/Instagram</span>`
+                  ? `<span class="card-clave card-origen">🔗 Desde ${nombreRed}, sin anuncio</span>`
                   : ""
             }
 
@@ -2029,21 +2079,46 @@ await actualizarConsulta(
 
       const vacio = { compras: 0, monto: 0 };
 
-      mostrarResumen(statOrigen, [
-        { nombre: "📣 Anuncios de Meta", ...(porOrigen.anuncio || vacio) },
+      // Total de la red, sus campañas y lo que vino sin anuncio
+      const filasRed = (nombre, red) => [
+        { nombre, ...(porOrigen[red] || vacio) },
         ...Object.entries(porCampana)
+          .filter(([clave]) => clave.startsWith(`${red}|`))
           .sort((a, b) => b[1].monto - a[1].monto)
-          .map(([campana, grupo]) => ({ nombre: campana, sangria: true, ...grupo })),
-        { nombre: "🔗 Facebook/Instagram sin etiqueta", ...(porOrigen.link || vacio) },
+          .map(([clave, grupo]) => ({
+            nombre: `📣 ${clave.slice(red.length + 1)}`,
+            sangria: true,
+            ...grupo
+          })),
+        ...(porSinAnuncio[red]
+          ? [{ nombre: "Sin anuncio (bio, publicaciones)", sangria: true, ...porSinAnuncio[red] }]
+          : [])
+      ];
+
+      mostrarResumen(statOrigen, [
+        ...filasRed("📸 Instagram", "instagram"),
+        ...filasRed("📘 Facebook", "facebook"),
+        ...(porOrigen.sinIdentificar
+          ? filasRed("🔗 Facebook o Instagram (sin identificar)", "sinIdentificar")
+          : []),
         { nombre: "Otros", ...(porOrigen.otro || vacio) }
       ]);
 
     }
 
 
+    if (tituloInstagram) {
+      tituloInstagram.textContent =
+        `📸 Instagram (${cantidadInstagram})`;
+    }
+
     if (tituloFacebook) {
       tituloFacebook.textContent =
-        `📣 Facebook/Instagram (${cantidadFacebook})`;
+        `📘 Facebook (${cantidadFacebook})`;
+    }
+
+    if (instagramVacio) {
+      instagramVacio.hidden = cantidadInstagram > 0;
     }
 
     if (facebookVacio) {

@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="admin.css?v=8">
+<link rel="stylesheet" href="admin.css?v=9">
 </head>
 
 <body>
@@ -122,10 +122,12 @@
     <div class="pestanas" role="tablist">
       <button type="button" role="tab" id="tituloPendientes" data-lista="pendientes" class="activa">Pendientes (0)</button>
       <button type="button" role="tab" id="tituloPagados" data-lista="pagados">Aprobados (0)</button>
-      <button type="button" role="tab" id="tituloFacebook" data-lista="facebook">📣 Facebook/Instagram (0)</button>
+      <button type="button" role="tab" id="tituloInstagram" data-lista="instagram">📸 Instagram (0)</button>
+      <button type="button" role="tab" id="tituloFacebook" data-lista="facebook">📘 Facebook (0)</button>
     </div>
 
-    <p class="fb-vacio" id="facebookVacio">Todavía no hay compras desde Facebook o Instagram.</p>
+    <p class="red-vacio vacio-instagram" id="instagramVacio">Todavía no hay compras desde Instagram.</p>
+    <p class="red-vacio vacio-facebook" id="facebookVacio">Todavía no hay compras desde Facebook.</p>
 
     <div id="pendientes" class="lista"></div>
 
@@ -145,7 +147,7 @@
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-<script type="module" src="admin.js?v=15"></script>
+<script type="module" src="admin.js?v=16"></script>
 
 <!-- Visor de comprobantes: se agranda en la misma página -->
 <div class="visor" id="visor" hidden>
@@ -194,8 +196,8 @@
   })();
 </script>
 
-<!-- Pestañas Pendientes / Aprobados / Facebook-Instagram
-     (la última muestra las dos listas, solo con las compras de ahí) -->
+<!-- Pestañas Pendientes / Aprobados / Instagram / Facebook
+     (las dos últimas muestran ambas listas, solo con las compras de esa red) -->
 <script>
   document.querySelectorAll(".pestanas [data-lista]").forEach((pestana) => {
     pestana.addEventListener("click", () => {
@@ -207,7 +209,9 @@
         otra.setAttribute("aria-selected", activa);
       });
 
-      document.getElementById("panelAdmin").classList.toggle("solo-fb", lista === "facebook");
+      const panel = document.getElementById("panelAdmin");
+      panel.classList.toggle("solo-instagram", lista === "instagram");
+      panel.classList.toggle("solo-facebook", lista === "facebook");
       document.getElementById("pendientes").hidden = lista === "pagados";
       document.getElementById("pagados").hidden = lista === "pendientes";
     });
