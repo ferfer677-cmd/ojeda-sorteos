@@ -155,6 +155,36 @@ function eventoMeta(evento, datos, idEvento) {
   } catch {}
 })();
 
+// Etiqueta de los anuncios (?utm_source=meta&utm_campaign=...): se guarda
+// 30 días, porque la persona puede comprar después de ver el anuncio
+const DIAS_ETIQUETA_ANUNCIO = 30;
+
+(function guardarEtiquetaAnuncio() {
+  const url = new URLSearchParams(location.search);
+  if (!url.get("utm_source")) return;
+  try {
+    localStorage.setItem("ojedaUtm", JSON.stringify({
+      utmSource: url.get("utm_source"),
+      utmMedium: url.get("utm_medium") || "",
+      utmCampaign: url.get("utm_campaign") || "",
+      utmContent: url.get("utm_content") || "",
+      fecha: Date.now()
+    }));
+  } catch {}
+})();
+
+function leerEtiquetaAnuncio() {
+  try {
+    const { fecha, ...etiqueta } =
+      JSON.parse(localStorage.getItem("ojedaUtm") || "{}");
+    const vigente =
+      Date.now() - Number(fecha) < DIAS_ETIQUETA_ANUNCIO * 864e5;
+    return vigente ? etiqueta : {};
+  } catch {
+    return {};
+  }
+}
+
 function leerCookie(nombre) {
   const par = document.cookie
     .split("; ")
@@ -178,7 +208,8 @@ function datosParaMeta() {
     fbc: leerCookie("_fbc") || fbcGuardado,
     fbp: leerCookie("_fbp"),
     userAgent: navigator.userAgent,
-    paginaUrl: location.origin + location.pathname
+    paginaUrl: location.origin + location.pathname,
+    ...leerEtiquetaAnuncio()
   };
 
 }

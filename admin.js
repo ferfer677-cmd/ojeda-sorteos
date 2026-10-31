@@ -90,6 +90,15 @@ const statPagados =
 const statClaves =
   document.getElementById("statClaves");
 
+const statOrigen =
+  document.getElementById("statOrigen");
+
+const tituloFacebook =
+  document.getElementById("tituloFacebook");
+
+const facebookVacio =
+  document.getElementById("facebookVacio");
+
 const statReferidos =
   document.getElementById("statReferidos");
 
@@ -924,6 +933,59 @@ function esc(valor) {
 
 
 // =====================================================
+// ORIGEN DE LA COMPRA
+// =====================================================
+//   anuncio: el link traía la etiqueta de los anuncios (utm_source=meta)
+//   link:    vino de Facebook/Instagram sin etiqueta (bio, publicación
+//            o un anuncio sin etiquetar): se reconoce por la marca fbc
+//   otro:    entró de cualquier otra forma
+
+const FUENTES_META = ["meta", "facebook", "fb", "instagram", "ig"];
+
+function origenCompra(datos) {
+  if (FUENTES_META.includes(String(datos.utmSource || "").trim().toLowerCase())) {
+    return "anuncio";
+  }
+  return datos.fbc ? "link" : "otro";
+}
+
+
+// Filas "Nombre · 3 compras · $15.000 · promedio $5.000" (solo texto)
+function mostrarResumen(elemento, filas) {
+
+  elemento.innerHTML = "";
+
+  filas.forEach(({ nombre, compras, monto, sangria }) => {
+
+    const fila = document.createElement("div");
+    fila.className = "resumen-fila" + (sangria ? " sangria" : "");
+
+    const titulo = document.createElement("b");
+    titulo.textContent = nombre;
+
+    const detalle = document.createElement("span");
+    const promedio = compras ? Math.round(monto / compras) : 0;
+    detalle.textContent =
+      `${compras} compra${compras === 1 ? "" : "s"} · $${monto.toLocaleString("es-AR")}` +
+      (compras ? ` · promedio $${promedio.toLocaleString("es-AR")}` : "");
+
+    fila.append(titulo, detalle);
+    elemento.appendChild(fila);
+
+  });
+
+}
+
+
+// Suma una compra en un grupo { compras, monto }
+function sumarCompra(grupos, clave, monto) {
+  grupos[clave] = grupos[clave] || { compras: 0, monto: 0 };
+  grupos[clave].compras++;
+  grupos[clave].monto += monto;
+}
+
+
+// =====================================================
 // PACK MÁS ELEGIDO (lo muestra la página)
 // =====================================================
 // Cuenta las compras APROBADAS de cada pack y publica en
@@ -1203,6 +1265,8 @@ async function cargarParticipantes(
 
     let cantidadPagados = 0;
 
+    let cantidadFacebook = 0;
+
 
     const dniUnicos =
       new Set();
@@ -1222,6 +1286,10 @@ async function cargarParticipantes(
     // Entradas por palabra clave (de qué portal vino cada compra)
     const porPalabraClave = {};
 
+    // Compras aprobadas por origen y por campaña
+    const porOrigen = {};
+    const porCampana = {};
+
     // Nombre de cada participante por DNI (para "vino por el link de...")
     const nombrePorDni = new Map(
       participantes.map(({ datos }) => [
@@ -1240,8 +1308,19 @@ async function cargarParticipantes(
         const clave =
           (datos.codigoPromo || "").toString().trim().toUpperCase();
 
-        if (clave) {
-          porPalabraClave[clave] = (porPalabraClave[clave] || 0) + 1;
+        // Solo aprobadas: es plata que ya entró
+        if (datos.estado === "Pagado") {
+
+          sumarCompra(porPalabraClave, clave || "Sin palabra clave", precio);
+
+          const origen = origenCompra(datos);
+
+          sumarCompra(porOrigen, origen, precio);
+
+          if (origen === "anuncio") {
+            sumarCompra(porCampana, datos.utmCampaign || "Sin nombre", precio);
+          }
+
         }
 
         if (datos.estado === "Pagado") {
@@ -1406,8 +1485,16 @@ async function cargarParticipantes(
           );
 
 
+        const origen =
+          origenCompra(datos);
+
         card.className =
-          `card ${datos.estado === "Pagado" ? "card-pagado" : "card-pendiente"}`;
+          `card ${datos.estado === "Pagado" ? "card-pagado" : "card-pendiente"}` +
+          (origen === "otro" ? "" : " card-fb");
+
+        if (origen !== "otro") {
+          cantidadFacebook++;
+        }
 
 
         // Comprobante: miniatura (imagen) o link (PDF)
@@ -1445,6 +1532,14 @@ async function cargarParticipantes(
               datos.codigoPromo
                 ? `<span class="card-clave">🔑 Palabra clave: ${esc(datos.codigoPromo)}</span>`
                 : ""
+            }
+
+            ${
+              origen === "anuncio"
+                ? `<span class="card-clave card-origen">📣 Anuncio: ${esc(datos.utmCampaign || datos.utmSource)}</span>`
+                : origen === "link"
+                  ? `<span class="card-clave card-origen">🔗 Desde Facebook/Instagram</span>`
+                  : ""
             }
 
             ${
@@ -1907,22 +2002,52 @@ await actualizarConsulta(
 
     if (statClaves) {
 
+      // La de más plata primero; "Sin palabra clave" siempre al final
       const claves =
         Object.entries(porPalabraClave)
-          .sort((a, b) => b[1] - a[1]);
+          .sort((a, b) =>
+            (a[0] === "Sin palabra clave") - (b[0] === "Sin palabra clave") ||
+            b[1].monto - a[1].monto
+          );
 
-      const sinClave =
-        participantes.length -
-        claves.reduce((n, [, cantidad]) => n + cantidad, 0);
+      if (claves.length) {
+        mostrarResumen(
+          statClaves,
+          claves.map(([clave, grupo]) => ({
+            nombre: clave === "Sin palabra clave" ? clave : `"${clave}"`,
+            ...grupo
+          }))
+        );
+      } else {
+        statClaves.textContent = "Todavía no hay compras aprobadas";
+      }
 
-      statClaves.textContent =
-        claves.length
-          ? [
-              ...claves.map(([clave, cantidad]) => `"${clave}": ${cantidad}`),
-              `sin clave: ${sinClave}`
-            ].join(" · ")
-          : "Todavía nadie usó una palabra clave";
+    }
 
+
+    if (statOrigen) {
+
+      const vacio = { compras: 0, monto: 0 };
+
+      mostrarResumen(statOrigen, [
+        { nombre: "📣 Anuncios de Meta", ...(porOrigen.anuncio || vacio) },
+        ...Object.entries(porCampana)
+          .sort((a, b) => b[1].monto - a[1].monto)
+          .map(([campana, grupo]) => ({ nombre: campana, sangria: true, ...grupo })),
+        { nombre: "🔗 Facebook/Instagram sin etiqueta", ...(porOrigen.link || vacio) },
+        { nombre: "Otros", ...(porOrigen.otro || vacio) }
+      ]);
+
+    }
+
+
+    if (tituloFacebook) {
+      tituloFacebook.textContent =
+        `📣 Facebook/Instagram (${cantidadFacebook})`;
+    }
+
+    if (facebookVacio) {
+      facebookVacio.hidden = cantidadFacebook > 0;
     }
 
 

@@ -124,6 +124,12 @@ export async function guardarParticipante(datos) {
         userAgent: corto(datos.userAgent, 400),
         paginaUrl: corto(datos.paginaUrl, 200),
 
+        // De qué anuncio vino (etiqueta utm del link)
+        utmSource: corto(datos.utmSource, 150),
+        utmMedium: corto(datos.utmMedium, 150),
+        utmCampaign: corto(datos.utmCampaign, 150),
+        utmContent: corto(datos.utmContent, 150),
+
         // Estado
         estado: "Esperando",
 

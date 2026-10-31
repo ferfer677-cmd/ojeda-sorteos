@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="admin.css?v=6">
+<link rel="stylesheet" href="admin.css?v=8">
 </head>
 
 <body>
@@ -77,8 +77,13 @@
       </div>
 
       <div class="stat stat-claves">
-        <small>🔑 Compras por palabra clave (de dónde entraron)</small>
-        <span id="statClaves">-</span>
+        <small>🔑 Recaudación por palabra clave (aprobados)</small>
+        <div id="statClaves">-</div>
+      </div>
+
+      <div class="stat stat-claves">
+        <small>📣 Recaudación por origen (aprobados)</small>
+        <div id="statOrigen">-</div>
       </div>
 
     </section>
@@ -117,7 +122,10 @@
     <div class="pestanas" role="tablist">
       <button type="button" role="tab" id="tituloPendientes" data-lista="pendientes" class="activa">Pendientes (0)</button>
       <button type="button" role="tab" id="tituloPagados" data-lista="pagados">Aprobados (0)</button>
+      <button type="button" role="tab" id="tituloFacebook" data-lista="facebook">📣 Facebook/Instagram (0)</button>
     </div>
+
+    <p class="fb-vacio" id="facebookVacio">Todavía no hay compras desde Facebook o Instagram.</p>
 
     <div id="pendientes" class="lista"></div>
 
@@ -137,7 +145,7 @@
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-<script type="module" src="admin.js?v=14"></script>
+<script type="module" src="admin.js?v=15"></script>
 
 <!-- Visor de comprobantes: se agranda en la misma página -->
 <div class="visor" id="visor" hidden>
@@ -186,16 +194,22 @@
   })();
 </script>
 
-<!-- Pestañas Pendientes / Aprobados -->
+<!-- Pestañas Pendientes / Aprobados / Facebook-Instagram
+     (la última muestra las dos listas, solo con las compras de ahí) -->
 <script>
   document.querySelectorAll(".pestanas [data-lista]").forEach((pestana) => {
     pestana.addEventListener("click", () => {
+      const lista = pestana.dataset.lista;
+
       document.querySelectorAll(".pestanas [data-lista]").forEach((otra) => {
         const activa = otra === pestana;
         otra.classList.toggle("activa", activa);
         otra.setAttribute("aria-selected", activa);
-        document.getElementById(otra.dataset.lista).hidden = !activa;
       });
+
+      document.getElementById("panelAdmin").classList.toggle("solo-fb", lista === "facebook");
+      document.getElementById("pendientes").hidden = lista === "pagados";
+      document.getElementById("pagados").hidden = lista === "pendientes";
     });
   });
 </script>

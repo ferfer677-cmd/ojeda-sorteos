@@ -56,6 +56,7 @@ La primera vez Firebase puede pedir habilitar algunas APIs de Google Cloud (Clou
 - Público: similar 1% de **"Compradores Ojeda"** (lista de clientes con valor), y/o Advantage+.
 - Palabras clave por portal: `50` y `MENOS` (50% OFF). Cada compra guarda cuál usó (en el Píxel va como `content_category`).
 - URL: `https://ojedasorteos.com.ar/`
+- **Parámetros de URL de cada anuncio (importante):** `utm_source=meta&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}}`. Con esto el admin separa las compras de los anuncios y muestra la recaudación real por campaña.
 - Cierre de compras: **viernes 13/11/2026, 19:00**. Sorteo en vivo: 21:00.
 
 ## Si algo falla

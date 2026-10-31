@@ -551,3 +551,48 @@ button:disabled { opacity: .6; cursor: wait; }
 }
 
 .meta-sello.error { color: var(--rojo); cursor: help; }
+
+
+/* Resúmenes de recaudación (palabra clave y origen) */
+.resumen-fila {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2px 12px;
+  padding: 6px 0;
+  font-size: 14px;
+  border-top: 1px solid var(--borde);
+}
+
+.resumen-fila:first-child { border-top: 0; }
+
+.resumen-fila b {
+  display: inline;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.resumen-fila.sangria b { font-size: 13px; }
+
+.resumen-fila span { font-size: 13px; font-weight: 600; color: var(--verde-osc); }
+
+.resumen-fila.sangria { padding-left: 16px; font-size: 13px; }
+
+.resumen-fila.sangria b { font-weight: 500; color: var(--suave); }
+
+.stat-claves #statClaves,
+.stat-claves #statOrigen { margin-top: 4px; }
+
+/* Pestaña Facebook/Instagram: solo esas compras, de las dos listas */
+.solo-fb .card:not(.card-fb) { display: none; }
+
+.fb-vacio { display: none; color: var(--suave); }
+
+.solo-fb .fb-vacio { display: block; }
+
+.card-origen {
+  margin-left: 4px;
+  color: #1e3a8a;
+  background: #dbeafe;
+}

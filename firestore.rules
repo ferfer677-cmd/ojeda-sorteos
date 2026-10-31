@@ -54,7 +54,8 @@ service cloud.firestore {
           "codigoPromo", "precioFinal", "multiplicadorPromo",
           "comprobanteURL", "comprobantePath",
           "referido", "estado", "fecha",
-          "metaEventId", "fbc", "fbp", "userAgent", "paginaUrl"
+          "metaEventId", "fbc", "fbp", "userAgent", "paginaUrl",
+          "utmSource", "utmMedium", "utmCampaign", "utmContent"
         ])
         && request.resource.data.estado == "Esperando"
         && request.resource.data.fecha == request.time
@@ -75,6 +76,10 @@ service cloud.firestore {
         && textoOpcional("fbp", 120)
         && textoOpcional("userAgent", 400)
         && textoOpcional("paginaUrl", 200)
+        && textoOpcional("utmSource", 150)
+        && textoOpcional("utmMedium", 150)
+        && textoOpcional("utmCampaign", 150)
+        && textoOpcional("utmContent", 150)
         && numero("chancesBase")
         && numero("chancesFinales")
         && numero("precioFinal")
