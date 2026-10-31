@@ -1505,12 +1505,19 @@ async function cargarParticipantes(
 
           const origen = origenCompra(datos);
 
+          // Lo que no es de Instagram ni de Facebook se cuenta como WhatsApp
+          const redDeCompra = redCompra(datos);
+
           const grupoRed =
-            origen === "otro" ? "otro" : (redCompra(datos) || "sinIdentificar");
+            origen !== "otro" && (redDeCompra === "instagram" || redDeCompra === "facebook")
+              ? redDeCompra
+              : "whatsapp";
 
           sumarCompra(porOrigen, grupoRed, precio);
 
-          if (origen === "anuncio") {
+          if (grupoRed === "whatsapp") {
+            // Sin desglose: es un solo grupo
+          } else if (origen === "anuncio") {
             sumarCompra(
               porCampana,
               `${grupoRed}|${datos.utmCampaign || "Sin nombre"}`,
@@ -1746,7 +1753,9 @@ async function cargarParticipantes(
             }
 
             ${
-              origen === "anuncio"
+              origen === "otro" || !(red === "instagram" || red === "facebook")
+                ? `<span class="card-clave card-origen">💬 WhatsApp</span>`
+                : origen === "anuncio"
                 ? `<span class="card-clave card-origen">📣 Anuncio en ${nombreRed}: ${esc(datos.utmCampaign || "sin nombre")}</span>`
                 : origen === "link"
                   ? `<span class="card-clave card-origen">🔗 Desde ${nombreRed}, sin anuncio</span>`
@@ -2248,11 +2257,7 @@ await actualizarConsulta(
         dibujarGraficoOrigen([
           { clave: "instagram", nombre: "Instagram" },
           { clave: "facebook", nombre: "Facebook" },
-          { clave: "whatsapp", nombre: "WhatsApp" },
-          { clave: "otro", nombre: "Otros" },
-          ...(porOrigen.sinIdentificar
-            ? [{ clave: "sinIdentificar", nombre: "Facebook o Instagram" }]
-            : [])
+          { clave: "whatsapp", nombre: "WhatsApp" }
         ].map((s) => ({ ...s, ...vacio, ...porOrigen[s.clave] })));
       }
 
@@ -2278,11 +2283,7 @@ await actualizarConsulta(
       mostrarResumen(statOrigen, [
         ...filasRed("📸 Instagram", "instagram"),
         ...filasRed("📘 Facebook", "facebook"),
-        { nombre: "💬 WhatsApp", ...(porOrigen.whatsapp || vacio) },
-        ...(porOrigen.sinIdentificar
-          ? filasRed("🔗 Facebook o Instagram (sin identificar)", "sinIdentificar")
-          : []),
-        { nombre: "Otros", ...(porOrigen.otro || vacio) }
+        { nombre: "💬 WhatsApp", ...(porOrigen.whatsapp || vacio) }
       ]);
 
     }
