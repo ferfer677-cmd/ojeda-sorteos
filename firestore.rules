@@ -55,7 +55,7 @@ service cloud.firestore {
           "comprobanteURL", "comprobantePath",
           "referido", "estado", "fecha",
           "metaEventId", "fbc", "fbp", "userAgent", "paginaUrl",
-          "utmSource", "utmMedium", "utmCampaign", "utmContent"
+          "utmSource", "utmMedium", "utmCampaign", "utmContent", "clientIp"
         ])
         && request.resource.data.estado == "Esperando"
         && request.resource.data.fecha == request.time
@@ -80,6 +80,7 @@ service cloud.firestore {
         && textoOpcional("utmMedium", 150)
         && textoOpcional("utmCampaign", 150)
         && textoOpcional("utmContent", 150)
+        && textoOpcional("clientIp", 60)
         && numero("chancesBase")
         && numero("chancesFinales")
         && numero("precioFinal")

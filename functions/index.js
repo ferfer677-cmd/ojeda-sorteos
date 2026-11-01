@@ -14,6 +14,7 @@
 // testEventCode = "TEST12345" (el código que da Meta). Borrarlo al terminar.
 
 const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
+const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const { initializeApp } = require("firebase-admin/app");
@@ -95,6 +96,31 @@ function chancesDeCompra(datos) {
 
 
 // ======================================================
+// IP DEL COMPRADOR
+// ======================================================
+// La página la pide por /api/mi-ip (rewrite de firebase.json), así sale
+// por la misma conexión con la que navega. No guarda nada: solo la devuelve.
+
+exports.miIp = onRequest(
+  {
+    region: "southamerica-east1",
+    invoker: "public",
+    maxInstances: 10
+  },
+  (pedido, respuesta) => {
+
+    const ip =
+      pedido.get("fastly-client-ip") ||
+      String(pedido.get("x-forwarded-for") || "").split(",")[0].trim();
+
+    respuesta.set("Cache-Control", "private, no-store");
+    respuesta.json({ ip });
+
+  }
+);
+
+
+// ======================================================
 // EVENTO "PURCHASE" AL APROBAR UN PAGO
 // ======================================================
 
@@ -144,7 +170,8 @@ exports.compraAprobadaAMeta = onDocumentUpdated(
       external_id: dni ? [sha256(dni)] : undefined,
       fbc: despues.fbc || undefined,
       fbp: despues.fbp || undefined,
-      client_user_agent: despues.userAgent || undefined
+      client_user_agent: despues.userAgent || undefined,
+      client_ip_address: despues.clientIp || undefined
     };
 
     const cuerpo = {

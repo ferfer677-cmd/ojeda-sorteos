@@ -123,6 +123,7 @@ export async function guardarParticipante(datos) {
         fbp: corto(datos.fbp, 120),
         userAgent: corto(datos.userAgent, 400),
         paginaUrl: corto(datos.paginaUrl, 200),
+        clientIp: corto(datos.clientIp, 60),
 
         // De qué anuncio vino (etiqueta utm del link)
         utmSource: corto(datos.utmSource, 150),

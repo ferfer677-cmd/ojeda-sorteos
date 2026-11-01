@@ -192,6 +192,20 @@ function leerCookie(nombre) {
   return par ? decodeURIComponent(par.slice(nombre.length + 1)) : "";
 }
 
+// IP del comprador, para la API de Conversiones (Meta la pide junto con el
+// navegador). Se pide a /api/mi-ip (functions/index.js) al elegir un pack.
+// Si tarda o falla, la compra sigue igual, sin IP.
+let pedidoIp = null;
+
+function leerIpCliente() {
+  pedidoIp = pedidoIp ||
+    fetch("/api/mi-ip", { cache: "no-store", signal: AbortSignal.timeout(4000) })
+      .then((respuesta) => respuesta.json())
+      .then((datos) => String(datos.ip || ""))
+      .catch(() => "");
+  return pedidoIp;
+}
+
 function datosParaMeta() {
 
   let fbcGuardado = "";
@@ -577,6 +591,8 @@ if (modal) {
   modal.classList.add("show");
   document.body.classList.add("modal-open");
 }
+
+            leerIpCliente();
 
             eventoMeta("InitiateCheckout", {
               value: precioDelPack(cantidad),
@@ -1108,8 +1124,10 @@ setInterval(
             }
 
             // Identificadores de Meta (mismo ID para el Píxel y el servidor)
-            const meta =
-              datosParaMeta();
+            const meta = {
+              ...datosParaMeta(),
+              clientIp: await leerIpCliente()
+            };
 
             const guardado =
               await guardarParticipante({

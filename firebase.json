@@ -22,6 +22,15 @@
           }
         ]
       }
+    ],
+    "rewrites": [
+      {
+        "source": "/api/mi-ip",
+        "function": {
+          "functionId": "miIp",
+          "region": "southamerica-east1"
+        }
+      }
     ]
   },
   "firestore": {
