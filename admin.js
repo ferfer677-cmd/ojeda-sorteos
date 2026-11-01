@@ -8,6 +8,8 @@ import {
 
 import { nombreAbreviado } from "./firestore.js";
 
+import { mostrarIngresosDiarios } from "./admin-diario.js";
+
 import {
   collection,
   getDocs,
@@ -1009,6 +1011,36 @@ function origenCompra(datos) {
 }
 
 
+// Lo que no es de Instagram ni de Facebook va a "otro"
+function grupoDeCompra(datos) {
+
+  const red = redCompra(datos);
+
+  return origenCompra(datos) !== "otro" && (red === "instagram" || red === "facebook")
+    ? red
+    : "otro";
+
+}
+
+const NOMBRES_ORIGEN = {
+  facebook: "Facebook + clave MENOS",
+  instagram: "Instagram + clave 50",
+  otro: "Otros"
+};
+
+// Cómo se muestra la palabra clave en los resúmenes
+function nombreClaveCompra(datos) {
+
+  const clave =
+    (datos.codigoPromo || "").toString().trim().toUpperCase();
+
+  if (clave.startsWith("RULETA")) return "🎡 Ruleta";
+
+  return clave ? `"${clave}"` : "Sin palabra clave";
+
+}
+
+
 // Gráfico redondo: una porción por grupo, proporcional a la plata
 const COLORES_ORIGEN = {
   instagram: "#C2185B",
@@ -1526,13 +1558,7 @@ async function cargarParticipantes(
 
           const origen = origenCompra(datos);
 
-          // Lo que no es de Instagram ni de Facebook va a "Otros"
-          const redDeCompra = redCompra(datos);
-
-          const grupoRed =
-            origen !== "otro" && (redDeCompra === "instagram" || redDeCompra === "facebook")
-              ? redDeCompra
-              : "otro";
+          const grupoRed = grupoDeCompra(datos);
 
           sumarCompra(porOrigen, grupoRed, precio);
 
@@ -2249,6 +2275,14 @@ await actualizarConsulta(
         ` · + $${ruletaPendiente.toLocaleString("es-AR")} por aprobar` +
         ` · ${comprasRuleta} compra${comprasRuleta === 1 ? "" : "s"}`;
     }
+
+
+    mostrarIngresosDiarios(participantes, {
+      precioDeCompra,
+      mostrarResumen,
+      nombreOrigen: (datos) => NOMBRES_ORIGEN[grupoDeCompra(datos)],
+      nombreClave: nombreClaveCompra
+    });
 
 
     if (statClaves) {

@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="admin.css?v=12">
+<link rel="stylesheet" href="admin.css?v=13">
 </head>
 
 <body>
@@ -125,6 +125,79 @@
     </section>
 
 
+    <!-- ===== INGRESOS POR DÍA ===== -->
+    <section class="panel panel-diario">
+
+      <div class="diario-cabecera">
+
+        <div>
+          <h2>📅 Ingresos por día</h2>
+          <p class="panel-bajada">Compras aprobadas, en el día en que se hizo la compra. Tocá una barra o elegí una fecha.</p>
+        </div>
+
+        <div class="diario-controles">
+          <div class="diario-rango" id="rangoDiario">
+            <button type="button" data-rango="7">7 días</button>
+            <button type="button" data-rango="30">30 días</button>
+            <button type="button" data-rango="todo">Todo</button>
+          </div>
+          <label class="diario-fecha">
+            <span>Ver el día</span>
+            <input type="date" id="selectorDia">
+          </label>
+        </div>
+
+      </div>
+
+      <p class="diario-periodo" id="periodoDiario"></p>
+
+      <div class="diario-grafico" id="graficoDiario"></div>
+      <div class="diario-globo" id="globoDiario" hidden></div>
+
+      <div class="diario-detalle">
+
+        <h3 id="diaTitulo"></h3>
+
+        <div class="diario-cifras">
+          <div>
+            <small>Recaudado</small>
+            <b id="diaMonto">$0</b>
+            <span id="diaPendiente"></span>
+          </div>
+          <div>
+            <small>Compras</small>
+            <b id="diaCompras">0</b>
+          </div>
+          <div>
+            <small>Promedio por compra</small>
+            <b id="diaPromedio">-</b>
+          </div>
+          <div>
+            <small>Contra el día anterior</small>
+            <b id="diaCambio">-</b>
+          </div>
+        </div>
+
+        <div class="diario-grupos">
+          <div>
+            <h4>Por origen</h4>
+            <div id="diaOrigen"></div>
+          </div>
+          <div>
+            <h4>Por palabra clave</h4>
+            <div id="diaClaves"></div>
+          </div>
+          <div>
+            <h4>Por pack</h4>
+            <div id="diaPacks"></div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+
     <!-- ===== ACCIONES ===== -->
     <section class="acciones">
 
@@ -183,7 +256,7 @@
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-<script type="module" src="admin.js?v=21"></script>
+<script type="module" src="admin.js?v=22"></script>
 
 <!-- Visor de comprobantes: se agranda en la misma página -->
 <div class="visor" id="visor" hidden>

@@ -727,3 +727,207 @@ button:disabled { opacity: .6; cursor: wait; }
   .torta { width: 190px; margin: 0 auto; }
 
 }
+
+
+/* ======================================================
+   INGRESOS POR DÍA
+   ====================================================== */
+
+.panel-diario { position: relative; margin-top: 12px; }
+
+.diario-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px 20px;
+}
+
+.diario-cabecera .panel-bajada { margin-bottom: 0; }
+
+.diario-controles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.diario-rango {
+  display: flex;
+  padding: 3px;
+  background: var(--fondo);
+  border-radius: 10px;
+}
+
+.diario-rango button {
+  padding: 7px 11px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--suave);
+  background: none;
+  border: 0;
+  border-radius: 8px;
+}
+
+.diario-rango button[aria-pressed="true"] {
+  color: var(--texto);
+  background: var(--tarjeta);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .12);
+}
+
+.diario-fecha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--suave);
+}
+
+.diario-fecha input {
+  padding: 7px 9px;
+  font: inherit;
+  color: var(--texto);
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+}
+
+.diario-periodo { margin: 14px 0 12px; font-size: 13px; font-weight: 600; }
+
+.diario-grafico {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+}
+
+/* Escala: alineada con la zona de barras, sin la franja de fechas */
+.diario-escala { position: relative; height: 196px; }
+
+.diario-escala span {
+  position: absolute;
+  right: 8px;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--suave);
+  transform: translateY(50%);
+}
+
+.diario-zona { overflow-x: auto; overflow-y: hidden; }
+
+.diario-barras {
+  display: flex;
+  min-width: 100%;
+  width: max-content;
+  height: 220px;
+  background:
+    linear-gradient(var(--borde), var(--borde)) 0 0 / 100% 1px no-repeat,
+    linear-gradient(var(--borde), var(--borde)) 0 98px / 100% 1px no-repeat,
+    linear-gradient(var(--suave), var(--suave)) 0 196px / 100% 1px no-repeat;
+}
+
+.diario-columna {
+  position: relative;
+  flex: 1 0 12px;
+  max-width: 64px;
+  height: 100%;
+  padding: 0 1px;
+  background: none;
+  border: 0;
+}
+
+/* Zona de la barra: 196px, igual que la escala */
+.diario-columna i {
+  position: absolute;
+  right: 1px;
+  bottom: 24px;
+  left: 1px;
+  max-height: 196px;
+  background: var(--verde);
+  border-radius: 4px 4px 0 0;
+}
+
+.diario-columna:hover { background: var(--fondo); border-radius: 6px; }
+
+.diario-columna:hover i { background: var(--verde-osc); }
+
+.diario-columna:focus-visible { outline: 2px solid var(--oscuro); outline-offset: -2px; }
+
+.diario-columna.elegida i { background: var(--oscuro); }
+
+.diario-columna small {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  font-size: 11px;
+  white-space: nowrap;
+  color: var(--suave);
+  transform: translateX(-50%);
+}
+
+/* La última fecha no se sale del gráfico */
+.diario-columna:last-child small { right: 0; left: auto; transform: none; }
+
+.diario-columna.elegida small { font-weight: 700; color: var(--texto); }
+
+.diario-globo {
+  position: absolute;
+  z-index: 3;
+  margin-top: -222px;
+  padding: 7px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  color: #fff;
+  pointer-events: none;
+  background: var(--oscuro);
+  border-radius: 8px;
+}
+
+.diario-globo b, .diario-globo span { display: block; }
+
+.diario-detalle {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--borde);
+}
+
+.diario-detalle h3 { margin: 0 0 12px; font-size: 16px; }
+
+.diario-cifras {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.diario-cifras > div {
+  min-width: 0;
+  padding: 11px 12px;
+  background: var(--fondo);
+  border-radius: 12px;
+}
+
+.diario-cifras small, .diario-cifras b, .diario-cifras span { display: block; }
+
+.diario-cifras small { font-size: 12px; color: var(--suave); }
+
+.diario-cifras b { margin-top: 3px; font-size: 19px; }
+
+.diario-cifras span { margin-top: 2px; font-size: 12px; color: var(--suave); }
+
+.diario-grupos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--suave);
+}
+
+.diario-grupos h4 { margin: 0 0 4px; font-size: 13px; color: var(--texto); }
+
+@media (max-width: 760px) {
+
+  .diario-cifras { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .diario-grupos { grid-template-columns: 1fr; }
+
+}
