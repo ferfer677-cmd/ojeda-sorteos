@@ -1731,3 +1731,11 @@ body.con-barra-compra .purchase-notification { bottom: 86px; }
   .ruleta-llamada { animation: none; }
   .ruleta-rueda { transition-duration: .2s; }
 }
+
+
+/* Botón "Ya compré: ver mis números": oscuro, para que se vea sobre el blanco */
+.boton-sec.consultar-btn {
+  font-weight: 700;
+  color: #fff;
+  background: var(--oscuro);
+}
