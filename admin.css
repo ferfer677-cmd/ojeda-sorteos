@@ -733,6 +733,8 @@ button:disabled { opacity: .6; cursor: wait; }
    INGRESOS POR DÍA
    ====================================================== */
 
+.panel-claves { margin-top: 12px; }
+
 .panel-diario { position: relative; margin-top: 12px; }
 
 .diario-cabecera {
@@ -894,7 +896,7 @@ button:disabled { opacity: .6; cursor: wait; }
 
 .diario-cifras {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -914,9 +916,6 @@ button:disabled { opacity: .6; cursor: wait; }
 .diario-cifras span { margin-top: 2px; font-size: 12px; color: var(--suave); }
 
 .diario-grupos {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
   margin-top: 14px;
   font-size: 13px;
   color: var(--suave);
@@ -924,10 +923,3 @@ button:disabled { opacity: .6; cursor: wait; }
 
 .diario-grupos h4 { margin: 0 0 4px; font-size: 13px; color: var(--texto); }
 
-@media (max-width: 760px) {
-
-  .diario-cifras { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-
-  .diario-grupos { grid-template-columns: 1fr; }
-
-}

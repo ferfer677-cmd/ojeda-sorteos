@@ -261,13 +261,8 @@ function mostrarPeriodo(dias, totales) {
   const monto = delPeriodo.reduce((suma, d) => suma + d.monto, 0);
   const cantidad = delPeriodo.reduce((suma, d) => suma + d.compras, 0);
 
-  const mejor =
-    delPeriodo.reduce((a, b) => (b.monto > a.monto ? b : a), delPeriodo[0]);
-
   document.getElementById("periodoDiario").textContent =
-    `En ${plural(dias.length, "día")}: ${pesos(monto)} · ${plural(cantidad, "compra")}` +
-    ` · promedio ${pesos(monto / dias.length)} por día` +
-    (mejor.monto ? ` · mejor día: ${diaCorto(mejor.dia)} (${pesos(mejor.monto)})` : "");
+    `En ${plural(dias.length, "día")}: ${pesos(monto)} · ${plural(cantidad, "compra")}`;
 
 }
 
@@ -292,18 +287,11 @@ function agrupar(lista, nombreDe) {
 
   });
 
-  return [...grupos.values()].sort((a, b) => b.monto - a.monto);
-
-}
-
-function nombrePack(datos) {
-
-  const chances =
-    Number(datos.chancesFinales) ||
-    Number((String(datos.pack || "").match(/(\d+)\s*CHANCE/i) || [])[1]) ||
-    0;
-
-  return chances ? plural(chances, "chance") : "Sin dato";
+  // La de más plata primero; "Otros" siempre al final
+  return [...grupos.values()].sort((a, b) =>
+    (a.nombre === "Otros") - (b.nombre === "Otros") ||
+    b.monto - a.monto
+  );
 
 }
 
@@ -314,7 +302,6 @@ function mostrarDetalle(totales) {
   const sinAprobar = del.filter(({ datos }) => datos.estado !== "Pagado");
 
   const total = totales.get(diaElegido) || { monto: 0, compras: 0 };
-  const anterior = totales.get(sumarDias(diaElegido, -1)) || { monto: 0 };
 
   const porAprobar =
     sinAprobar.reduce((suma, { datos }) => suma + ayudas.precioDeCompra(datos), 0);
@@ -322,32 +309,17 @@ function mostrarDetalle(totales) {
   document.getElementById("diaTitulo").textContent = diaLargo(diaElegido);
   document.getElementById("diaMonto").textContent = pesos(total.monto);
   document.getElementById("diaCompras").textContent = total.compras.toLocaleString("es-AR");
-  document.getElementById("diaPromedio").textContent =
-    total.compras ? pesos(total.monto / total.compras) : "-";
   document.getElementById("diaPendiente").textContent =
     porAprobar ? `+ ${pesos(porAprobar)} por aprobar` : "Nada por aprobar";
 
-  let cambio = "Sin ventas el día anterior";
+  const claves = document.getElementById("diaClaves");
+  const grupos = agrupar(aprobadas, ayudas.nombreClave);
 
-  if (anterior.monto) {
-    const parte = Math.round(((total.monto - anterior.monto) / anterior.monto) * 100);
-    cambio = `${parte > 0 ? "▲ +" : parte < 0 ? "▼ " : ""}${parte}%`;
+  if (grupos.length) {
+    ayudas.mostrarResumen(claves, grupos);
+  } else {
+    claves.textContent = "Sin compras aprobadas";
   }
-
-  document.getElementById("diaCambio").textContent = cambio;
-
-  const pintar = (id, grupos) => {
-    const elemento = document.getElementById(id);
-    if (grupos.length) {
-      ayudas.mostrarResumen(elemento, grupos);
-    } else {
-      elemento.textContent = "Sin compras aprobadas";
-    }
-  };
-
-  pintar("diaOrigen", agrupar(aprobadas, ayudas.nombreOrigen));
-  pintar("diaClaves", agrupar(aprobadas, ayudas.nombreClave));
-  pintar("diaPacks", agrupar(aprobadas, nombrePack));
 
 }
 

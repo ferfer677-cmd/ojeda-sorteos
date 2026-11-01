@@ -92,24 +92,6 @@ const statPagados =
 const statClaves =
   document.getElementById("statClaves");
 
-const statOrigen =
-  document.getElementById("statOrigen");
-
-const statRuleta =
-  document.getElementById("statRuleta");
-
-const graficoOrigen =
-  document.getElementById("graficoOrigen");
-
-const leyendaOrigen =
-  document.getElementById("leyendaOrigen");
-
-const centroMonto =
-  document.getElementById("centroMonto");
-
-const centroTexto =
-  document.getElementById("centroTexto");
-
 const tituloInstagram =
   document.getElementById("tituloInstagram");
 
@@ -122,8 +104,6 @@ const instagramVacio =
 const facebookVacio =
   document.getElementById("facebookVacio");
 
-const statReferidos =
-  document.getElementById("statReferidos");
 
 const sortearReferidos =
   document.getElementById("sortearReferidos");
@@ -1011,155 +991,13 @@ function origenCompra(datos) {
 }
 
 
-// Lo que no es de Instagram ni de Facebook va a "otro"
-function grupoDeCompra(datos) {
-
-  const red = redCompra(datos);
-
-  return origenCompra(datos) !== "otro" && (red === "instagram" || red === "facebook")
-    ? red
-    : "otro";
-
-}
-
-const NOMBRES_ORIGEN = {
-  facebook: "Facebook + clave MENOS",
-  instagram: "Instagram + clave 50",
-  otro: "Otros"
-};
-
-// Cómo se muestra la palabra clave en los resúmenes
+// Cada compra va a su palabra clave o a "Otros" (incluye la ruleta)
 function nombreClaveCompra(datos) {
 
   const clave =
     (datos.codigoPromo || "").toString().trim().toUpperCase();
 
-  if (clave.startsWith("RULETA")) return "🎡 Ruleta";
-
-  return clave ? `"${clave}"` : "Sin palabra clave";
-
-}
-
-
-// Gráfico redondo: una porción por grupo, proporcional a la plata
-const COLORES_ORIGEN = {
-  instagram: "#C2185B",
-  facebook: "#1877F2",
-  otro: "#7C3AED"
-};
-
-function dibujarGraficoOrigen(segmentos) {
-
-  const total =
-    segmentos.reduce((suma, s) => suma + s.monto, 0);
-
-  const pesos = (monto) =>
-    `$${monto.toLocaleString("es-AR")}`;
-
-  const mostrarCentro = (monto, texto) => {
-    centroMonto.textContent = pesos(monto);
-    centroTexto.textContent = texto;
-  };
-
-  graficoOrigen.innerHTML = "";
-  leyendaOrigen.innerHTML = "";
-
-  mostrarCentro(total, "recaudado");
-
-  const NS = "http://www.w3.org/2000/svg";
-
-  // Fondo: se ve si todavía no hay plata
-  const fondo = document.createElementNS(NS, "circle");
-  fondo.setAttribute("class", "porcion-fondo");
-  fondo.setAttribute("cx", "100");
-  fondo.setAttribute("cy", "100");
-  fondo.setAttribute("r", "78");
-  graficoOrigen.appendChild(fondo);
-
-  const conPlata =
-    segmentos.filter((s) => s.monto > 0);
-
-  // Separación entre porciones (nada si hay una sola)
-  const separacion = conPlata.length > 1 ? 0.7 : 0;
-
-  let acumulado = 0;
-
-  segmentos.forEach((segmento) => {
-
-    const porcentaje =
-      total ? (segmento.monto / total) * 100 : 0;
-
-    const resaltar = () => {
-      mostrarCentro(segmento.monto, segmento.nombre);
-      graficoOrigen.dataset.activo = segmento.clave;
-    };
-
-    const quitar = () => {
-      mostrarCentro(total, "recaudado");
-      delete graficoOrigen.dataset.activo;
-    };
-
-    if (segmento.monto > 0) {
-
-      const porcion = document.createElementNS(NS, "circle");
-      porcion.setAttribute("class", "porcion");
-      porcion.dataset.clave = segmento.clave;
-      porcion.setAttribute("cx", "100");
-      porcion.setAttribute("cy", "100");
-      porcion.setAttribute("r", "78");
-      porcion.setAttribute("pathLength", "100");
-      porcion.setAttribute("stroke", COLORES_ORIGEN[segmento.clave]);
-      porcion.setAttribute(
-        "stroke-dasharray",
-        `${Math.max(porcentaje - separacion, 0.3)} ${100 - Math.max(porcentaje - separacion, 0.3)}`
-      );
-      // Arranca arriba y sigue como las agujas del reloj
-      porcion.setAttribute("stroke-dashoffset", String(25 - acumulado));
-
-      const titulo = document.createElementNS(NS, "title");
-      titulo.textContent =
-        `${segmento.nombre}: ${pesos(segmento.monto)} (${Math.round(porcentaje)}%)`;
-      porcion.appendChild(titulo);
-
-      porcion.addEventListener("mouseenter", resaltar);
-      porcion.addEventListener("mouseleave", quitar);
-
-      graficoOrigen.appendChild(porcion);
-
-      acumulado += porcentaje;
-
-    }
-
-    // Leyenda: color, nombre, compras, plata y porcentaje
-    const fila = document.createElement("li");
-
-    const color = document.createElement("i");
-    color.style.background = COLORES_ORIGEN[segmento.clave];
-
-    const nombre = document.createElement("span");
-    nombre.className = "leyenda-nombre";
-    nombre.textContent = segmento.nombre;
-
-    const compras = document.createElement("small");
-    compras.textContent =
-      `${segmento.compras} compra${segmento.compras === 1 ? "" : "s"}`;
-    nombre.appendChild(compras);
-
-    const monto = document.createElement("b");
-    monto.textContent = pesos(segmento.monto);
-
-    const parte = document.createElement("span");
-    parte.className = "leyenda-parte";
-    parte.textContent = `${Math.round(porcentaje)}%`;
-
-    fila.append(color, nombre, monto, parte);
-
-    fila.addEventListener("mouseenter", resaltar);
-    fila.addEventListener("mouseleave", quitar);
-
-    leyendaOrigen.appendChild(fila);
-
-  });
+  return RED_POR_CLAVE[clave] ? `"${clave}"` : "Otros";
 
 }
 
@@ -1507,17 +1345,6 @@ async function cargarParticipantes(
     // Entradas por palabra clave (de qué portal vino cada compra)
     const porPalabraClave = {};
 
-    // Plata extra por las ofertas de la ruleta
-    let ruletaAprobado = 0;
-    let ruletaPendiente = 0;
-    let comprasRuleta = 0;
-
-    // Compras aprobadas por origen y por campaña
-    const porOrigen = {};
-    const porCampana = {};
-    const porSinAnuncio = {};
-    const porClaveRed = {};
-
     // Nombre de cada participante por DNI (para "vino por el link de...")
     const nombrePorDni = new Map(
       participantes.map(({ datos }) => [
@@ -1533,49 +1360,9 @@ async function cargarParticipantes(
         const precio =
           precioDeCompra(datos);
 
-        const clave =
-          (datos.codigoPromo || "").toString().trim().toUpperCase();
-
-        const esRuleta = clave.startsWith("RULETA");
-
-        if (esRuleta && precio > 0) {
-          comprasRuleta++;
-          if (datos.estado === "Pagado") {
-            ruletaAprobado += precio;
-          } else {
-            ruletaPendiente += precio;
-          }
-        }
-
         // Solo aprobadas: es plata que ya entró
         if (datos.estado === "Pagado") {
-
-          sumarCompra(
-            porPalabraClave,
-            esRuleta ? "🎡 Ruleta" : (clave || "Sin palabra clave"),
-            precio
-          );
-
-          const origen = origenCompra(datos);
-
-          const grupoRed = grupoDeCompra(datos);
-
-          sumarCompra(porOrigen, grupoRed, precio);
-
-          if (grupoRed === "otro") {
-            // Sin desglose: es un solo grupo
-          } else if (origen === "anuncio") {
-            sumarCompra(
-              porCampana,
-              `${grupoRed}|${datos.utmCampaign || "Sin nombre"}`,
-              precio
-            );
-          } else if (origen === "clave") {
-            sumarCompra(porClaveRed, grupoRed, precio);
-          } else if (origen === "link") {
-            sumarCompra(porSinAnuncio, grupoRed, precio);
-          }
-
+          sumarCompra(porPalabraClave, nombreClaveCompra(datos), precio);
         }
 
         if (datos.estado === "Pagado") {
@@ -2256,96 +2043,31 @@ await actualizarConsulta(
     }
 
 
-    if (statReferidos) {
-
-      const { personas, compras } =
-        chancesSorteoReferidos(participantes);
-
-      statReferidos.textContent =
-        compras
-          ? `${compras} compra${compras === 1 ? "" : "s"} aprobada${compras === 1 ? "" : "s"} desde links · ${personas.length} persona${personas.length === 1 ? "" : "s"} en el sorteo de $50.000`
-          : "Todavía nadie compró desde el link de otro";
-
-    }
-
-
-    if (statRuleta) {
-      statRuleta.textContent =
-        `$${ruletaAprobado.toLocaleString("es-AR")} aprobados` +
-        ` · + $${ruletaPendiente.toLocaleString("es-AR")} por aprobar` +
-        ` · ${comprasRuleta} compra${comprasRuleta === 1 ? "" : "s"}`;
-    }
-
-
     mostrarIngresosDiarios(participantes, {
       precioDeCompra,
       mostrarResumen,
-      nombreOrigen: (datos) => NOMBRES_ORIGEN[grupoDeCompra(datos)],
       nombreClave: nombreClaveCompra
     });
 
 
     if (statClaves) {
 
-      // La de más plata primero; "Sin palabra clave" siempre al final
+      // La de más plata primero; "Otros" siempre al final
       const claves =
         Object.entries(porPalabraClave)
           .sort((a, b) =>
-            (a[0] === "Sin palabra clave") - (b[0] === "Sin palabra clave") ||
+            (a[0] === "Otros") - (b[0] === "Otros") ||
             b[1].monto - a[1].monto
           );
 
       if (claves.length) {
         mostrarResumen(
           statClaves,
-          claves.map(([clave, grupo]) => ({
-            nombre: clave === "Sin palabra clave" || clave === "🎡 Ruleta" ? clave : `"${clave}"`,
-            ...grupo
-          }))
+          claves.map(([nombre, grupo]) => ({ nombre, ...grupo }))
         );
       } else {
         statClaves.textContent = "Todavía no hay compras aprobadas";
       }
-
-    }
-
-
-    if (statOrigen) {
-
-      const vacio = { compras: 0, monto: 0 };
-
-      if (graficoOrigen) {
-        dibujarGraficoOrigen([
-          { clave: "facebook", nombre: "Facebook + clave MENOS" },
-          { clave: "instagram", nombre: "Instagram + clave 50" },
-          { clave: "otro", nombre: "Otros" }
-        ].map((s) => ({ ...s, ...vacio, ...porOrigen[s.clave] })));
-      }
-
-      // Total de la red, sus campañas y lo que vino sin anuncio
-      const filasRed = (nombre, red) => [
-        { nombre, ...(porOrigen[red] || vacio) },
-        ...Object.entries(porCampana)
-          .filter(([clave]) => clave.startsWith(`${red}|`))
-          .sort((a, b) => b[1].monto - a[1].monto)
-          .map(([clave, grupo]) => ({
-            nombre: `📣 ${clave.slice(red.length + 1)}`,
-            sangria: true,
-            ...grupo
-          })),
-        ...(porClaveRed[red]
-          ? [{ nombre: "🔑 Con palabra clave", sangria: true, ...porClaveRed[red] }]
-          : []),
-        ...(porSinAnuncio[red]
-          ? [{ nombre: "Sin anuncio (bio, publicaciones)", sangria: true, ...porSinAnuncio[red] }]
-          : [])
-      ];
-
-      mostrarResumen(statOrigen, [
-        ...filasRed("📘 Facebook + clave MENOS", "facebook"),
-        ...filasRed("📸 Instagram + clave 50", "instagram"),
-        { nombre: "Otros", ...(porOrigen.otro || vacio) }
-      ]);
 
     }
 
