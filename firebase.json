@@ -30,6 +30,13 @@
           "functionId": "miIp",
           "region": "southamerica-east1"
         }
+      },
+      {
+        "source": "/api/ruleta",
+        "function": {
+          "functionId": "ruleta",
+          "region": "southamerica-east1"
+        }
       }
     ]
   },

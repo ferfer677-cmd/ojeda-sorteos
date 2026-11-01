@@ -55,6 +55,7 @@ window.participacionesCerradas = function () {
 // se pregunta si ya hay otro abierto y, si lo hay, se espera.
 
 const SELECTORES_CARTELES = [
+  "#ruletaOverlay.activo",
   ".cierre-overlay.activo",
   "#superPromoOverlay.activo",
   "#ofertaEnteroOverlay.activo",

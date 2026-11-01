@@ -1598,3 +1598,136 @@ body.con-barra-compra .purchase-notification { bottom: 86px; }
   .packs-grid { grid-template-columns: repeat(2, 1fr); }
 
 }
+
+
+/* ======================================================
+   RULETA DE PREMIOS (ruleta.js)
+   ====================================================== */
+
+.ruleta-llamada {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 16px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, var(--naranja), #C2185B);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(255, 106, 0, .35);
+  cursor: pointer;
+  animation: ruleta-latido 1.6s ease-in-out infinite;
+}
+
+@keyframes ruleta-latido {
+  50% { transform: scale(1.025); }
+}
+
+.ruleta-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 850;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, .7);
+}
+
+.ruleta-caja {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  max-height: 94vh;
+  overflow-y: auto;
+  padding: 24px 18px;
+  background: #fff;
+  border-radius: 20px;
+}
+
+.ruleta-cerrar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  width: 34px;
+  height: 34px;
+  background: var(--fondo);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.ruleta-contenido { text-align: center; }
+
+.ruleta-contenido h3 { margin: 0 34px 8px; font-size: 20px; }
+
+.ruleta-contenido p { margin: 0 0 14px; font-size: 14px; line-height: 1.5; color: var(--suave); }
+
+/* La flecha marca el premio, arriba y al centro */
+.ruleta-marco {
+  position: relative;
+  width: min(290px, 100%);
+  margin: 18px auto;
+}
+
+.ruleta-marco::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  z-index: 1;
+  border: 12px solid transparent;
+  border-top: 22px solid var(--oscuro);
+  border-bottom: 0;
+  transform: translateX(-50%);
+}
+
+.ruleta-rueda {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 5px solid var(--oscuro);
+  border-radius: 50%;
+  transition: transform 4.5s cubic-bezier(.12, .7, .15, 1);
+}
+
+.ruleta-rueda span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 96px;
+  margin-top: -14px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  color: #fff;
+  transform-origin: 0 14px;
+}
+
+.ruleta-boton {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 14px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--verde);
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.ruleta-boton:disabled { opacity: .7; cursor: wait; }
+
+.ruleta-aviso { display: inline-block; margin-top: 12px; font-size: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ruleta-llamada { animation: none; }
+  .ruleta-rueda { transition-duration: .2s; }
+}

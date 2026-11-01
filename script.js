@@ -310,6 +310,9 @@ if (successBtn && successModal) {
 
   let codigoPromoActivo = "";
 
+  // Precio de una oferta de la ruleta (0 = se usa el precio del pack)
+  let precioPromoActivo = 0;
+
   // ==================================================
 // DESCUENTO POR PALABRA CLAVE - 50% OFF (sorteo MT-07, 13/11/2026)
 // ==================================================
@@ -349,6 +352,9 @@ const preciosConDescuento = {
 
 // Precio del pack según si hay palabra clave activa
 function precioDelPack(chances) {
+  if (precioPromoActivo) {
+    return precioPromoActivo;
+  }
   return (
     descuentoPalabraClaveActivo
       ? preciosConDescuento[chances]
@@ -447,8 +453,11 @@ window.abrirModalPromo = function(
   codigoPromoActivo =
     codigoPromo || "";
 
+  precioPromoActivo =
+    Number(precio) || 0;
+
   packSeleccionado =
-    `PROMO EXCLUSIVA • ${chances} CHANCES • $${precio}`;
+    `RULETA • ${chances} CHANCES • $${Number(precio).toLocaleString("es-AR")}`;
 
   if (selectedPack) {
     selectedPack.innerText =
@@ -575,6 +584,8 @@ ofertaEnteroOverlay?.addEventListener("click", (e) => {
 
             // La palabra clave queda guardada en la compra (codigoPromo)
             codigoPromoActivo = palabraClaveActiva;
+
+            precioPromoActivo = 0;
 
             packSeleccionado =
               `${descuentoPalabraClaveActivo ? `CLAVE ${palabraClaveActiva} 50% OFF • ` : ""}${packName} • ${cantidad} CHANCE${cantidad === 1 ? "" : "S"} • ${packPrice}`;
@@ -1158,6 +1169,7 @@ codigoPromo:
 
 
 precioFinal:
+  precioPromoActivo ? precioPromoActivo :
   codigoPromoActivo === "ENTERO20"
     ? 10000
     : codigoPromoActivo === "ENTERO50"
@@ -2847,6 +2859,9 @@ if (btnConsultar && resultadoNumeros) {
           ${html}
 
         `;
+
+// Botón de la ruleta debajo de los números (ruleta.js)
+window.Ruleta?.mostrar(dniBuscado, resultadoNumeros);
 
 // La súper promo al consultar el DNI (50 chances $14.999 /
 // 100 chances $19.999) se dio de baja el 16/10/2026.

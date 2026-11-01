@@ -93,6 +93,9 @@ const statClaves =
 const statOrigen =
   document.getElementById("statOrigen");
 
+const statRuleta =
+  document.getElementById("statRuleta");
+
 const graficoOrigen =
   document.getElementById("graficoOrigen");
 
@@ -1353,6 +1356,11 @@ if (sortearReferidos) {
 
 function precioDeCompra(datos) {
 
+  // La chance gratis de la ruleta no suma plata
+  if (datos.codigoPromo === "RULETAGRATIS") {
+    return 0;
+  }
+
   let precio = 0;
 
   // Precio que quedó guardado dentro del pack. Ejemplos:
@@ -1467,6 +1475,11 @@ async function cargarParticipantes(
     // Entradas por palabra clave (de qué portal vino cada compra)
     const porPalabraClave = {};
 
+    // Plata extra por las ofertas de la ruleta
+    let ruletaAprobado = 0;
+    let ruletaPendiente = 0;
+    let comprasRuleta = 0;
+
     // Compras aprobadas por origen y por campaña
     const porOrigen = {};
     const porCampana = {};
@@ -1491,10 +1504,25 @@ async function cargarParticipantes(
         const clave =
           (datos.codigoPromo || "").toString().trim().toUpperCase();
 
+        const esRuleta = clave.startsWith("RULETA");
+
+        if (esRuleta && precio > 0) {
+          comprasRuleta++;
+          if (datos.estado === "Pagado") {
+            ruletaAprobado += precio;
+          } else {
+            ruletaPendiente += precio;
+          }
+        }
+
         // Solo aprobadas: es plata que ya entró
         if (datos.estado === "Pagado") {
 
-          sumarCompra(porPalabraClave, clave || "Sin palabra clave", precio);
+          sumarCompra(
+            porPalabraClave,
+            esRuleta ? "🎡 Ruleta" : (clave || "Sin palabra clave"),
+            precio
+          );
 
           const origen = origenCompra(datos);
 
@@ -2215,6 +2243,14 @@ await actualizarConsulta(
     }
 
 
+    if (statRuleta) {
+      statRuleta.textContent =
+        `$${ruletaAprobado.toLocaleString("es-AR")} aprobados` +
+        ` · + $${ruletaPendiente.toLocaleString("es-AR")} por aprobar` +
+        ` · ${comprasRuleta} compra${comprasRuleta === 1 ? "" : "s"}`;
+    }
+
+
     if (statClaves) {
 
       // La de más plata primero; "Sin palabra clave" siempre al final
@@ -2229,7 +2265,7 @@ await actualizarConsulta(
         mostrarResumen(
           statClaves,
           claves.map(([clave, grupo]) => ({
-            nombre: clave === "Sin palabra clave" ? clave : `"${clave}"`,
+            nombre: clave === "Sin palabra clave" || clave === "🎡 Ruleta" ? clave : `"${clave}"`,
             ...grupo
           }))
         );

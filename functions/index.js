@@ -21,6 +21,9 @@ const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const crypto = require("node:crypto");
 
+// Cierre de compras: viernes 13/11/2026 19:00 (igual que firestore.rules)
+const CIERRE_COMPRAS = 1794607200000;
+
 initializeApp();
 
 const META_CAPI_TOKEN = defineSecret("META_CAPI_TOKEN");
@@ -121,6 +124,186 @@ exports.miIp = onRequest(
 
 
 // ======================================================
+// RULETA DE PREMIOS
+// ======================================================
+// Cada compra aprobada da un giro. El premio se elige acá, no en el
+// navegador. Las probabilidades también figuran en terminos.html:
+// si se cambian, cambiarlas en los dos lugares.
+
+const PREMIOS_RULETA = [
+  { id: "gratis", peso: 5, nombre: "1 chance gratis", chances: 1, precio: 0, codigo: "RULETAGRATIS" },
+  { id: "tresxuno", peso: 15, nombre: "3x1 en tu próxima compra", chances: 0, precio: 0, codigo: "RULETA3X1" },
+  { id: "p35", peso: 27, nombre: "35 chances a $19.999", chances: 35, precio: 19999, codigo: "RULETA35" },
+  { id: "p200", peso: 27, nombre: "200 chances a $99.999", chances: 200, precio: 99999, codigo: "RULETA200" },
+  { id: "p500", peso: 26, nombre: "500 chances a $199.000", chances: 500, precio: 199000, codigo: "RULETA500" }
+];
+
+function elegirPremio() {
+  let numero = crypto.randomInt(100);
+  return PREMIOS_RULETA.find((p) => (numero -= p.peso) < 0);
+}
+
+function premioPublico({ id, nombre, chances, precio, codigo }) {
+  return { id, nombre, chances, precio, codigo };
+}
+
+// Giros ganados: compras aprobadas, sin contar las chances gratis de la ruleta
+function girosGanados(consulta) {
+  const compras = consulta.exists ? consulta.get("compras") : null;
+  return Array.isArray(compras)
+    ? compras.filter((c) => !String(c.pack || "").includes("CHANCE GRATIS")).length
+    : 0;
+}
+
+async function comprasDelDni(db, dni) {
+  const compras =
+    await db.collection("participantes").where("dniNormalizado", "==", dni).get();
+  return compras.docs.map((d) => d.data());
+}
+
+// Premios ganados que todavía no se compraron
+function premiosPendientes(giros, compras) {
+
+  const usados = {};
+
+  compras.forEach((c) => {
+    usados[c.codigoPromo] = (usados[c.codigoPromo] || 0) + 1;
+  });
+
+  return giros
+    .map((giro) => PREMIOS_RULETA.find((p) => p.id === giro.premio))
+    .filter((premio) => {
+      if (!premio || premio.id === "gratis") return false;
+      if (usados[premio.codigo] > 0) {
+        usados[premio.codigo]--;
+        return false;
+      }
+      return true;
+    })
+    .map(premioPublico);
+
+}
+
+exports.ruleta = onRequest(
+  {
+    region: "southamerica-east1",
+    invoker: "public",
+    maxInstances: 10
+  },
+  async (pedido, respuesta) => {
+
+    respuesta.set("Cache-Control", "private, no-store");
+
+    if (pedido.method !== "POST") {
+      respuesta.status(405).json({ error: "METODO" });
+      return;
+    }
+
+    const dni = String(pedido.body?.dni || "").replace(/[^0-9]/g, "").slice(0, 20);
+    const accion = pedido.body?.accion;
+
+    if (!dni || !["estado", "girar"].includes(accion)) {
+      respuesta.status(400).json({ error: "DATOS" });
+      return;
+    }
+
+    if (Date.now() >= CIERRE_COMPRAS) {
+      respuesta.json({ disponibles: 0, pendientes: [] });
+      return;
+    }
+
+    const db = getFirestore();
+    const refConsulta = db.collection("consultas").doc(dni);
+    const refRuleta = db.collection("ruleta").doc(dni);
+
+    try {
+
+      const compras = await comprasDelDni(db, dni);
+
+      if (accion === "estado") {
+
+        const [consulta, ruleta] =
+          await Promise.all([refConsulta.get(), refRuleta.get()]);
+
+        const giros = ruleta.exists ? ruleta.get("giros") || [] : [];
+
+        respuesta.json({
+          disponibles: Math.max(girosGanados(consulta) - giros.length, 0),
+          pendientes: premiosPendientes(giros, compras)
+        });
+
+        return;
+
+      }
+
+      // Girar: en una transacción, para que un doble clic no dé dos giros
+      const ultimaCompra =
+        compras.find((c) => c.codigoPromo !== "RULETAGRATIS") || compras[0];
+
+      const premio = await db.runTransaction(async (tx) => {
+
+        const consulta = await tx.get(refConsulta);
+        const ruleta = await tx.get(refRuleta);
+
+        const giros = ruleta.exists ? ruleta.get("giros") || [] : [];
+
+        if (girosGanados(consulta) <= giros.length) {
+          return null;
+        }
+
+        const elegido = elegirPremio();
+
+        tx.set(refRuleta, {
+          giros: [...giros, { premio: elegido.id, fecha: new Date() }]
+        });
+
+        // La chance gratis queda pendiente de aprobar en el admin,
+        // que es el que asigna el número
+        if (elegido.id === "gratis" && ultimaCompra) {
+          tx.create(db.collection("participantes").doc(), {
+            nombre: ultimaCompra.nombre || "",
+            apellido: ultimaCompra.apellido || "",
+            dni: ultimaCompra.dni || dni,
+            dniNormalizado: dni,
+            telefono: ultimaCompra.telefono || "",
+            instagram: ultimaCompra.instagram || "",
+            pack: "RULETA • CHANCE GRATIS • 1 CHANCE • $0",
+            chancesBase: 1,
+            chancesFinales: 1,
+            codigoPromo: "RULETAGRATIS",
+            precioFinal: 0,
+            multiplicadorPromo: 1,
+            comprobanteURL: "",
+            comprobantePath: "",
+            referido: "",
+            estado: "Esperando",
+            fecha: FieldValue.serverTimestamp()
+          });
+        }
+
+        return elegido;
+
+      });
+
+      if (!premio) {
+        respuesta.status(409).json({ error: "SIN_GIROS" });
+        return;
+      }
+
+      respuesta.json({ premio: premioPublico(premio) });
+
+    } catch (error) {
+
+      logger.error("Error en la ruleta", { error: sinToken(error.message) });
+      respuesta.status(500).json({ error: "RULETA" });
+
+    }
+
+  }
+);
+
+
+// ======================================================
 // EVENTO "PURCHASE" AL APROBAR UN PAGO
 // ======================================================
 
@@ -135,6 +318,11 @@ exports.compraAprobadaAMeta = onDocumentUpdated(
 
     const antes = evento.data?.before.data();
     const despues = evento.data?.after.data();
+
+    // La chance gratis de la ruleta no es una venta
+    if (despues?.codigoPromo === "RULETAGRATIS") {
+      return;
+    }
 
     // Solo cuando pasa a "Pagado", y una sola vez
     if (
