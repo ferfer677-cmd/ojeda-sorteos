@@ -12,6 +12,7 @@
 // foto (opcional): imagen de la entrega; al tocarla abre fotoVideo (o video)
 // fotos (opcional): varias fotos: [{ src, link, alt, ganador }]
 //   ganador: a qué ganador de la lista corresponde la foto (0 = el primero)
+//   formato: "ancho" para fotos horizontales, así no se recortan de los costados
 // entrega: "pendiente" si el premio todavía no se entregó
 // Los sorteos van del más reciente al más viejo.
 
@@ -22,9 +23,10 @@ const SORTEOS_ANTERIORES = [
     titulo: "Yamaha MT-07",
     fecha: "Octubre 2026",
     video: IG + "Dek8dFfkc-c/",
-    foto: "assets/ganadores/mt07.jpg",
+    fotos: [
+      { src: "assets/ganadores/mt07-flete.jpg", link: IG + "DelG-xYROIP/", alt: "La Yamaha MT-07 embalada y atada en la camioneta del flete, en camino a su ganador" }
+    ],
     entrega: "pendiente",
-    fotoVideo: IG + "DelG-xYROIP/",
     ganadores: [
       { premio: "🏍️ Yamaha MT-07", ig: "e.speed420", ciudad: "San Luis capital" },
       { premio: "💵 $50.000", ig: "alcarazgaston" },
@@ -112,7 +114,6 @@ const SORTEOS_ANTERIORES = [
     titulo: "iPhone 16 Pro Max y express",
     fecha: "Marzo 2026",
     video: IG + "DV2B2xGEd1k/",
-    foto: "assets/ganadores/iphone.jpg",
     ganadores: [
       { premio: "📱 iPhone 16 Pro Max", ig: "yonii_irizarre" },
       { premio: "💵 $50.000", ig: "elianitazramirez" },
@@ -211,7 +212,7 @@ const SORTEOS_ANTERIORES = [
     titulo: "Honda Twister 293cc",
     fecha: "Mayo 2025",
     fotos: [
-      { src: "assets/ganadores/twister-lagus.jpg", link: "https://www.instagram.com/sorteo_ojeda_/p/DKLI6PzJ7ZJ/", alt: "Entrega de la Twister 293cc a @lagus.293 en Victoria, Entre Ríos" }
+      { src: "assets/ganadores/twister-lagus.jpg", formato: "ancho", link: "https://www.instagram.com/sorteo_ojeda_/p/DKLI6PzJ7ZJ/", alt: "Entrega de la Twister 293cc a @lagus.293 en Victoria, Entre Ríos" }
     ],
     ganadores: [
       { premio: "🏍️ Honda Twister 293cc", ig: "lagus.293", ciudad: "Victoria, Entre Ríos" }
@@ -235,7 +236,7 @@ const SORTEOS_ANTERIORES = [
 ];
 
 // Cuántas entregas con foto se ven antes de tocar "Ver todos"
-const ENTREGAS_VISIBLES = 4;
+const ENTREGAS_VISIBLES = 3;
 
 
 (function () {
@@ -285,7 +286,7 @@ const ENTREGAS_VISIBLES = 4;
 
 
   // ====================================================
-  // ENTREGAS CON FOTO (como reseñas)
+  // ENTREGAS CON FOTO GRANDE
   // ====================================================
 
   const entregas = [];
@@ -333,7 +334,7 @@ const ENTREGAS_VISIBLES = 4;
     }
 
     const caja = document.createElement(foto.link ? "a" : "div");
-    caja.className = "resena-foto";
+    caja.className = "resena-foto" + (foto.formato === "ancho" ? " ancho" : "");
     if (foto.link) {
       caja.href = foto.link;
       caja.target = "_blank";
@@ -348,6 +349,7 @@ const ENTREGAS_VISIBLES = 4;
     caja.appendChild(img);
 
     const texto = document.createElement("div");
+    texto.className = "resena-texto";
 
     const quien = ganador.ig
       ? linkInstagram(ganador.ig, "resena-quien")
@@ -372,13 +374,21 @@ const ENTREGAS_VISIBLES = 4;
 
     const lugar = [ganador.ciudad, sorteo.fecha].filter(Boolean).join(" · ");
 
-    texto.append(quien, sello, parrafo(premio, "premio"), parrafo(`📍 ${lugar}`));
+    texto.append(parrafo(premio, "premio"), quien, parrafo(`📍 ${lugar}`));
 
     if (!ganador.ciudad) {
       texto.lastChild.textContent = sorteo.fecha;
     }
 
-    resena.append(caja, texto);
+    resena.append(caja, sello, texto);
+
+    if (foto.link) {
+      const verLink = document.createElement("span");
+      verLink.className = "resena-instagram";
+      verLink.textContent = "Ver en Instagram ↗";
+      resena.appendChild(verLink);
+    }
+
     contenedor.appendChild(resena);
 
   });
