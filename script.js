@@ -231,6 +231,86 @@ function datosParaMeta() {
 
 
 // ======================================================
+// NO SE PUDO ENVIAR: SEGUIR POR WHATSAPP
+// ======================================================
+// Si el comprobante no se puede cargar, la compra sigue por WhatsApp
+// con los datos ya escritos en el mensaje.
+
+const WHATSAPP_COMPRAS = "5492494527588";
+
+function mostrarErrorEnvio(mensaje, codigo, pack) {
+
+  document.getElementById("errorEnvio")?.remove();
+
+  const valor = (id) =>
+    document.getElementById(id)?.value.trim() || "";
+
+  const texto = [
+    "Hola! No pude cargar el comprobante en la página.",
+    pack ? `Pack: ${pack}` : "",
+    `Nombre: ${valor("nombre")} ${valor("apellido")}`.trim(),
+    valor("dniCompra") ? `DNI: ${valor("dniCompra")}` : "",
+    valor("telefono") ? `Teléfono: ${valor("telefono")}` : "",
+    "Te mando el comprobante por acá."
+  ].filter(Boolean).join("\n");
+
+  const fondo = document.createElement("div");
+  fondo.id = "errorEnvio";
+  fondo.className = "cierre-overlay error-envio";
+  fondo.setAttribute("role", "dialog");
+  fondo.setAttribute("aria-modal", "true");
+
+  const tarjeta = document.createElement("div");
+  tarjeta.className = "cierre-card";
+
+  const titulo = document.createElement("h2");
+  titulo.className = "cierre-titulo";
+  titulo.textContent = "⚠️ No se pudo enviar";
+
+  const explicacion = document.createElement("p");
+  explicacion.className = "cierre-texto";
+  explicacion.textContent = mensaje;
+
+  const ayuda = document.createElement("p");
+  ayuda.className = "cierre-texto";
+  ayuda.innerHTML =
+    "Si no podés cargarlo, <strong>mandanos todo por WhatsApp</strong>: " +
+    "el comprobante y tus datos. Te anotamos nosotros.";
+
+  const whatsapp = document.createElement("a");
+  whatsapp.className = "cierre-cta proximo-cta";
+  whatsapp.href =
+    `https://wa.me/${WHATSAPP_COMPRAS}?text=${encodeURIComponent(texto)}`;
+  whatsapp.target = "_blank";
+  whatsapp.rel = "noopener";
+  whatsapp.textContent = "📲 Enviar por WhatsApp";
+
+  const reintentar = document.createElement("button");
+  reintentar.type = "button";
+  reintentar.className = "error-envio-reintentar";
+  reintentar.textContent = "Probar de nuevo";
+
+  const detalle = document.createElement("small");
+  detalle.className = "error-envio-codigo";
+  detalle.textContent = `Código: ${codigo}`;
+
+  tarjeta.append(titulo, explicacion, ayuda, whatsapp, reintentar, detalle);
+  fondo.appendChild(tarjeta);
+  document.body.appendChild(fondo);
+
+  const cerrar = () => fondo.remove();
+
+  reintentar.addEventListener("click", cerrar);
+  fondo.addEventListener("click", (evento) => {
+    if (evento.target === fondo) cerrar();
+  });
+
+  requestAnimationFrame(() => fondo.classList.add("activo"));
+
+}
+
+
+// ======================================================
 // TODO EL SISTEMA
 // ======================================================
 
@@ -1324,9 +1404,12 @@ multiplicadorPromo:
 
             }
 
-            // El código permite identificar el error si mandan captura
-            alert(
-              `${mensaje}\n\nCódigo: ${error.code || error.message || "sin_codigo"}`
+            // Cartel con la salida por WhatsApp; el código permite
+            // identificar el error si mandan captura
+            mostrarErrorEnvio(
+              mensaje.replace(/^⚠️\s*/u, ""),
+              error.code || error.message || "sin_codigo",
+              packSeleccionado
             );
 
 

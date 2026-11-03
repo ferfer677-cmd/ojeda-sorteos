@@ -1778,3 +1778,33 @@ body.con-barra-compra .purchase-notification { bottom: 86px; }
   color: #fff;
   background: var(--oscuro);
 }
+
+
+/* ======================================================
+   NO SE PUDO ENVIAR EL COMPROBANTE (script.js)
+   ====================================================== */
+
+.error-envio { z-index: 1100; }
+
+.error-envio .cierre-texto { white-space: pre-line; }
+
+.error-envio-reintentar {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 13px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--texto);
+  background: var(--fondo);
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.error-envio-codigo {
+  display: block;
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--suave);
+}
