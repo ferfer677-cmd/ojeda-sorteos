@@ -735,6 +735,9 @@ button:disabled { opacity: .6; cursor: wait; }
 
 .panel-claves { margin-top: 12px; }
 
+.facturacion .panel-claves,
+.facturacion .panel-diario { margin-top: 0; }
+
 .panel-diario { position: relative; margin-top: 12px; }
 
 .diario-cabecera {
@@ -1035,3 +1038,65 @@ button:disabled { opacity: .6; cursor: wait; }
 .borrados-cifra b { display: block; font-size: 22px; color: var(--rojo); }
 
 .borrados-cifra span { font-size: 13px; color: var(--suave); }
+
+/* ======================================================
+   FACTURACIÓN: los números de plata juntos, con ojo
+   ====================================================== */
+
+.facturacion {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: #e8ebf0;
+  border-radius: 20px;
+}
+
+.facturacion-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 4px;
+}
+
+.facturacion-cabecera h2,
+.seccion-titulo { margin: 0; font-size: 18px; }
+
+.seccion-titulo { margin: 22px 0 0; padding: 0 4px; }
+
+.ojo {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--texto);
+  background: var(--tarjeta);
+  border: 0;
+  border-radius: 10px;
+}
+
+.ojo[aria-pressed="true"] { color: #fff; background: var(--oscuro); }
+
+.facturacion-fila {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: start;
+}
+
+/* Montos ocultos: desenfocados, sin globo del gráfico */
+.facturacion.oculto :is(
+  .stat b, .stat span,
+  .resumen-fila span,
+  #borradosTotal, .borrados-cifra,
+  .diario-periodo, .diario-escala, .diario-barras i,
+  .diario-cifras b, .diario-cifras span
+) {
+  filter: blur(8px);
+  user-select: none;
+}
+
+.facturacion.oculto .diario-globo { display: none !important; }
+
+@media (max-width: 760px) {
+  .facturacion-fila { grid-template-columns: 1fr; }
+}

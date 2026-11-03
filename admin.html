@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="admin.css?v=17">
+<link rel="stylesheet" href="admin.css?v=18">
 </head>
 
 <body>
@@ -47,120 +47,141 @@
 
   <main class="admin">
 
-    <!-- ===== RESUMEN ===== -->
-    <section class="stats">
+    <!-- ===== FACTURACIÓN: todos los números de plata juntos ===== -->
+    <section class="facturacion" id="facturacion">
 
-      <div class="stat stat-plata">
-        <small>💰 Recaudado (aprobados)</small>
-        <b id="recaudacionTotal">$0</b>
-        <span id="recaudacionPendiente"></span>
-      </div>
+      <header class="facturacion-cabecera">
+        <h2>💰 Facturación</h2>
+        <button type="button" class="ojo" id="ojoMontos" aria-pressed="false">👁 Ocultar montos</button>
+      </header>
 
-      <div class="stat">
-        <small>⏳ Pendientes</small>
-        <b id="statPendientes">0</b>
-      </div>
+      <!-- ===== RESUMEN ===== -->
+      <section class="stats">
 
-      <div class="stat">
-        <small>✅ Aprobados</small>
-        <b id="statPagados">0</b>
-      </div>
-
-      <div class="stat">
-        <small>👤 Participantes únicos</small>
-        <b id="totalParticipantes">0</b>
-      </div>
-
-    </section>
-
-
-    <!-- ===== POR PALABRA CLAVE ===== -->
-    <section class="panel panel-claves">
-      <h2>🔑 Por palabra clave</h2>
-      <div id="statClaves">-</div>
-    </section>
-
-
-    <!-- ===== MONTOS BORRADOS ===== -->
-    <section class="panel panel-claves">
-      <div class="borrados-cabecera">
-        <div>
-          <h2>🗑 Montos borrados</h2>
-          <p class="panel-bajada" id="borradosTotal">-</p>
+        <div class="stat stat-plata">
+          <small>💰 Recaudado (aprobados)</small>
+          <b id="recaudacionTotal">$0</b>
+          <span id="recaudacionPendiente"></span>
         </div>
-        <label class="diario-fecha">
-          <span>Día</span>
-          <input type="date" id="diaBorrados">
-        </label>
+
+        <div class="stat">
+          <small>⏳ Pendientes</small>
+          <b id="statPendientes">0</b>
+        </div>
+
+        <div class="stat">
+          <small>✅ Aprobados</small>
+          <b id="statPagados">0</b>
+        </div>
+
+        <div class="stat">
+          <small>👤 Participantes únicos</small>
+          <b id="totalParticipantes">0</b>
+        </div>
+
+      </section>
+
+      <div class="facturacion-fila">
+
+        <!-- ===== POR PALABRA CLAVE ===== -->
+        <section class="panel panel-claves">
+          <h2>🔑 Por palabra clave</h2>
+          <div id="statClaves">-</div>
+        </section>
+
+        <!-- ===== MONTOS BORRADOS ===== -->
+        <section class="panel panel-claves">
+          <div class="borrados-cabecera">
+            <div>
+              <h2>🗑 Montos borrados</h2>
+              <p class="panel-bajada" id="borradosTotal">-</p>
+            </div>
+            <label class="diario-fecha">
+              <span>Día</span>
+              <input type="date" id="diaBorrados">
+            </label>
+          </div>
+          <div class="borrados-cifra">
+            <b id="borradosMonto">$0</b>
+            <span id="borradosDetalle"></span>
+          </div>
+          <details class="panel-detalle" id="detalleBorrados" hidden>
+            <summary id="resumenBorrados">Ver compras borradas</summary>
+            <div id="statBorrados"></div>
+          </details>
+        </section>
+
       </div>
-      <div class="borrados-cifra">
-        <b id="borradosMonto">$0</b>
-        <span id="borradosDetalle"></span>
-      </div>
-      <div id="statBorrados"></div>
+
+      <!-- ===== INGRESOS POR DÍA ===== -->
+      <section class="panel panel-diario">
+
+        <div class="diario-cabecera">
+
+          <div>
+            <h2>📅 Ingresos por día</h2>
+            <p class="panel-bajada">Compras aprobadas, en el día en que se hizo la compra. Tocá una barra o elegí una fecha.</p>
+          </div>
+
+          <div class="diario-controles">
+            <div class="diario-rango" id="rangoDiario">
+              <button type="button" data-rango="7">7 días</button>
+              <button type="button" data-rango="30">30 días</button>
+              <button type="button" data-rango="todo">Todo</button>
+            </div>
+            <label class="diario-fecha">
+              <span>Ver el día</span>
+              <input type="date" id="selectorDia">
+            </label>
+          </div>
+
+        </div>
+
+        <p class="diario-periodo" id="periodoDiario"></p>
+
+        <div class="diario-grafico" id="graficoDiario"></div>
+        <div class="diario-globo" id="globoDiario" hidden></div>
+
+        <div class="diario-detalle">
+
+          <h3 id="diaTitulo"></h3>
+
+          <div class="diario-cifras">
+            <div>
+              <small>Recaudado</small>
+              <b id="diaMonto">$0</b>
+              <span id="diaPendiente"></span>
+            </div>
+            <div>
+              <small>Compras</small>
+              <b id="diaCompras">0</b>
+            </div>
+          </div>
+
+          <div class="diario-grupos">
+            <h4>Por palabra clave</h4>
+            <div id="diaClaves"></div>
+          </div>
+
+        </div>
+
+      </section>
+
     </section>
 
+
+    <!-- ===== COMPROBANTES ===== -->
+    <h2 class="seccion-titulo">🧾 Comprobantes</h2>
 
     <!-- ===== ERRORES AL ENVIAR COMPROBANTES ===== -->
     <section class="panel panel-claves">
       <h2>⚠️ Errores al enviar comprobantes</h2>
       <p class="panel-bajada">Últimos 7 días. Se registran desde que se publicó este panel.</p>
-      <div id="statErrores">-</div>
-    </section>
-
-
-    <!-- ===== INGRESOS POR DÍA ===== -->
-    <section class="panel panel-diario">
-
-      <div class="diario-cabecera">
-
-        <div>
-          <h2>📅 Ingresos por día</h2>
-          <p class="panel-bajada">Compras aprobadas, en el día en que se hizo la compra. Tocá una barra o elegí una fecha.</p>
-        </div>
-
-        <div class="diario-controles">
-          <div class="diario-rango" id="rangoDiario">
-            <button type="button" data-rango="7">7 días</button>
-            <button type="button" data-rango="30">30 días</button>
-            <button type="button" data-rango="todo">Todo</button>
-          </div>
-          <label class="diario-fecha">
-            <span>Ver el día</span>
-            <input type="date" id="selectorDia">
-          </label>
-        </div>
-
-      </div>
-
-      <p class="diario-periodo" id="periodoDiario"></p>
-
-      <div class="diario-grafico" id="graficoDiario"></div>
-      <div class="diario-globo" id="globoDiario" hidden></div>
-
-      <div class="diario-detalle">
-
-        <h3 id="diaTitulo"></h3>
-
-        <div class="diario-cifras">
-          <div>
-            <small>Recaudado</small>
-            <b id="diaMonto">$0</b>
-            <span id="diaPendiente"></span>
-          </div>
-          <div>
-            <small>Compras</small>
-            <b id="diaCompras">0</b>
-          </div>
-        </div>
-
-        <div class="diario-grupos">
-          <h4>Por palabra clave</h4>
-          <div id="diaClaves"></div>
-        </div>
-
-      </div>
-
+      <p class="panel-texto" id="resumenErrores">-</p>
+      <details class="panel-detalle" id="detalleErrores" hidden>
+        <summary>Ver el detalle</summary>
+        <div id="statErrores"></div>
+      </details>
     </section>
 
 
@@ -225,7 +246,7 @@
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-<script type="module" src="admin.js?v=28"></script>
+<script type="module" src="admin.js?v=30"></script>
 
 <!-- Visor de comprobantes: se agranda en la misma página -->
 <div class="visor" id="visor" hidden>
@@ -270,6 +291,30 @@
 
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && !visor.hidden) cerrar();
+    });
+  })();
+</script>
+
+<!-- Ojo de facturación: oculta los montos con un desenfoque -->
+<script>
+  (function () {
+    const bloque = document.getElementById("facturacion");
+    const ojo = document.getElementById("ojoMontos");
+
+    function aplicar(oculto) {
+      bloque.classList.toggle("oculto", oculto);
+      ojo.setAttribute("aria-pressed", String(oculto));
+      ojo.textContent = oculto ? "🙈 Mostrar montos" : "👁 Ocultar montos";
+    }
+
+    let guardado = false;
+    try { guardado = localStorage.getItem("adminMontosOcultos") === "si"; } catch {}
+    aplicar(guardado);
+
+    ojo.addEventListener("click", () => {
+      const oculto = !bloque.classList.contains("oculto");
+      aplicar(oculto);
+      try { localStorage.setItem("adminMontosOcultos", oculto ? "si" : "no"); } catch {}
     });
   })();
 </script>

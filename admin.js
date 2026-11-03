@@ -1099,6 +1099,12 @@ function pintarBorradosDelDia() {
 
   lugar.innerHTML = "";
 
+  // Lista cerrada: se abre tocando "Ver las N compras borradas"
+  const detalleBorrados = document.getElementById("detalleBorrados");
+  detalleBorrados.hidden = !delDia.length;
+  document.getElementById("resumenBorrados").textContent =
+    `Ver ${delDia.length === 1 ? "la compra borrada" : `las ${delDia.length} compras borradas`}`;
+
   delDia.forEach(({ datos }) => {
 
     const fila = document.createElement("div");
@@ -1432,8 +1438,10 @@ const EXPLICACION_ERRORES = {
 async function mostrarErroresCompra() {
 
   const lugar = document.getElementById("statErrores");
+  const resumen = document.getElementById("resumenErrores");
+  const detalle = document.getElementById("detalleErrores");
 
-  if (!lugar) return;
+  if (!lugar || !resumen || !detalle) return;
 
   try {
 
@@ -1465,10 +1473,19 @@ async function mostrarErroresCompra() {
 
     lugar.innerHTML = "";
 
+    // Arriba solo el total; el detalle queda cerrado
+    detalle.hidden = !grupos.size;
+
     if (!grupos.size) {
-      lugar.textContent = "Sin errores registrados";
+      resumen.textContent = "Sin errores registrados";
       return;
     }
+
+    const total =
+      [...grupos.values()].reduce((suma, grupo) => suma + grupo.veces, 0);
+
+    resumen.textContent =
+      `${total} error${total === 1 ? "" : "es"} · ${grupos.size} tipo${grupos.size === 1 ? "" : "s"} distinto${grupos.size === 1 ? "" : "s"}`;
 
     [...grupos.values()]
       .sort((a, b) => b.veces - a.veces)
@@ -1493,7 +1510,7 @@ async function mostrarErroresCompra() {
   } catch (error) {
 
     console.error("No se pudieron leer los errores:", error);
-    lugar.textContent = "No se pudieron leer los errores";
+    resumen.textContent = "No se pudieron leer los errores";
 
   }
 
