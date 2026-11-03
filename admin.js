@@ -16,6 +16,7 @@ import {
   doc,
   updateDoc,
   deleteDoc,
+  addDoc,
   setDoc,
   increment,
   serverTimestamp,
@@ -1030,6 +1031,21 @@ async function eliminarCompra(id, datos) {
 
   await deleteDoc(doc(db, "participantes", id));
 
+  // Queda registrada para el control de "Montos borrados"
+  try {
+    await addDoc(collection(db, "borrados"), {
+      nombre: `${datos.nombre || ""} ${datos.apellido || ""}`.trim(),
+      dni: String(datos.dni || ""),
+      pack: String(datos.pack || ""),
+      monto: precioDeCompra(datos),
+      estado: datos.estado || "",
+      fechaCompra: datos.fecha || null,
+      fecha: serverTimestamp()
+    });
+  } catch (error) {
+    console.warn("No se pudo registrar el borrado:", error);
+  }
+
   const numerosAsignados =
     Array.isArray(datos.numeros) ? datos.numeros.length : 0;
 
@@ -1038,6 +1054,120 @@ async function eliminarCompra(id, datos) {
   }
 
   await actualizarConsulta(dniDe(datos));
+
+}
+
+
+// =====================================================
+// MONTOS BORRADOS
+// =====================================================
+// Lo borrado cada día (hora de Argentina), para control.
+
+const diaArgentina = (fecha) =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(fecha);
+
+let borradosCargados = [];
+
+function pintarBorradosDelDia() {
+
+  const selector = document.getElementById("diaBorrados");
+  const lugar = document.getElementById("statBorrados");
+
+  if (!selector || !lugar) return;
+
+  const delDia =
+    borradosCargados.filter(({ dia }) => dia === selector.value);
+
+  const suma = (lista) =>
+    lista.reduce((total, { datos }) => total + (Number(datos.monto) || 0), 0);
+
+  const aprobadas = delDia.filter(({ datos }) => datos.estado === "Pagado");
+  const pendientes = delDia.filter(({ datos }) => datos.estado !== "Pagado");
+
+  const pesos = (monto) => `$${monto.toLocaleString("es-AR")}`;
+
+  document.getElementById("borradosMonto").textContent = pesos(suma(delDia));
+  document.getElementById("borradosDetalle").textContent =
+    delDia.length
+      ? `${delDia.length} compra${delDia.length === 1 ? "" : "s"} · ${pesos(suma(aprobadas))} de aprobadas · ${pesos(suma(pendientes))} de pendientes`
+      : "Ese día no se borró nada";
+
+  lugar.innerHTML = "";
+
+  delDia.forEach(({ datos }) => {
+
+    const fila = document.createElement("div");
+    fila.className = "resumen-fila";
+
+    const quien = document.createElement("b");
+    quien.textContent = `${datos.nombre || "Sin nombre"} · DNI ${datos.dni || "-"}`;
+
+    const detalle = document.createElement("span");
+    const hora = datos.fecha?.toDate?.().toLocaleTimeString("es-AR", {
+      timeZone: "America/Argentina/Buenos_Aires",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23"
+    });
+    detalle.textContent =
+      `${pesos(Number(datos.monto) || 0)} · ${datos.estado === "Pagado" ? "aprobada" : "pendiente"}${hora ? ` · ${hora} h` : ""}`;
+
+    fila.append(quien, detalle);
+    lugar.appendChild(fila);
+
+  });
+
+}
+
+async function mostrarBorrados() {
+
+  const selector = document.getElementById("diaBorrados");
+
+  if (!selector) return;
+
+  try {
+
+    const resultado = await getDocs(collection(db, "borrados"));
+
+    borradosCargados = resultado.docs
+      .map((documento) => {
+        const datos = documento.data();
+        const fecha = datos.fecha?.toDate?.();
+        return { datos, dia: fecha ? diaArgentina(fecha) : "", momento: fecha?.getTime() || 0 };
+      })
+      .sort((a, b) => b.momento - a.momento);
+
+    const total =
+      borradosCargados.reduce((suma, { datos }) => suma + (Number(datos.monto) || 0), 0);
+
+    document.getElementById("borradosTotal").textContent =
+      borradosCargados.length
+        ? `En total: $${total.toLocaleString("es-AR")} en ${borradosCargados.length} compra${borradosCargados.length === 1 ? "" : "s"}`
+        : "Todavía no se borró ninguna compra";
+
+    const hoy = diaArgentina(new Date());
+    selector.max = hoy;
+    selector.value = selector.value || hoy;
+
+    if (!selector.dataset.listo) {
+      selector.dataset.listo = "si";
+      selector.addEventListener("change", pintarBorradosDelDia);
+    }
+
+    pintarBorradosDelDia();
+
+  } catch (error) {
+
+    console.error("No se pudieron leer los borrados:", error);
+    document.getElementById("borradosTotal").textContent =
+      "No se pudieron leer los montos borrados";
+
+  }
 
 }
 
@@ -2374,6 +2504,8 @@ await actualizarConsulta(
 
 
     mostrarErroresCompra();
+
+    mostrarBorrados();
 
     mostrarRepetidas(participantes);
 

@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="admin.css?v=16">
+<link rel="stylesheet" href="admin.css?v=17">
 </head>
 
 <body>
@@ -78,6 +78,26 @@
     <section class="panel panel-claves">
       <h2>🔑 Por palabra clave</h2>
       <div id="statClaves">-</div>
+    </section>
+
+
+    <!-- ===== MONTOS BORRADOS ===== -->
+    <section class="panel panel-claves">
+      <div class="borrados-cabecera">
+        <div>
+          <h2>🗑 Montos borrados</h2>
+          <p class="panel-bajada" id="borradosTotal">-</p>
+        </div>
+        <label class="diario-fecha">
+          <span>Día</span>
+          <input type="date" id="diaBorrados">
+        </label>
+      </div>
+      <div class="borrados-cifra">
+        <b id="borradosMonto">$0</b>
+        <span id="borradosDetalle"></span>
+      </div>
+      <div id="statBorrados"></div>
     </section>
 
 
@@ -205,7 +225,7 @@
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-<script type="module" src="admin.js?v=27"></script>
+<script type="module" src="admin.js?v=28"></script>
 
 <!-- Visor de comprobantes: se agranda en la misma página -->
 <div class="visor" id="visor" hidden>

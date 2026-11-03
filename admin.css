@@ -1010,3 +1010,28 @@ button:disabled { opacity: .6; cursor: wait; }
   border: 0;
   border-radius: 10px;
 }
+
+/* ======================================================
+   MONTOS BORRADOS
+   ====================================================== */
+
+.borrados-cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.borrados-cabecera .panel-bajada { margin-bottom: 0; }
+
+.borrados-cifra {
+  margin: 12px 0 6px;
+  padding: 11px 12px;
+  background: #fef2f2;
+  border-radius: 12px;
+}
+
+.borrados-cifra b { display: block; font-size: 22px; color: var(--rojo); }
+
+.borrados-cifra span { font-size: 13px; color: var(--suave); }
