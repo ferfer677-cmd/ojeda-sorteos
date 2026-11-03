@@ -28,6 +28,7 @@ import {
 
 import {
   ref,
+  getDownloadURL,
   deleteObject,
   getMetadata
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
@@ -1002,6 +1003,94 @@ function nombreClaveCompra(datos) {
 }
 
 
+// =====================================================
+// ERRORES AL ENVIAR COMPROBANTES
+// =====================================================
+
+const EXPLICACION_ERRORES = {
+  sin_archivo: "Tocó enviar sin comprobante adjunto",
+  NO_GUARDADO: "El comprobante subió, pero no se guardó la compra",
+  SIN_CONEXION: "Se cortó la conexión o tardó demasiado",
+  "storage/unauthorized": "Firebase rechazó el archivo (reglas)",
+  "storage/canceled": "La subida se canceló",
+  "storage/unknown": "Error desconocido del almacenamiento",
+  "storage/retry-limit-exceeded": "Conexión mala: se agotaron los reintentos",
+  "storage/quota-exceeded": "Se superó el límite de almacenamiento o hay un problema de facturación",
+  "permission-denied": "Firebase rechazó los datos de la compra (reglas)",
+  unavailable: "Sin conexión con la base de datos"
+};
+
+async function mostrarErroresCompra() {
+
+  const lugar = document.getElementById("statErrores");
+
+  if (!lugar) return;
+
+  try {
+
+    const resultado = await getDocs(
+      query(
+        collection(db, "errores_compra"),
+        orderBy("fecha", "desc"),
+        limit(500)
+      )
+    );
+
+    const desde = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const grupos = new Map();
+
+    resultado.docs.forEach((documento) => {
+
+      const error = documento.data();
+      const fecha = error.fecha?.toDate?.();
+
+      if (!fecha || fecha.getTime() < desde) return;
+
+      const clave = `${error.codigo}|${error.app}|${error.sistema}`;
+      const grupo = grupos.get(clave) || { ...error, veces: 0 };
+
+      grupo.veces++;
+      grupos.set(clave, grupo);
+
+    });
+
+    lugar.innerHTML = "";
+
+    if (!grupos.size) {
+      lugar.textContent = "Sin errores registrados";
+      return;
+    }
+
+    [...grupos.values()]
+      .sort((a, b) => b.veces - a.veces)
+      .forEach((grupo) => {
+
+        const fila = document.createElement("div");
+        fila.className = "resumen-fila";
+
+        const titulo = document.createElement("b");
+        titulo.textContent =
+          EXPLICACION_ERRORES[grupo.codigo] || grupo.codigo;
+
+        const detalle = document.createElement("span");
+        detalle.textContent =
+          `${grupo.veces} ${grupo.veces === 1 ? "vez" : "veces"} · ${grupo.app} · ${grupo.sistema}`;
+
+        fila.append(titulo, detalle);
+        lugar.appendChild(fila);
+
+      });
+
+  } catch (error) {
+
+    console.error("No se pudieron leer los errores:", error);
+    lugar.textContent = "No se pudieron leer los errores";
+
+  }
+
+}
+
+
 // Filas "Nombre · 3 compras · $15.000 · promedio $5.000" (solo texto)
 function mostrarResumen(elemento, filas) {
 
@@ -1311,6 +1400,20 @@ async function cargarParticipantes(
 
     const participantes =
       await obtenerParticipantes({ usarCache });
+
+    // Compras que se guardaron sin el link del comprobante
+    await Promise.all(
+      participantes
+        .filter(({ datos }) => !datos.comprobanteURL && datos.comprobantePath)
+        .map(async ({ datos }) => {
+          try {
+            datos.comprobanteURL =
+              await getDownloadURL(ref(storage, datos.comprobantePath));
+          } catch (error) {
+            console.warn("No se encontró el comprobante:", error);
+          }
+        })
+    );
 
 
     pendientes.innerHTML = "";
@@ -2041,6 +2144,9 @@ await actualizarConsulta(
           : "Nada por aprobar";
 
     }
+
+
+    mostrarErroresCompra();
 
 
     mostrarIngresosDiarios(participantes, {

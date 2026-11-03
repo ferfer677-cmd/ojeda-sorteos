@@ -6,6 +6,8 @@ import {
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
 
+import { registrarErrorCompra } from "./errores-compra.js";
+
 // =====================================================
 // LÍMITES
 // =====================================================
@@ -102,10 +104,64 @@ async function achicarImagen(file) {
 // SUBIR COMPROBANTE
 // =====================================================
 
+// El link se pide después de subir: si falla se reintenta, y si sigue
+// fallando la compra se guarda igual (el admin lo arma con la ruta).
+
+async function pedirLink(referencia, archivo) {
+
+  for (let intento = 1; intento <= 3; intento++) {
+
+    try {
+
+      return await getDownloadURL(referencia);
+
+    } catch (error) {
+
+      if (intento === 3) {
+        registrarErrorCompra({ etapa: "link", error, archivo });
+        return "";
+      }
+
+      await new Promise(
+        (resolve) => setTimeout(resolve, intento * 1500)
+      );
+
+    }
+
+  }
+
+}
+
+
 export async function subirComprobante(file, onProgress) {
 
   const archivo =
     await achicarImagen(file);
+
+  try {
+
+    return await subirUnaVez(archivo, onProgress);
+
+  } catch (error) {
+
+    // Sin señal o archivo rechazado: reintentar no sirve
+    if (
+      error.message === "SIN_CONEXION" ||
+      error.code === "storage/unauthorized"
+    ) {
+      throw error;
+    }
+
+    registrarErrorCompra({ etapa: "reintento", error, archivo });
+
+    return subirUnaVez(archivo, onProgress);
+
+  }
+
+}
+
+
+function subirUnaVez(archivo, onProgress) {
 
   const nombreArchivo =
     Date.now() + "_" +
@@ -177,23 +233,10 @@ export async function subirComprobante(file, onProgress) {
 
         clearTimeout(vigilancia);
 
-        try {
-
-          const url =
-            await getDownloadURL(
-              uploadTask.snapshot.ref
-            );
-
-          resolve({
-            url,
-            path: rutaArchivo
-          });
-
-        } catch (error) {
-
-          reject(error);
-
-        }
+        resolve({
+          url: await pedirLink(uploadTask.snapshot.ref, archivo),
+          path: rutaArchivo
+        });
 
       }
     );

@@ -98,6 +98,23 @@ service cloud.firestore {
         && request.resource.data.fecha == request.time;
     }
 
+    // Errores al enviar una compra (sin datos personales): solo los ve el admin
+    match /errores_compra/{id} {
+      allow create: if
+        request.resource.data.keys().hasOnly([
+          "etapa", "codigo", "detalle", "archivoTipo", "archivoKB",
+          "app", "sistema", "fecha"
+        ])
+        && request.resource.data.fecha == request.time
+        && texto("etapa", 30)
+        && texto("codigo", 80)
+        && texto("detalle", 300)
+        && texto("archivoTipo", 80)
+        && numero("archivoKB")
+        && texto("app", 20)
+        && texto("sistema", 20);
+    }
+
     // "ranking" (DNI y nombre completo) queda solo para el admin.
     // La página usa publico/ranking.
 

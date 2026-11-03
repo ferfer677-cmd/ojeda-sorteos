@@ -14,6 +14,7 @@ import {
 
 import { guardarParticipante } from "./firestore.js";
 import { subirComprobante } from "./storage.js";
+import { registrarErrorCompra } from "./errores-compra.js";
 
 import {
   ref,
@@ -985,6 +986,11 @@ setInterval(
 
           if (!archivo) {
 
+            registrarErrorCompra({
+              etapa: "sin_archivo",
+              error: { code: "sin_archivo" }
+            });
+
             alert(
               "Debés adjuntar un comprobante."
             );
@@ -1018,6 +1024,10 @@ setInterval(
 
           purchaseForm.style.opacity =
             "0.6";
+
+
+          // En qué paso estaba si algo falla
+          let etapa = "subida";
 
 
           try {
@@ -1126,6 +1136,8 @@ setInterval(
             // ------------------------------------------
             // GUARDAR PARTICIPANTE
             // ------------------------------------------
+
+            etapa = "guardado";
 
             if (submitBtn) {
 
@@ -1281,6 +1293,8 @@ multiplicadorPromo:
               error
             );
 
+            registrarErrorCompra({ etapa, error, archivo });
+
 
             // Mensaje claro según qué falló
 
@@ -1310,7 +1324,10 @@ multiplicadorPromo:
 
             }
 
-            alert(mensaje);
+            // El código permite identificar el error si mandan captura
+            alert(
+              `${mensaje}\n\nCódigo: ${error.code || error.message || "sin_codigo"}`
+            );
 
 
           } finally {

@@ -174,6 +174,9 @@ export async function guardarParticipante(datos) {
       error
     );
 
-    return false;
+    // Se avisa qué falló para mostrarlo y registrarlo
+    const fallo = new Error("NO_GUARDADO");
+    fallo.code = error.code || error.message;
+    throw fallo;
   }
 }
