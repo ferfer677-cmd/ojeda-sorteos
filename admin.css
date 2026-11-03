@@ -974,7 +974,7 @@ button:disabled { opacity: .6; cursor: wait; }
 
 .repetida-compra {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
+  grid-template-columns: 64px minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
   margin-top: 10px;
@@ -1000,3 +1000,13 @@ button:disabled { opacity: .6; cursor: wait; }
 .repetida-compra span { margin-top: 2px; font-size: 13px; color: var(--suave); }
 
 .repetida-compra small { margin-top: 3px; font-size: 12px; font-weight: 700; color: #9a3412; }
+
+.repetida-borrar {
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--rojo);
+  background: #fef2f2;
+  border: 0;
+  border-radius: 10px;
+}

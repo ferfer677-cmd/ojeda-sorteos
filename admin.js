@@ -1010,6 +1010,39 @@ function nombreClaveCompra(datos) {
 
 
 // =====================================================
+// ELIMINAR UNA COMPRA
+// =====================================================
+// Borra el comprobante y la compra, descuenta del ranking los números
+// que ya tenía asignados y actualiza "Ver mis números".
+// La recaudación se recalcula al recargar la lista.
+
+async function eliminarCompra(id, datos) {
+
+  if (datos.comprobantePath) {
+
+    try {
+      await deleteObject(ref(storage, datos.comprobantePath));
+    } catch (error) {
+      console.warn("No se pudo eliminar el comprobante:", error);
+    }
+
+  }
+
+  await deleteDoc(doc(db, "participantes", id));
+
+  const numerosAsignados =
+    Array.isArray(datos.numeros) ? datos.numeros.length : 0;
+
+  if (datos.estado === "Pagado" && numerosAsignados) {
+    await actualizarRanking(datos, -numerosAsignados);
+  }
+
+  await actualizarConsulta(dniDe(datos));
+
+}
+
+
+// =====================================================
 // PERSONAS CON MÁS DE UNA COMPRA
 // =====================================================
 // Para controlar que no hayan cargado dos veces la misma operación.
@@ -1024,6 +1057,10 @@ function mostrarRepetidas(participantes) {
 
   // La chance gratis de la ruleta no cuenta: no es una operación
   const porDni = new Map();
+
+  const idDe = new Map(
+    participantes.map(({ id, datos }) => [datos, id])
+  );
 
   participantes.forEach(({ datos }) => {
 
@@ -1195,7 +1232,45 @@ function mostrarRepetidas(participantes) {
         info.appendChild(aviso);
       }
 
-      fila.append(miniatura, info);
+      const borrar = document.createElement("button");
+      borrar.type = "button";
+      borrar.className = "repetida-borrar";
+      borrar.textContent = "🗑 Borrar";
+      borrar.addEventListener("click", async () => {
+
+        const aprobada = datos.estado === "Pagado";
+
+        const confirmar = confirm(
+          `¿Borrar esta compra de ${datos.nombre || ""} ${datos.apellido || ""}?\n\n` +
+          `${datos.pack || "-"}\n${mostrarFecha(datos.fecha)} · ${aprobada ? "Aprobada" : "Pendiente"}\n\n` +
+          "Se borran la compra y su comprobante" +
+          (aprobada ? ", y se descuentan sus números y su plata." : ".")
+        );
+
+        if (!confirmar) return;
+
+        borrar.disabled = true;
+        borrar.textContent = "Borrando...";
+
+        try {
+
+          await eliminarCompra(idDe.get(datos), datos);
+
+          await cargarParticipantes();
+
+        } catch (error) {
+
+          console.error("ERROR ELIMINANDO:", error);
+          alert("❌ No se pudo borrar.\n\n" + error.message);
+
+          borrar.disabled = false;
+          borrar.textContent = "🗑 Borrar";
+
+        }
+
+      });
+
+      fila.append(miniatura, info, borrar);
       grupo.appendChild(fila);
 
     });
@@ -2194,59 +2269,7 @@ await actualizarConsulta(
 
               try {
 
-                // -----------------------------------------
-                // BORRAR COMPROBANTE
-                // -----------------------------------------
-
-                if (
-                  datos.comprobantePath
-                ) {
-
-                  try {
-
-                    const archivoRef =
-                      ref(
-                        storage,
-                        datos.comprobantePath
-                      );
-
-
-                    await deleteObject(
-                      archivoRef
-                    );
-
-                  } catch (error) {
-
-                    console.warn(
-                      "No se pudo eliminar el comprobante:",
-                      error
-                    );
-
-                  }
-
-                }
-
-
-                // -----------------------------------------
-                // BORRAR PARTICIPANTE
-                // -----------------------------------------
-
-                await deleteDoc(
-
-                  doc(
-                    db,
-                    "participantes",
-                    id
-                  )
-
-                );
-
-
-                // Actualizar "Ver mis números"
-                await actualizarConsulta(
-                  dniDe(datos)
-                );
-
+                await eliminarCompra(id, datos);
 
                 await cargarParticipantes();
 
