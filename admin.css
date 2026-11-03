@@ -923,3 +923,80 @@ button:disabled { opacity: .6; cursor: wait; }
 
 .diario-grupos h4 { margin: 0 0 4px; font-size: 13px; color: var(--texto); }
 
+
+
+/* ======================================================
+   PESTAÑA REPETIDAS (personas con más de una compra)
+   ====================================================== */
+
+.repetidas-ayuda { margin: 0; font-size: 13px; color: var(--suave); }
+
+.repetida {
+  padding: 14px;
+  background: var(--tarjeta);
+  border: 2px solid transparent;
+  border-radius: 16px;
+}
+
+.repetida.sospechosa { border-color: var(--naranja); }
+
+.repetida header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.repetida h3 { margin: 0; font-size: 16px; }
+
+.repetida header p { margin: 2px 0 0; font-size: 13px; color: var(--suave); }
+
+.repetida-buscar {
+  flex: none;
+  padding: 8px 11px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texto);
+  background: var(--fondo);
+  border: 0;
+  border-radius: 10px;
+}
+
+.repetida-alerta {
+  margin: 10px 0 0;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #9a3412;
+  background: #ffedd5;
+  border-radius: 8px;
+}
+
+.repetida-compra {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 12px;
+}
+
+.repetida-compra.marcada { background: #fff7ed; }
+
+.repetida-compra .card-comprobante {
+  width: 64px;
+  height: 80px;
+  font-size: 11px;
+  text-align: center;
+}
+
+.repetida-compra b,
+.repetida-compra span,
+.repetida-compra small { display: block; }
+
+.repetida-compra b { font-size: 14px; }
+
+.repetida-compra span { margin-top: 2px; font-size: 13px; color: var(--suave); }
+
+.repetida-compra small { margin-top: 3px; font-size: 12px; font-weight: 700; color: #9a3412; }

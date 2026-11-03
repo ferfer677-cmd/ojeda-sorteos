@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="admin.css?v=14">
+<link rel="stylesheet" href="admin.css?v=15">
 </head>
 
 <body>
@@ -179,6 +179,7 @@
       <button type="button" role="tab" id="tituloPagados" data-lista="pagados">Aprobados (0)</button>
       <button type="button" role="tab" id="tituloInstagram" data-lista="instagram">📸 Instagram (0)</button>
       <button type="button" role="tab" id="tituloFacebook" data-lista="facebook">📘 Facebook (0)</button>
+      <button type="button" role="tab" id="tituloRepetidas" data-lista="repetidas">🔁 Repetidas (0)</button>
     </div>
 
     <p class="red-vacio vacio-instagram" id="instagramVacio">Todavía no hay compras desde Instagram.</p>
@@ -187,6 +188,8 @@
     <div id="pendientes" class="lista"></div>
 
     <div id="pagados" class="lista" hidden></div>
+
+    <div id="repetidas" class="lista" hidden></div>
 
 
     <!-- ===== ZONA PELIGROSA ===== -->
@@ -202,7 +205,7 @@
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-<script type="module" src="admin.js?v=25"></script>
+<script type="module" src="admin.js?v=26"></script>
 
 <!-- Visor de comprobantes: se agranda en la misma página -->
 <div class="visor" id="visor" hidden>
@@ -251,8 +254,9 @@
   })();
 </script>
 
-<!-- Pestañas Pendientes / Aprobados / Instagram / Facebook
-     (las dos últimas muestran ambas listas, solo con las compras de esa red) -->
+<!-- Pestañas Pendientes / Aprobados / Instagram / Facebook / Repetidas
+     (Instagram y Facebook muestran ambas listas, solo con las compras de esa red;
+     "todas" la usa el botón "Buscar en la lista" de Repetidas) -->
 <script>
   document.querySelectorAll(".pestanas [data-lista]").forEach((pestana) => {
     pestana.addEventListener("click", () => {
@@ -267,8 +271,9 @@
       const panel = document.getElementById("panelAdmin");
       panel.classList.toggle("solo-instagram", lista === "instagram");
       panel.classList.toggle("solo-facebook", lista === "facebook");
-      document.getElementById("pendientes").hidden = lista === "pagados";
-      document.getElementById("pagados").hidden = lista === "pendientes";
+      document.getElementById("pendientes").hidden = lista === "pagados" || lista === "repetidas";
+      document.getElementById("pagados").hidden = lista === "pendientes" || lista === "repetidas";
+      document.getElementById("repetidas").hidden = lista !== "repetidas";
     });
   });
 </script>

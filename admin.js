@@ -99,6 +99,12 @@ const tituloInstagram =
 const tituloFacebook =
   document.getElementById("tituloFacebook");
 
+const tituloRepetidas =
+  document.getElementById("tituloRepetidas");
+
+const listaRepetidas =
+  document.getElementById("repetidas");
+
 const instagramVacio =
   document.getElementById("instagramVacio");
 
@@ -999,6 +1005,204 @@ function nombreClaveCompra(datos) {
     (datos.codigoPromo || "").toString().trim().toUpperCase();
 
   return RED_POR_CLAVE[clave] ? `"${clave}"` : "Otros";
+
+}
+
+
+// =====================================================
+// PERSONAS CON MÁS DE UNA COMPRA
+// =====================================================
+// Para controlar que no hayan cargado dos veces la misma operación.
+// Se marca "posible duplicado" si hay dos compras con el mismo monto
+// en menos de este tiempo.
+
+const MINUTOS_DUPLICADO = 120;
+
+function mostrarRepetidas(participantes) {
+
+  if (!listaRepetidas) return;
+
+  // La chance gratis de la ruleta no cuenta: no es una operación
+  const porDni = new Map();
+
+  participantes.forEach(({ datos }) => {
+
+    if (datos.codigoPromo === "RULETAGRATIS") return;
+
+    const dni = dniDe(datos);
+
+    if (!dni) return;
+
+    if (!porDni.has(dni)) porDni.set(dni, []);
+
+    porDni.get(dni).push(datos);
+
+  });
+
+  const momento = (datos) =>
+    datos.fecha?.toDate?.().getTime() || 0;
+
+  const grupos = [...porDni.values()]
+    .filter((compras) => compras.length > 1)
+    .map((compras) => {
+
+      compras.sort((a, b) => momento(b) - momento(a));
+
+      // Compras con el mismo monto y cerca en el tiempo
+      const sospechosas = new Map();
+
+      compras.forEach((a, i) => {
+        compras.slice(i + 1).forEach((b) => {
+
+          const minutos =
+            Math.round(Math.abs(momento(a) - momento(b)) / 60000);
+
+          if (
+            momento(a) && momento(b) &&
+            minutos <= MINUTOS_DUPLICADO &&
+            precioDeCompra(a) === precioDeCompra(b)
+          ) {
+            sospechosas.set(a, Math.min(sospechosas.get(a) ?? minutos, minutos));
+            sospechosas.set(b, Math.min(sospechosas.get(b) ?? minutos, minutos));
+          }
+
+        });
+      });
+
+      return { compras, sospechosas };
+
+    })
+    .sort((a, b) =>
+      (b.sospechosas.size > 0) - (a.sospechosas.size > 0) ||
+      momento(b.compras[0]) - momento(a.compras[0])
+    );
+
+  const conAlerta =
+    grupos.filter((g) => g.sospechosas.size).length;
+
+  if (tituloRepetidas) {
+    tituloRepetidas.textContent =
+      `🔁 Repetidas (${grupos.length})` + (conAlerta ? ` · ⚠️ ${conAlerta}` : "");
+  }
+
+  listaRepetidas.innerHTML = "";
+
+  const ayuda = document.createElement("p");
+  ayuda.className = "repetidas-ayuda";
+  ayuda.textContent = grupos.length
+    ? `${grupos.length} personas con más de una compra. Arriba, las que tienen dos compras del mismo monto con menos de ${MINUTOS_DUPLICADO / 60} horas de diferencia: compará los comprobantes.`
+    : "Nadie tiene más de una compra.";
+  listaRepetidas.appendChild(ayuda);
+
+  grupos.forEach(({ compras, sospechosas }) => {
+
+    const primera = compras[0];
+
+    const grupo = document.createElement("article");
+    grupo.className = "repetida" + (sospechosas.size ? " sospechosa" : "");
+
+    const cabecera = document.createElement("header");
+
+    const titulo = document.createElement("div");
+
+    const nombre = document.createElement("h3");
+    nombre.textContent =
+      `${primera.nombre || ""} ${primera.apellido || ""}`.trim() || "Sin nombre";
+
+    const resumen = document.createElement("p");
+    const total =
+      compras.reduce((suma, datos) => suma + precioDeCompra(datos), 0);
+    resumen.textContent =
+      `DNI ${primera.dni || "-"} · ${compras.length} compras · $${total.toLocaleString("es-AR")}`;
+
+    titulo.append(nombre, resumen);
+
+    const buscar = document.createElement("button");
+    buscar.type = "button";
+    buscar.className = "repetida-buscar";
+    buscar.textContent = "Buscar en la lista";
+    buscar.addEventListener("click", () => {
+      // Muestra las dos listas con solo las compras de esta persona
+      document.querySelector('.pestanas [data-lista="pendientes"]')?.click();
+      document.getElementById("pagados").hidden = false;
+      buscador.value = String(primera.dni || "");
+      buscador.dispatchEvent(new Event("input"));
+      buscador.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+
+    cabecera.append(titulo, buscar);
+    grupo.appendChild(cabecera);
+
+    if (sospechosas.size) {
+      const alerta = document.createElement("p");
+      alerta.className = "repetida-alerta";
+      alerta.textContent =
+        "⚠️ Posible duplicado: mismo monto y poco tiempo entre compras";
+      grupo.appendChild(alerta);
+    }
+
+    compras.forEach((datos) => {
+
+      const fila = document.createElement("div");
+      fila.className = "repetida-compra" + (sospechosas.has(datos) ? " marcada" : "");
+
+      let miniatura;
+
+      if (!datos.comprobanteURL) {
+        miniatura = document.createElement("div");
+        miniatura.className = "card-comprobante sin";
+        miniatura.textContent = "❌ Sin archivo";
+      } else {
+        miniatura = document.createElement("a");
+        miniatura.href = datos.comprobanteURL;
+        miniatura.target = "_blank";
+        miniatura.rel = "noopener";
+        if (/\.pdf($|\?)/i.test(datos.comprobantePath || datos.comprobanteURL)) {
+          miniatura.className = "card-comprobante pdf";
+          miniatura.textContent = "📄 PDF";
+        } else {
+          miniatura.className = "card-comprobante";
+          const imagen = document.createElement("img");
+          imagen.src = datos.comprobanteURL;
+          imagen.alt = "Comprobante";
+          imagen.loading = "lazy";
+          miniatura.appendChild(imagen);
+        }
+      }
+
+      const info = document.createElement("div");
+
+      const pack = document.createElement("b");
+      pack.textContent = datos.pack || "-";
+
+      const detalle = document.createElement("span");
+      detalle.textContent =
+        [
+          mostrarFecha(datos.fecha),
+          datos.estado === "Pagado" ? "✅ Aprobada" : "⏳ Pendiente",
+          datos.codigoPromo ? `🔑 ${datos.codigoPromo}` : ""
+        ].filter(Boolean).join(" · ");
+
+      info.append(pack, detalle);
+
+      if (sospechosas.has(datos)) {
+        const aviso = document.createElement("small");
+        const minutos = sospechosas.get(datos);
+        aviso.textContent =
+          minutos < 60
+            ? `⚠️ Otra compra igual ${minutos} min antes o después`
+            : `⚠️ Otra compra igual ${Math.round(minutos / 6) / 10} h antes o después`;
+        info.appendChild(aviso);
+      }
+
+      fila.append(miniatura, info);
+      grupo.appendChild(fila);
+
+    });
+
+    listaRepetidas.appendChild(grupo);
+
+  });
 
 }
 
@@ -2147,6 +2351,8 @@ await actualizarConsulta(
 
 
     mostrarErroresCompra();
+
+    mostrarRepetidas(participantes);
 
 
     mostrarIngresosDiarios(participantes, {
