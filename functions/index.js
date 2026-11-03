@@ -133,9 +133,9 @@ exports.miIp = onRequest(
 const PREMIOS_RULETA = [
   { id: "gratis", peso: 5, nombre: "1 chance gratis", chances: 1, precio: 0, codigo: "RULETAGRATIS" },
   { id: "tresxuno", peso: 15, nombre: "3x1 en tu próxima compra", chances: 0, precio: 0, codigo: "RULETA3X1" },
-  { id: "p35", peso: 27, nombre: "35 chances a $19.999", chances: 35, precio: 19999, codigo: "RULETA35" },
-  { id: "p200", peso: 27, nombre: "200 chances a $99.999", chances: 200, precio: 99999, codigo: "RULETA200" },
-  { id: "p500", peso: 26, nombre: "500 chances a $199.000", chances: 500, precio: 199000, codigo: "RULETA500" }
+  { id: "p35", peso: 27, nombre: "35 chances a $12.999", chances: 35, precio: 12999, codigo: "RULETA35" },
+  { id: "p200", peso: 27, nombre: "200 chances a $29.999", chances: 200, precio: 29999, codigo: "RULETA200" },
+  { id: "p500", peso: 26, nombre: "400 chances a $39.999", chances: 400, precio: 39999, codigo: "RULETA500" }
 ];
 
 function elegirPremio() {

@@ -10,10 +10,10 @@
   // Porciones de la rueda, en el orden en que se dibujan
   const PORCIONES = [
     { id: "gratis", texto: "1 chance gratis", color: "#00A650" },
-    { id: "p35", texto: "35 chances $19.999", color: "#1877F2" },
+    { id: "p35", texto: "35 chances $12.999", color: "#1877F2" },
     { id: "tresxuno", texto: "3x1", color: "#FF6A00" },
-    { id: "p200", texto: "200 chances $99.999", color: "#7C3AED" },
-    { id: "p500", texto: "500 chances $199.000", color: "#C2185B" }
+    { id: "p200", texto: "200 chances $29.999", color: "#7C3AED" },
+    { id: "p500", texto: "400 chances $39.999", color: "#C2185B" }
   ];
 
   const GRADOS = 360 / PORCIONES.length;
