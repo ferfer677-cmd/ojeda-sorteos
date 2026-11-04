@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="admin.css?v=19">
+<link rel="stylesheet" href="admin.css?v=20">
 </head>
 
 <body>
@@ -83,10 +83,11 @@
 
       <div class="facturacion-fila">
 
-        <!-- ===== POR PALABRA CLAVE ===== -->
+        <!-- ===== ANUNCIO U ORGÁNICO ===== -->
         <section class="panel panel-claves">
-          <h2>🔑 Por palabra clave</h2>
-          <div id="statClaves">-</div>
+          <h2>📣 Anuncio u orgánico</h2>
+          <p class="panel-bajada">Compras aprobadas. Anuncio = Facebook e Instagram juntos.</p>
+          <div id="statOrigen">-</div>
         </section>
 
         <!-- ===== MONTOS BORRADOS ===== -->
@@ -159,7 +160,7 @@
           </div>
 
           <div class="diario-grupos">
-            <h4>Por palabra clave</h4>
+            <h4>Anuncio u orgánico</h4>
             <div id="diaClaves"></div>
           </div>
 
@@ -206,13 +207,13 @@
     <div class="pestanas" role="tablist">
       <button type="button" role="tab" id="tituloPendientes" data-lista="pendientes" class="activa">Pendientes (0)</button>
       <button type="button" role="tab" id="tituloPagados" data-lista="pagados">Aprobados (0)</button>
-      <button type="button" role="tab" id="tituloInstagram" data-lista="instagram">📸 Instagram (0)</button>
-      <button type="button" role="tab" id="tituloFacebook" data-lista="facebook">📘 Facebook (0)</button>
+      <button type="button" role="tab" id="tituloAnuncio" data-lista="anuncio">📣 Anuncio (0)</button>
+      <button type="button" role="tab" id="tituloOrganico" data-lista="organico">🌱 Orgánico (0)</button>
       <button type="button" role="tab" id="tituloRepetidas" data-lista="repetidas">🔁 Repetidas (0)</button>
     </div>
 
-    <p class="red-vacio vacio-instagram" id="instagramVacio">Todavía no hay compras desde Instagram.</p>
-    <p class="red-vacio vacio-facebook" id="facebookVacio">Todavía no hay compras desde Facebook.</p>
+    <p class="red-vacio vacio-anuncio" id="anuncioVacio">Todavía no hay compras desde anuncios.</p>
+    <p class="red-vacio vacio-organico" id="organicoVacio">Todavía no hay compras orgánicas.</p>
 
     <div id="pendientes" class="lista"></div>
 
@@ -234,7 +235,7 @@
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-<script type="module" src="admin.js?v=32"></script>
+<script type="module" src="admin.js?v=33"></script>
 
 <!-- Visor de comprobantes: se agranda en la misma página -->
 <div class="visor" id="visor" hidden>
@@ -307,8 +308,8 @@
   })();
 </script>
 
-<!-- Pestañas Pendientes / Aprobados / Instagram / Facebook / Repetidas
-     (Instagram y Facebook muestran ambas listas, solo con las compras de esa red;
+<!-- Pestañas Pendientes / Aprobados / Anuncio / Orgánico / Repetidas
+     (Anuncio y Orgánico muestran ambas listas, solo con las compras de ese origen;
      "todas" la usa el botón "Buscar en la lista" de Repetidas) -->
 <script>
   document.querySelectorAll(".pestanas [data-lista]").forEach((pestana) => {
@@ -322,8 +323,8 @@
       });
 
       const panel = document.getElementById("panelAdmin");
-      panel.classList.toggle("solo-instagram", lista === "instagram");
-      panel.classList.toggle("solo-facebook", lista === "facebook");
+      panel.classList.toggle("solo-anuncio", lista === "anuncio");
+      panel.classList.toggle("solo-organico", lista === "organico");
       document.getElementById("pendientes").hidden = lista === "pagados" || lista === "repetidas";
       document.getElementById("pagados").hidden = lista === "pendientes" || lista === "repetidas";
       document.getElementById("repetidas").hidden = lista !== "repetidas";

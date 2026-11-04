@@ -574,14 +574,20 @@ button:disabled { opacity: .6; cursor: wait; }
 .resumen-fila.sangria b { font-weight: 500; color: var(--suave); }
 
 
-/* Pestañas Instagram y Facebook: solo las compras de esa red, de las dos listas */
-.solo-instagram .card:not(.card-instagram),
-.solo-facebook .card:not(.card-facebook) { display: none; }
+/* Pestañas Anuncio y Orgánico: solo las compras de ese origen, de las dos listas */
+.solo-anuncio .card:not(.card-anuncio),
+.solo-organico .card:not(.card-organico) { display: none; }
 
 .red-vacio { display: none; color: var(--suave); }
 
-.solo-instagram .vacio-instagram,
-.solo-facebook .vacio-facebook { display: block; }
+.solo-anuncio .vacio-anuncio,
+.solo-organico .vacio-organico { display: block; }
+
+.card-organico-sello {
+  margin-left: 4px;
+  color: #166534;
+  background: #dcfce7;
+}
 
 .card-origen {
   margin-left: 4px;

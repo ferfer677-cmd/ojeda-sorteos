@@ -45,8 +45,8 @@ La primera vez Firebase puede pedir habilitar algunas APIs de Google Cloud (Clou
 2. Firebase → Firestore → crear la colección **`privado`**, documento **`meta`**, campo **`testEventCode`** (texto) = ese código.
 3. Hacer una compra de prueba en la web (1 chance, comprobante propio) y aprobarla en el admin.
 4. En "Probar eventos" tienen que aparecer:
-   - `Purchase` del **navegador** (al enviar el comprobante)
-   - `Purchase` del **servidor** (al aprobar), marcado como **deduplicado**
+   - `AddPaymentInfo` del **navegador** (al enviar el comprobante)
+   - `Purchase` del **servidor** (al aprobar). Desde el 04/11/2026 es la única `Purchase`: el navegador ya no la manda, así Meta cuenta solo compras aprobadas.
 5. En el admin la compra muestra **📡 Meta ✓ (prueba)**.
 6. **Borrar el documento `privado/meta`** (si no, los eventos reales siguen yendo como prueba) y borrar la compra de prueba desde el admin.
 
@@ -54,7 +54,7 @@ La primera vez Firebase puede pedir habilitar algunas APIs de Google Cloud (Clou
 
 - Objetivo **Ventas** → evento de conversión **Compra** (Píxel `1685745569217221`).
 - Público: similar 1% de **"Compradores Ojeda"** (lista de clientes con valor), y/o Advantage+.
-- Palabras clave por red: `50` = Instagram y `MENOS` = Facebook (50% OFF). El admin agrupa las compras por red según la palabra usada. Cada compra guarda cuál usó (en el Píxel va como `content_category`).
+- Palabras clave (50% OFF): `50` = orgánica (Instagram, sin anuncio) y `MENOS` = anuncios de Facebook. El admin cuenta `50` como orgánico. El admin agrupa las compras por red según la palabra usada. Cada compra guarda cuál usó (en el Píxel va como `content_category`).
 - URL: `https://ojedasorteos.com.ar/`
 - **Parámetros de URL de cada anuncio (importante):** `utm_source={{site_source_name}}&utm_medium=paid&utm_campaign={{campaign.name}}&utm_content={{ad.name}}`. Con esto el admin separa las compras de anuncios de Instagram y de Facebook, y muestra la recaudación real por campaña.
 - Cierre de compras: **viernes 13/11/2026, 19:00**. Sorteo en vivo: 21:00.

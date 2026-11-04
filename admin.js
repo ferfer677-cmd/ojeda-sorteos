@@ -91,14 +91,14 @@ const statPendientes =
 const statPagados =
   document.getElementById("statPagados");
 
-const statClaves =
-  document.getElementById("statClaves");
+const statOrigen =
+  document.getElementById("statOrigen");
 
-const tituloInstagram =
-  document.getElementById("tituloInstagram");
+const tituloAnuncio =
+  document.getElementById("tituloAnuncio");
 
-const tituloFacebook =
-  document.getElementById("tituloFacebook");
+const tituloOrganico =
+  document.getElementById("tituloOrganico");
 
 const tituloRepetidas =
   document.getElementById("tituloRepetidas");
@@ -106,11 +106,11 @@ const tituloRepetidas =
 const listaRepetidas =
   document.getElementById("repetidas");
 
-const instagramVacio =
-  document.getElementById("instagramVacio");
+const anuncioVacio =
+  document.getElementById("anuncioVacio");
 
-const facebookVacio =
-  document.getElementById("facebookVacio");
+const organicoVacio =
+  document.getElementById("organicoVacio");
 
 
 const sortearReferidos =
@@ -999,14 +999,22 @@ function origenCompra(datos) {
 }
 
 
-// Cada compra va a su palabra clave o a "Otros" (incluye la ruleta)
-function nombreClaveCompra(datos) {
+// Palabras clave que se publicitan en anuncios. "50" es orgánica
+// (se comparte en Instagram sin pagar).
+const CLAVES_DE_ANUNCIO = ["MENOS"];
 
-  const clave =
-    (datos.codigoPromo || "").toString().trim().toUpperCase();
+// Anuncio: vino de un anuncio de Facebook o Instagram (los parámetros
+// del anuncio en la URL, o una palabra clave de anuncio). Orgánico:
+// todo lo demás (bio, posts, historias, WhatsApp, boca en boca, la
+// palabra "50", la ruleta).
+function esDeAnuncio(datos) {
+  const origen = origenCompra(datos);
+  const clave = String(datos.codigoPromo || "").trim().toUpperCase();
+  return origen === "anuncio" || (origen === "clave" && CLAVES_DE_ANUNCIO.includes(clave));
+}
 
-  return RED_POR_CLAVE[clave] ? `"${clave}"` : "Otros";
-
+function nombreOrigenCompra(datos) {
+  return esDeAnuncio(datos) ? "📣 Anuncio" : "🌱 Orgánico";
 }
 
 
@@ -1916,9 +1924,9 @@ async function cargarParticipantes(
 
     let cantidadPagados = 0;
 
-    let cantidadInstagram = 0;
+    let cantidadAnuncio = 0;
 
-    let cantidadFacebook = 0;
+    let cantidadOrganico = 0;
 
 
     const dniUnicos =
@@ -1936,8 +1944,8 @@ async function cargarParticipantes(
 
     let porAprobar = 0;
 
-    // Entradas por palabra clave (de qué portal vino cada compra)
-    const porPalabraClave = {};
+    // Aprobadas por origen: anuncio u orgánico
+    const porOrigen = {};
 
     // Nombre de cada participante por DNI (para "vino por el link de...")
     const nombrePorDni = new Map(
@@ -1956,7 +1964,7 @@ async function cargarParticipantes(
 
         // Solo aprobadas: es plata que ya entró
         if (datos.estado === "Pagado") {
-          sumarCompra(porPalabraClave, nombreClaveCompra(datos), precio);
+          sumarCompra(porOrigen, nombreOrigenCompra(datos), precio);
         }
 
         if (datos.estado === "Pagado") {
@@ -2135,16 +2143,17 @@ async function cargarParticipantes(
         const nombreRed =
           red === "instagram" ? "Instagram" : red === "facebook" ? "Facebook" : "Facebook o Instagram";
 
+        const deAnuncio =
+          esDeAnuncio(datos);
+
         card.className =
           `card ${datos.estado === "Pagado" ? "card-pagado" : "card-pendiente"}` +
-          (origen !== "otro" && red ? ` card-${red}` : "");
+          (deAnuncio ? " card-anuncio" : " card-organico");
 
-        if (origen !== "otro" && red === "instagram") {
-          cantidadInstagram++;
-        }
-
-        if (origen !== "otro" && red === "facebook") {
-          cantidadFacebook++;
+        if (deAnuncio) {
+          cantidadAnuncio++;
+        } else {
+          cantidadOrganico++;
         }
 
 
@@ -2197,15 +2206,15 @@ async function cargarParticipantes(
             }
 
             ${
-              origen === "otro" || !(red === "instagram" || red === "facebook")
-                ? ""
-                : origen === "anuncio"
-                ? `<span class="card-clave card-origen">📣 Anuncio en ${nombreRed}: ${esc(datos.utmCampaign || "sin nombre")}</span>`
-                : origen === "link"
-                  ? `<span class="card-clave card-origen">🔗 Desde ${nombreRed}, sin anuncio</span>`
-                  : origen === "clave"
-                    ? `<span class="card-clave card-origen">${red === "instagram" ? "📸" : "📘"} ${nombreRed}</span>`
-                  : ""
+              deAnuncio
+                ? `<span class="card-clave card-origen">📣 Anuncio${
+                    red ? ` · ${nombreRed}` : ""
+                  }${
+                    origen === "anuncio" && datos.utmCampaign ? `: ${esc(datos.utmCampaign)}` : ""
+                  }</span>`
+                : `<span class="card-clave card-organico-sello">🌱 Orgánico${
+                    (origen === "link" || origen === "clave") && red ? ` · desde ${nombreRed}` : ""
+                  }</span>`
             }
 
             ${
@@ -2615,48 +2624,47 @@ await actualizarConsulta(
     mostrarIngresosDiarios(participantes, {
       precioDeCompra,
       mostrarResumen,
-      nombreClave: nombreClaveCompra
+      nombreClave: nombreOrigenCompra
     });
 
 
-    if (statClaves) {
+    if (statOrigen) {
 
-      // La de más plata primero; "Otros" siempre al final
-      const claves =
-        Object.entries(porPalabraClave)
-          .sort((a, b) =>
-            (a[0] === "Otros") - (b[0] === "Otros") ||
-            b[1].monto - a[1].monto
-          );
+      const total =
+        Object.values(porOrigen).reduce((suma, grupo) => suma + grupo.monto, 0);
 
-      if (claves.length) {
-        mostrarResumen(
-          statClaves,
-          claves.map(([nombre, grupo]) => ({ nombre, ...grupo }))
-        );
+      const filas =
+        ["📣 Anuncio", "🌱 Orgánico"].map((nombre) => {
+          const grupo = porOrigen[nombre] || { compras: 0, monto: 0 };
+          const parte = total ? Math.round((grupo.monto / total) * 100) : 0;
+          return { nombre: `${nombre} · ${parte}%`, ...grupo };
+        });
+
+      if (total) {
+        mostrarResumen(statOrigen, filas);
       } else {
-        statClaves.textContent = "Todavía no hay compras aprobadas";
+        statOrigen.textContent = "Todavía no hay compras aprobadas";
       }
 
     }
 
 
-    if (tituloInstagram) {
-      tituloInstagram.textContent =
-        `📸 Instagram (${cantidadInstagram})`;
+    if (tituloAnuncio) {
+      tituloAnuncio.textContent =
+        `📣 Anuncio (${cantidadAnuncio})`;
     }
 
-    if (tituloFacebook) {
-      tituloFacebook.textContent =
-        `📘 Facebook (${cantidadFacebook})`;
+    if (tituloOrganico) {
+      tituloOrganico.textContent =
+        `🌱 Orgánico (${cantidadOrganico})`;
     }
 
-    if (instagramVacio) {
-      instagramVacio.hidden = cantidadInstagram > 0;
+    if (anuncioVacio) {
+      anuncioVacio.hidden = cantidadAnuncio > 0;
     }
 
-    if (facebookVacio) {
-      facebookVacio.hidden = cantidadFacebook > 0;
+    if (organicoVacio) {
+      organicoVacio.hidden = cantidadOrganico > 0;
     }
 
 
