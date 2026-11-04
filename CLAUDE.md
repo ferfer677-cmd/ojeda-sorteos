@@ -22,6 +22,9 @@ Each HTML page loads its own module. Everything shares `firebase.js`, which expo
 | `admin.html` | `admin.js` | Admin panel: list, approve, edit and delete participants, assign raffle numbers, Excel export (SheetJS from CDN) |
 | `consultar.html` | `consultar.js` | Participants look up their numbers by DNI |
 | `detectar_comprobantes_duplicados.html` | inline module | Standalone tool that scans Storage `comprobantes/` for duplicate receipt files |
+| `buscador.html` | inline module | Sub admin for a helper: password login, search by DNI/name, load purchases by hand and approve only those (all through the `buscarComprobantes` function at `/api/buscar`) |
+
+Cloud Functions (`functions/index.js`, Node 22, `southamerica-east1`): `miIp`, `ruleta` (`/api/ruleta`), `buscarComprobantes` (`/api/buscar`, secret `CLAVE_BUSCADOR`) and `compraAprobadaAMeta` (sends the only Meta `Purchase` when a purchase becomes "Pagado", secret `META_CAPI_TOKEN`). Deploy them with `firebase deploy --only functions:<name>`.
 
 Helpers: `firestore.js` has `guardarParticipante()`, which defines the participant document shape. `storage.js` has `subirComprobante()`, a resumable upload to `comprobantes/<timestamp>_<name>` with a progress callback.
 
@@ -41,8 +44,9 @@ When you change packs or prices, update every location. `cantidadPorPack` matche
 
 ### Security notes
 
-- Admin "auth" happens only on the client. `admin.js` checks a hardcoded password (`CONTRASENA_ADMIN`) and stores `localStorage.adminLogueado = "si"`. No Firebase Auth is used, and there are no Firestore/Storage rules files in the repo (rules are managed in the Firebase console).
-- `index.html` includes a Meta Pixel snippet.
+- Admin login is Firebase Auth with Google (`auth.js`, `EMAIL_ADMIN`). `firestore.rules` and `storage.rules` (in the repo, deployed with `firebase deploy --only firestore:rules,storage`) give that account full access; the public can only create purchases until the close timestamp.
+- `index.html` includes a Meta Pixel snippet. It sends `AddPaymentInfo` when a receipt is sent; `Purchase` comes only from the server on approval.
+- Secrets are set by the owner with `firebase functions:secrets:set`; never write them in code or chat.
 
 ## Conventions
 
