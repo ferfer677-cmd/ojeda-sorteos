@@ -19,6 +19,8 @@ const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { getAuth } = require("firebase-admin/auth");
+const { getStorage, getDownloadURL } = require("firebase-admin/storage");
 const crypto = require("node:crypto");
 
 // Cierre de compras: viernes 13/11/2026 19:00 (igual que firestore.rules)
@@ -296,6 +298,154 @@ exports.ruleta = onRequest(
 
       logger.error("Error en la ruleta", { error: sinToken(error.message) });
       respuesta.status(500).json({ error: "RULETA" });
+
+    }
+
+  }
+);
+
+
+// ======================================================
+// BUSCADOR DE COMPROBANTES (AYUDANTES)
+// ======================================================
+// Para quien ayuda a controlar pagos sin ser admin: entra con su
+// cuenta de Google en buscador.html y solo puede buscar por DNI o
+// nombre. La búsqueda se hace acá, así nunca descarga la lista entera
+// ni ve montos, teléfonos o totales.
+// Para dar o sacar acceso, cambiar esta lista y volver a publicar
+// (firebase deploy --only functions:buscarComprobantes).
+
+const AYUDANTES = [
+  "ferfer677@gmail.com",
+  "tazcan66@gmail.com"
+];
+
+const MAXIMO_RESULTADOS = 30;
+
+const sinAcentos = (texto) =>
+  String(texto || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+// La lista para buscar por nombre se guarda 2 minutos por instancia
+let listaNombres = { hasta: 0, docs: [] };
+
+async function compraParaAyudante(documento) {
+
+  const datos = documento.data();
+
+  let comprobante = datos.comprobanteURL || "";
+
+  if (!comprobante && datos.comprobantePath) {
+    try {
+      comprobante = await getDownloadURL(getStorage().bucket().file(datos.comprobantePath));
+    } catch {
+      comprobante = "";
+    }
+  }
+
+  return {
+    nombre: `${datos.nombre || ""} ${datos.apellido || ""}`.trim(),
+    dni: String(datos.dni || ""),
+    pack: String(datos.pack || ""),
+    estado: datos.estado || "",
+    fecha: datos.fecha?.toMillis?.() || 0,
+    comprobante
+  };
+
+}
+
+exports.buscarComprobantes = onRequest(
+  {
+    region: "southamerica-east1",
+    invoker: "public",
+    maxInstances: 3
+  },
+  async (pedido, respuesta) => {
+
+    respuesta.set("Cache-Control", "private, no-store");
+
+    if (pedido.method !== "POST") {
+      respuesta.status(405).json({ error: "METODO" });
+      return;
+    }
+
+    // Solo cuentas de Google de la lista
+    let usuario;
+
+    try {
+      const token = String(pedido.get("Authorization") || "").replace(/^Bearer /, "");
+      usuario = await getAuth().verifyIdToken(token);
+    } catch {
+      respuesta.status(401).json({ error: "SESION" });
+      return;
+    }
+
+    if (
+      !AYUDANTES.includes(usuario.email) ||
+      !usuario.email_verified ||
+      usuario.firebase?.sign_in_provider !== "google.com"
+    ) {
+      respuesta.status(403).json({ error: "SIN_PERMISO" });
+      return;
+    }
+
+    const texto = String(pedido.body?.texto || "").trim().slice(0, 60);
+    const dni = texto.replace(/[^0-9]/g, "");
+    const esDni = /^[0-9.\s-]+$/.test(texto);
+
+    if (esDni ? dni.length < 6 : sinAcentos(texto).replace(/\s/g, "").length < 3) {
+      respuesta.status(400).json({ error: "CORTO" });
+      return;
+    }
+
+    const db = getFirestore();
+
+    try {
+
+      let encontrados;
+
+      if (esDni) {
+
+        const resultado =
+          await db.collection("participantes").where("dniNormalizado", "==", dni).get();
+
+        encontrados = resultado.docs;
+
+      } else {
+
+        if (Date.now() > listaNombres.hasta) {
+          const resultado = await db.collection("participantes").get();
+          listaNombres = { hasta: Date.now() + 2 * 60 * 1000, docs: resultado.docs };
+        }
+
+        const palabras = sinAcentos(texto).split(/\s+/).filter(Boolean);
+
+        encontrados = listaNombres.docs.filter((documento) => {
+          const datos = documento.data();
+          const nombre = sinAcentos(`${datos.nombre || ""} ${datos.apellido || ""}`);
+          return palabras.every((palabra) => nombre.includes(palabra));
+        });
+
+      }
+
+      // La chance gratis de la ruleta no tiene comprobante
+      encontrados =
+        encontrados.filter((documento) => documento.get("codigoPromo") !== "RULETAGRATIS");
+
+      const compras = await Promise.all(
+        encontrados
+          .sort((a, b) => (b.get("fecha")?.toMillis?.() || 0) - (a.get("fecha")?.toMillis?.() || 0))
+          .slice(0, MAXIMO_RESULTADOS)
+          .map(compraParaAyudante)
+      );
+
+      logger.info("Búsqueda de ayudante", { email: usuario.email, cantidad: compras.length });
+
+      respuesta.json({ compras, hayMas: encontrados.length > MAXIMO_RESULTADOS });
+
+    } catch (error) {
+
+      logger.error("Error en el buscador", { error: error.message });
+      respuesta.status(500).json({ error: "BUSCADOR" });
 
     }
 

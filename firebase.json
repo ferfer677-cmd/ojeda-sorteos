@@ -32,6 +32,13 @@
         }
       },
       {
+        "source": "/api/buscar",
+        "function": {
+          "functionId": "buscarComprobantes",
+          "region": "southamerica-east1"
+        }
+      },
+      {
         "source": "/api/ruleta",
         "function": {
           "functionId": "ruleta",

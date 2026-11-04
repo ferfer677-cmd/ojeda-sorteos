@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Buscador de comprobantes</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --fondo: #f3f4f7;
+    --tarjeta: #ffffff;
+    --borde: #e3e5ea;
+    --texto: #111827;
+    --suave: #6b7280;
+    --verde: #00a650;
+    --naranja: #ff6a00;
+    --rojo: #dc2626;
+    --oscuro: #0f172a;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: Inter, system-ui, sans-serif;
+    color: var(--texto);
+    background: var(--fondo);
+  }
+
+  .contenedor { max-width: 640px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  h1 { margin: 0 0 4px; font-size: 22px; }
+
+  .bajada { margin: 0 0 18px; font-size: 14px; color: var(--suave); }
+
+  .caja {
+    padding: 18px;
+    background: var(--tarjeta);
+    border: 1px solid var(--borde);
+    border-radius: 16px;
+  }
+
+  button {
+    font: inherit;
+    font-weight: 700;
+    border: 0;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+
+  .boton {
+    width: 100%;
+    padding: 14px;
+    color: #fff;
+    background: var(--oscuro);
+  }
+
+  .boton:disabled { opacity: .6; }
+
+  .sesion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--suave);
+  }
+
+  .sesion button { padding: 6px 10px; color: var(--texto); background: var(--borde); }
+
+  form { display: flex; gap: 8px; }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: 14px;
+    font: inherit;
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+  }
+
+  form button { padding: 0 18px; color: #fff; background: var(--verde); }
+
+  .aviso { margin: 14px 0 0; font-size: 14px; color: var(--suave); }
+
+  .aviso.error { color: var(--rojo); }
+
+  .compra {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+    margin-top: 10px;
+    padding: 12px;
+    background: var(--tarjeta);
+    border: 1px solid var(--borde);
+    border-radius: 14px;
+  }
+
+  .compra a, .sin-foto {
+    display: grid;
+    place-items: center;
+    width: 76px;
+    height: 76px;
+    overflow: hidden;
+    font-size: 11px;
+    color: var(--suave);
+    background: var(--fondo);
+    border-radius: 10px;
+  }
+
+  .compra img { width: 100%; height: 100%; object-fit: cover; }
+
+  .compra b { display: block; font-size: 15px; }
+
+  .compra span { display: block; margin-top: 2px; font-size: 13px; color: var(--suave); overflow-wrap: anywhere; }
+
+  .estado {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 999px;
+    color: var(--naranja);
+    background: #fff3e8;
+  }
+
+  .estado.pagado { color: var(--verde); background: #e9f8f0; }
+
+  [hidden] { display: none !important; }
+</style>
+</head>
+
+<body>
+
+<main class="contenedor">
+
+  <h1>🔎 Buscador de comprobantes</h1>
+  <p class="bajada">Buscá una compra por DNI o por nombre.</p>
+
+  <!-- ===== ENTRAR ===== -->
+  <section class="caja" id="entrar">
+    <button type="button" class="boton" id="botonEntrar">Entrar con Google</button>
+    <p class="aviso" id="avisoEntrar" hidden></p>
+  </section>
+
+  <!-- ===== BUSCADOR ===== -->
+  <section id="buscar" hidden>
+
+    <div class="sesion">
+      <span id="cuenta"></span>
+      <button type="button" id="botonSalir">Salir</button>
+    </div>
+
+    <div class="caja">
+      <form id="formulario">
+        <input id="texto" type="search" placeholder="DNI o nombre" autocomplete="off" required>
+        <button type="submit">Buscar</button>
+      </form>
+    </div>
+
+    <p class="aviso" id="avisoBuscar" hidden></p>
+    <div id="resultados"></div>
+
+  </section>
+
+</main>
+
+<script type="module">
+  import { auth } from "./firebase.js";
+
+  import {
+    GoogleAuthProvider,
+    signInWithPopup,
+    signOut,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+
+  // =====================================================
+  // SESIÓN
+  // =====================================================
+  // Cualquiera puede entrar con Google, pero el servidor solo
+  // responde a las cuentas de la lista AYUDANTES (functions/index.js).
+
+  const entrar = document.getElementById("entrar");
+  const buscar = document.getElementById("buscar");
+  const avisoEntrar = document.getElementById("avisoEntrar");
+  const avisoBuscar = document.getElementById("avisoBuscar");
+  const resultados = document.getElementById("resultados");
+
+  function avisar(lugar, mensaje, esError = false) {
+    lugar.hidden = !mensaje;
+    lugar.textContent = mensaje;
+    lugar.classList.toggle("error", esError);
+  }
+
+  document.getElementById("botonEntrar").addEventListener("click", async () => {
+    const proveedor = new GoogleAuthProvider();
+    proveedor.setCustomParameters({ prompt: "select_account" });
+    try {
+      await signInWithPopup(auth, proveedor);
+    } catch (error) {
+      avisar(avisoEntrar, "No se pudo entrar. Probá de nuevo.", true);
+    }
+  });
+
+  document.getElementById("botonSalir").addEventListener("click", () => signOut(auth));
+
+  onAuthStateChanged(auth, (usuario) => {
+    entrar.hidden = Boolean(usuario);
+    buscar.hidden = !usuario;
+    document.getElementById("cuenta").textContent = usuario ? usuario.email : "";
+    resultados.innerHTML = "";
+    avisar(avisoBuscar, "");
+  });
+
+
+  // =====================================================
+  // BUSCAR
+  // =====================================================
+
+  const MENSAJES = {
+    SIN_PERMISO: "Esta cuenta no tiene permiso para buscar.",
+    SESION: "Se cerró la sesión. Salí y volvé a entrar.",
+    CORTO: "Escribí un DNI completo o al menos 3 letras del nombre."
+  };
+
+  const fechaArgentina = (ms) =>
+    ms
+      ? new Date(ms).toLocaleString("es-AR", {
+          timeZone: "America/Argentina/Buenos_Aires",
+          day: "2-digit",
+          month: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hourCycle: "h23"
+        }) + " h"
+      : "Sin fecha";
+
+  function tarjeta(compra) {
+
+    const fila = document.createElement("article");
+    fila.className = "compra";
+
+    if (compra.comprobante) {
+      const enlace = document.createElement("a");
+      enlace.href = compra.comprobante;
+      enlace.target = "_blank";
+      enlace.rel = "noopener";
+      const imagen = document.createElement("img");
+      imagen.src = compra.comprobante;
+      imagen.alt = "Comprobante";
+      imagen.loading = "lazy";
+      // Si es un PDF no se ve la miniatura: queda el texto
+      imagen.addEventListener("error", () => { enlace.textContent = "Ver archivo"; });
+      enlace.appendChild(imagen);
+      fila.appendChild(enlace);
+    } else {
+      const vacio = document.createElement("div");
+      vacio.className = "sin-foto";
+      vacio.textContent = "Sin comprobante";
+      fila.appendChild(vacio);
+    }
+
+    const info = document.createElement("div");
+
+    const nombre = document.createElement("b");
+    nombre.textContent = compra.nombre || "Sin nombre";
+
+    const dni = document.createElement("span");
+    dni.textContent = `DNI ${compra.dni || "-"} · ${fechaArgentina(compra.fecha)}`;
+
+    const pack = document.createElement("span");
+    pack.textContent = compra.pack || "-";
+
+    const estado = document.createElement("i");
+    const pagado = compra.estado === "Pagado";
+    estado.className = "estado" + (pagado ? " pagado" : "");
+    estado.style.fontStyle = "normal";
+    estado.textContent = pagado ? "Aprobado" : "Pendiente";
+
+    info.append(nombre, dni, pack, estado);
+    fila.appendChild(info);
+
+    return fila;
+
+  }
+
+  document.getElementById("formulario").addEventListener("submit", async (evento) => {
+
+    evento.preventDefault();
+
+    const texto = document.getElementById("texto").value.trim();
+    const boton = evento.submitter;
+
+    resultados.innerHTML = "";
+    avisar(avisoBuscar, "Buscando...");
+    if (boton) boton.disabled = true;
+
+    try {
+
+      const token = await auth.currentUser.getIdToken();
+
+      const respuesta = await fetch("/api/buscar", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ texto })
+      });
+
+      const datos = await respuesta.json().catch(() => ({}));
+
+      if (!respuesta.ok) {
+        avisar(avisoBuscar, MENSAJES[datos.error] || "No se pudo buscar. Probá de nuevo.", true);
+        return;
+      }
+
+      if (!datos.compras.length) {
+        avisar(avisoBuscar, "No se encontró ninguna compra.");
+        return;
+      }
+
+      avisar(
+        avisoBuscar,
+        datos.hayMas
+          ? `Se muestran las ${datos.compras.length} más recientes. Escribí más para achicar la búsqueda.`
+          : `${datos.compras.length} compra${datos.compras.length === 1 ? "" : "s"}`
+      );
+
+      datos.compras.forEach((compra) => resultados.appendChild(tarjeta(compra)));
+
+    } catch (error) {
+
+      avisar(avisoBuscar, "No se pudo buscar. Revisá la conexión.", true);
+
+    } finally {
+
+      if (boton) boton.disabled = false;
+
+    }
+
+  });
+</script>
+
+</body>
+</html>
