@@ -785,6 +785,17 @@ exports.buscarComprobantes = onRequest(
         resultado = await cargarCompra(db, pedido.body || {});
       } else if (accion === "aprobar") {
         resultado = await aprobarCompra(db, pedido.body?.id);
+      } else if (accion === "error") {
+        // Falla al cargar desde el celular del sub admin (sin datos del cliente)
+        const cuerpo = pedido.body || {};
+        logger.warn("Error al cargar desde el sub admin", {
+          etapa: textoLimpio(cuerpo.etapa, 20),
+          codigo: textoLimpio(cuerpo.codigo, 80),
+          archivoTipo: textoLimpio(cuerpo.archivoTipo, 60),
+          archivoKB: Number(cuerpo.archivoKB) || 0,
+          navegador: textoLimpio(cuerpo.navegador, 200)
+        });
+        resultado = { ok: true };
       } else {
         resultado = await buscar(db, pedido.body?.texto);
       }

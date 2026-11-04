@@ -231,7 +231,7 @@
     <div id="panelCargar" hidden>
 
       <div class="caja">
-        <form id="formCargar">
+        <form id="formCargar" novalidate>
 
           <label>
             Chances
@@ -593,7 +593,9 @@
 
       const { ok, datos } = await pedir({ clave, accion: "packs" });
 
-      if (sesionVencida(datos) || !ok) return;
+      if (sesionVencida(datos)) return;
+
+      if (!ok) throw new Error(datos.error || "PACKS");
 
       selectorPack.innerHTML = '<option value="">Elegí las chances</option>';
 
@@ -621,6 +623,7 @@
     } catch {
 
       selectorPack.innerHTML = '<option value="">No se pudieron cargar los packs</option>';
+      avisar(avisoCargar, "No se pudieron cargar las chances. Tocá \"Buscar\" y volvé a \"Cargar compra\" para reintentar.", true);
 
     }
 
@@ -635,12 +638,25 @@
     const archivo = document.getElementById("cargarArchivo").files[0];
     const valor = (id) => document.getElementById(id).value.trim();
 
-    if (!archivo) {
-      avisar(avisoCargar, "Elegí la foto del comprobante.", true);
+    // Revisado acá (no con el navegador): algunos celulares no muestran
+    // qué falta y parece que el botón no hace nada
+    const falta =
+      !selectorPack.value ? "Elegí las chances." :
+      !valor("cargarNombre") ? "Falta el nombre." :
+      !valor("cargarApellido") ? "Falta el apellido." :
+      !/^\d{6,9}$/.test(valor("cargarDni").replace(/\D/g, "")) ? "El DNI tiene que tener entre 6 y 9 números." :
+      !valor("cargarTelefono") ? "Falta el teléfono." :
+      !archivo ? "Elegí la foto del comprobante." :
+      "";
+
+    if (falta) {
+      avisar(avisoCargar, falta, true);
       return;
     }
 
     if (boton) boton.disabled = true;
+
+    let etapa = "subida";
 
     try {
 
@@ -649,6 +665,8 @@
       const subido = await subirComprobante(archivo, (porcentaje) => {
         avisar(avisoCargar, `Subiendo comprobante... ${Math.round(porcentaje)}%`);
       });
+
+      etapa = "guardado";
 
       avisar(avisoCargar, "Guardando la compra...");
 
@@ -682,7 +700,27 @@
 
     } catch (error) {
 
-      avisar(avisoCargar, "No se pudo subir el comprobante. Revisá la conexión y probá de nuevo.", true);
+      const codigo = String(error?.code || error?.message || "sin código").slice(0, 80);
+
+      avisar(
+        avisoCargar,
+        (etapa === "subida"
+          ? "No se pudo subir el comprobante. Revisá la conexión y probá de nuevo."
+          : "Se subió el comprobante pero no se pudo guardar la compra. Probá de nuevo.") +
+          ` (Error: ${codigo})`,
+        true
+      );
+
+      // Queda en el registro del servidor (sin datos del cliente)
+      pedir({
+        clave,
+        accion: "error",
+        etapa,
+        codigo,
+        archivoTipo: archivo.type,
+        archivoKB: Math.round(archivo.size / 1024),
+        navegador: navigator.userAgent
+      }).catch(() => {});
 
     } finally {
 

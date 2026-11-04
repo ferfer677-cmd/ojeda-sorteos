@@ -1127,3 +1127,5 @@ button:disabled { opacity: .6; cursor: wait; }
 .card-aviso.alerta { color: #92400e; background: #fffbeb; border: 1px solid #fcd34d; }
 
 .card-aviso.grave { color: #fff; background: var(--rojo); }
+
+#borradosOrigen { display: block; margin-top: 2px; }

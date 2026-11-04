@@ -1047,6 +1047,7 @@ async function eliminarCompra(id, datos) {
       pack: String(datos.pack || ""),
       monto: precioDeCompra(datos),
       estado: datos.estado || "",
+      origen: nombreOrigenCompra(datos),
       fechaCompra: datos.fecha || null,
       fecha: serverTimestamp()
     });
@@ -1105,6 +1106,29 @@ function pintarBorradosDelDia() {
       ? `${delDia.length} compra${delDia.length === 1 ? "" : "s"} · ${pesos(suma(aprobadas))} de aprobadas · ${pesos(suma(pendientes))} de pendientes`
       : "Ese día no se borró nada";
 
+  // Anuncio u orgánico (las borradas antes del 04/11 no lo guardaban)
+  const origenDe = (datos) =>
+    datos.origen ||
+    (/CLAVE MENOS/i.test(datos.pack || "") ? "📣 Anuncio" : "❔ Sin dato");
+
+  const porOrigen = new Map();
+  delDia.forEach(({ datos }) => {
+    const origen = origenDe(datos);
+    const grupo = porOrigen.get(origen) || { compras: 0, monto: 0 };
+    grupo.compras++;
+    grupo.monto += Number(datos.monto) || 0;
+    porOrigen.set(origen, grupo);
+  });
+
+  document.getElementById("borradosOrigen").textContent =
+    ["📣 Anuncio", "🌱 Orgánico", "❔ Sin dato"]
+      .filter((origen) => porOrigen.has(origen))
+      .map((origen) => {
+        const { compras, monto } = porOrigen.get(origen);
+        return `${origen}: ${pesos(monto)} (${compras})`;
+      })
+      .join(" · ");
+
   lugar.innerHTML = "";
 
   // Lista cerrada: se abre tocando "Ver las N compras borradas"
@@ -1129,7 +1153,7 @@ function pintarBorradosDelDia() {
       hourCycle: "h23"
     });
     detalle.textContent =
-      `${pesos(Number(datos.monto) || 0)} · ${datos.estado === "Pagado" ? "aprobada" : "pendiente"}${hora ? ` · ${hora} h` : ""}`;
+      `${pesos(Number(datos.monto) || 0)} · ${datos.estado === "Pagado" ? "aprobada" : "pendiente"} · ${origenDe(datos)}${hora ? ` · ${hora} h` : ""}`;
 
     fila.append(quien, detalle);
     lugar.appendChild(fila);
