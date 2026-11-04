@@ -1095,15 +1095,13 @@ function pintarBorradosDelDia() {
   const suma = (lista) =>
     lista.reduce((total, { datos }) => total + (Number(datos.monto) || 0), 0);
 
-  const aprobadas = delDia.filter(({ datos }) => datos.estado === "Pagado");
-  const pendientes = delDia.filter(({ datos }) => datos.estado !== "Pagado");
-
   const pesos = (monto) => `$${monto.toLocaleString("es-AR")}`;
 
+  // Todo junto, aprobada o no: para Meta ya contaba como compra
   document.getElementById("borradosMonto").textContent = pesos(suma(delDia));
   document.getElementById("borradosDetalle").textContent =
     delDia.length
-      ? `${delDia.length} compra${delDia.length === 1 ? "" : "s"} · ${pesos(suma(aprobadas))} de aprobadas · ${pesos(suma(pendientes))} de pendientes`
+      ? `${delDia.length} compra${delDia.length === 1 ? "" : "s"} borrada${delDia.length === 1 ? "" : "s"}`
       : "Ese día no se borró nada";
 
   // Anuncio u orgánico (las borradas antes del 04/11 no lo guardaban)
@@ -1153,7 +1151,7 @@ function pintarBorradosDelDia() {
       hourCycle: "h23"
     });
     detalle.textContent =
-      `${pesos(Number(datos.monto) || 0)} · ${datos.estado === "Pagado" ? "aprobada" : "pendiente"} · ${origenDe(datos)}${hora ? ` · ${hora} h` : ""}`;
+      `${pesos(Number(datos.monto) || 0)} · ${origenDe(datos)}${hora ? ` · ${hora} h` : ""}`;
 
     fila.append(quien, detalle);
     lugar.appendChild(fila);
