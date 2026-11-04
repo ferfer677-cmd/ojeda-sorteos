@@ -1179,6 +1179,170 @@ async function mostrarBorrados() {
 
 
 // =====================================================
+// AVISOS ANTES DE APROBAR
+// =====================================================
+// En cada compra pendiente: si esa persona ya tiene otra compra
+// del mismo monto o muy reciente, cuántas chances tiene aprobadas,
+// y si el comprobante es el mismo archivo que el de otra compra.
+
+const HORAS_MISMO_MONTO = 24;
+const MINUTOS_RECIENTE = 120;
+
+const momentoDe = (datos) => datos.fecha?.toDate?.().getTime() || 0;
+
+function haceCuanto(ms) {
+  const minutos = Math.round(ms / 60000);
+  if (minutos < 60) return `hace ${minutos} min`;
+  const horas = Math.round(minutos / 60);
+  if (horas < 48) return `hace ${horas} h`;
+  return `hace ${Math.round(horas / 24)} días`;
+}
+
+const estadoCorto = (datos) => (datos.estado === "Pagado" ? "aprobada" : "pendiente");
+
+// Compras por DNI (sin la chance gratis de la ruleta)
+function agruparPorDni(participantes) {
+  const porDni = new Map();
+  participantes.forEach(({ id, datos }) => {
+    if (datos.codigoPromo === "RULETAGRATIS") return;
+    const dni = dniDe(datos);
+    if (!dni) return;
+    if (!porDni.has(dni)) porDni.set(dni, []);
+    porDni.get(dni).push({ id, datos });
+  });
+  return porDni;
+}
+
+// Devuelve [{ tipo: "alerta" | "info", texto }]
+function avisosDeCompra(id, datos, porDni) {
+
+  const otras =
+    (porDni.get(dniDe(datos)) || []).filter((otra) => otra.id !== id);
+
+  if (!otras.length) return [];
+
+  const avisos = [];
+  const precio = precioDeCompra(datos);
+  const momento = momentoDe(datos);
+
+  otras.forEach(({ datos: otra }) => {
+
+    const distancia = Math.abs(momento - momentoDe(otra));
+    const mismoMonto = precioDeCompra(otra) === precio;
+
+    if (momento && momentoDe(otra) && mismoMonto && distancia <= HORAS_MISMO_MONTO * 3600000) {
+      avisos.push({
+        tipo: "alerta",
+        texto: `⚠️ Posible repetida: otra compra de $${precio.toLocaleString("es-AR")} ${haceCuanto(distancia).replace("hace ", "a ")} de esta (${estadoCorto(otra)})`
+      });
+    } else if (momento && momentoDe(otra) && distancia <= MINUTOS_RECIENTE * 60000) {
+      avisos.push({
+        tipo: "alerta",
+        texto: `⚠️ Otra compra reciente: ${otra.pack || "-"} (${estadoCorto(otra)})`
+      });
+    }
+
+  });
+
+  const aprobadas = otras.filter(({ datos: otra }) => otra.estado === "Pagado");
+  const chances = aprobadas.reduce(
+    (suma, { datos: otra }) => suma + (Array.isArray(otra.numeros) ? otra.numeros.length : 0),
+    0
+  );
+  const pendientesOtras = otras.length - aprobadas.length;
+
+  avisos.push({
+    tipo: "info",
+    texto:
+      `ℹ️ Ya tiene ${chances} chance${chances === 1 ? "" : "s"} aprobada${chances === 1 ? "" : "s"} en ${aprobadas.length} compra${aprobadas.length === 1 ? "" : "s"}` +
+      (pendientesOtras ? ` y ${pendientesOtras} pendiente${pendientesOtras === 1 ? "" : "s"} más` : "")
+  });
+
+  return avisos;
+
+}
+
+function avisosHTML(avisos) {
+  return avisos.length
+    ? `<div class="card-avisos">${avisos
+        .map(({ tipo, texto }) => `<p class="card-aviso ${tipo}">${esc(texto)}</p>`)
+        .join("")}</div>`
+    : "";
+}
+
+// Huella (MD5) de cada archivo, para no pedirla dos veces
+const huellas = new Map();
+
+async function huellaDe(path) {
+  if (!huellas.has(path)) {
+    huellas.set(
+      path,
+      getMetadata(ref(storage, path))
+        .then((meta) => meta.md5Hash || "")
+        .catch(() => "")
+    );
+  }
+  return huellas.get(path);
+}
+
+// Compara el comprobante de cada pendiente con los de los últimos 7 días
+async function marcarMismoComprobante(participantes, tarjetas) {
+
+  const desde = Date.now() - 7 * 24 * 3600000;
+
+  const conArchivo = participantes.filter(({ id, datos }) =>
+    datos.comprobantePath &&
+    (tarjetas.has(id) || momentoDe(datos) >= desde)
+  );
+
+  // De a 8 pedidos por vez
+  const resultado = [];
+  for (let i = 0; i < conArchivo.length; i += 8) {
+    const tanda = conArchivo.slice(i, i + 8);
+    const huellasTanda = await Promise.all(
+      tanda.map(({ datos }) => huellaDe(String(datos.comprobantePath).replace(/^\/+/, "")))
+    );
+    tanda.forEach((compra, j) => resultado.push({ ...compra, huella: huellasTanda[j] }));
+  }
+
+  const porHuella = new Map();
+  resultado.forEach((compra) => {
+    if (!compra.huella) return;
+    if (!porHuella.has(compra.huella)) porHuella.set(compra.huella, []);
+    porHuella.get(compra.huella).push(compra);
+  });
+
+  tarjetas.forEach((card, id) => {
+
+    const propia = resultado.find((compra) => compra.id === id);
+    if (!propia?.huella) return;
+
+    const iguales =
+      porHuella.get(propia.huella).filter((otra) => otra.id !== id);
+
+    if (!iguales.length) return;
+
+    let lugar = card.querySelector(".card-avisos");
+    if (!lugar) {
+      lugar = document.createElement("div");
+      lugar.className = "card-avisos";
+      card.querySelector(".card-pack")?.after(lugar);
+    }
+
+    iguales.forEach(({ datos }) => {
+      const aviso = document.createElement("p");
+      aviso.className = "card-aviso grave";
+      aviso.textContent =
+        `🚨 Mismo comprobante que la compra de ${datos.nombre || ""} ${datos.apellido || ""} (DNI ${datos.dni || "-"}) · ${mostrarFecha(datos.fecha)} · ${estadoCorto(datos)}`;
+      lugar.prepend(aviso);
+    });
+
+  });
+
+}
+
+
+// =====================================================
 // PERSONAS CON MÁS DE UNA COMPRA
 // =====================================================
 // Para controlar que no hayan cargado dos veces la misma operación.
@@ -1414,105 +1578,6 @@ function mostrarRepetidas(participantes) {
     listaRepetidas.appendChild(grupo);
 
   });
-
-}
-
-
-// =====================================================
-// ERRORES AL ENVIAR COMPROBANTES
-// =====================================================
-
-const EXPLICACION_ERRORES = {
-  sin_archivo: "Tocó enviar sin comprobante adjunto",
-  NO_GUARDADO: "El comprobante subió, pero no se guardó la compra",
-  SIN_CONEXION: "Se cortó la conexión o tardó demasiado",
-  "storage/unauthorized": "Firebase rechazó el archivo (reglas)",
-  "storage/canceled": "La subida se canceló",
-  "storage/unknown": "Error desconocido del almacenamiento",
-  "storage/retry-limit-exceeded": "Conexión mala: se agotaron los reintentos",
-  "storage/quota-exceeded": "Se superó el límite de almacenamiento o hay un problema de facturación",
-  "permission-denied": "Firebase rechazó los datos de la compra (reglas)",
-  unavailable: "Sin conexión con la base de datos"
-};
-
-async function mostrarErroresCompra() {
-
-  const lugar = document.getElementById("statErrores");
-  const resumen = document.getElementById("resumenErrores");
-  const detalle = document.getElementById("detalleErrores");
-
-  if (!lugar || !resumen || !detalle) return;
-
-  try {
-
-    const resultado = await getDocs(
-      query(
-        collection(db, "errores_compra"),
-        orderBy("fecha", "desc"),
-        limit(500)
-      )
-    );
-
-    const desde = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const grupos = new Map();
-
-    resultado.docs.forEach((documento) => {
-
-      const error = documento.data();
-      const fecha = error.fecha?.toDate?.();
-
-      if (!fecha || fecha.getTime() < desde) return;
-
-      const clave = `${error.codigo}|${error.app}|${error.sistema}`;
-      const grupo = grupos.get(clave) || { ...error, veces: 0 };
-
-      grupo.veces++;
-      grupos.set(clave, grupo);
-
-    });
-
-    lugar.innerHTML = "";
-
-    // Arriba solo el total; el detalle queda cerrado
-    detalle.hidden = !grupos.size;
-
-    if (!grupos.size) {
-      resumen.textContent = "Sin errores registrados";
-      return;
-    }
-
-    const total =
-      [...grupos.values()].reduce((suma, grupo) => suma + grupo.veces, 0);
-
-    resumen.textContent =
-      `${total} error${total === 1 ? "" : "es"} · ${grupos.size} tipo${grupos.size === 1 ? "" : "s"} distinto${grupos.size === 1 ? "" : "s"}`;
-
-    [...grupos.values()]
-      .sort((a, b) => b.veces - a.veces)
-      .forEach((grupo) => {
-
-        const fila = document.createElement("div");
-        fila.className = "resumen-fila";
-
-        const titulo = document.createElement("b");
-        titulo.textContent =
-          EXPLICACION_ERRORES[grupo.codigo] || grupo.codigo;
-
-        const detalle = document.createElement("span");
-        detalle.textContent =
-          `${grupo.veces} ${grupo.veces === 1 ? "vez" : "veces"} · ${grupo.app} · ${grupo.sistema}`;
-
-        fila.append(titulo, detalle);
-        lugar.appendChild(fila);
-
-      });
-
-  } catch (error) {
-
-    console.error("No se pudieron leer los errores:", error);
-    resumen.textContent = "No se pudieron leer los errores";
-
-  }
 
 }
 
@@ -1904,6 +1969,11 @@ async function cargarParticipantes(
     );
 
 
+    // Para los avisos de las pendientes
+    const comprasPorDni = agruparPorDni(participantes);
+    const tarjetasPendientes = new Map();
+
+
     // =================================================
     // BUSCADOR
     // =================================================
@@ -2099,6 +2169,15 @@ async function cargarParticipantes(
         const instagram =
           (datos.instagram || "").toString().replace(/^@+/, "").trim();
 
+        const avisos =
+          datos.estado !== "Pagado" && datos.codigoPromo !== "RULETAGRATIS"
+            ? avisosDeCompra(id, datos, comprasPorDni)
+            : [];
+
+        if (datos.estado !== "Pagado") {
+          tarjetasPendientes.set(id, card);
+        }
+
         card.innerHTML = `
 
           ${comprobanteHTML}
@@ -2108,6 +2187,8 @@ async function cargarParticipantes(
             <h3>${esc(datos.nombre)} ${esc(datos.apellido)}</h3>
 
             <p class="card-pack">${esc(datos.pack) || "-"}</p>
+
+            ${avisosHTML(avisos)}
 
             ${
               datos.codigoPromo
@@ -2189,9 +2270,15 @@ async function cargarParticipantes(
             "click",
             async () => {
 
+              const alertas =
+                [...card.querySelectorAll(".card-aviso.alerta, .card-aviso.grave")]
+                  .map((aviso) => aviso.textContent);
+
               const confirmar =
                 confirm(
-                  "¿Confirmar este pago?"
+                  alertas.length
+                    ? `¿Confirmar este pago?\n\nOJO:\n${alertas.join("\n")}`
+                    : "¿Confirmar este pago?"
                 );
 
 
@@ -2520,8 +2607,6 @@ await actualizarConsulta(
     }
 
 
-    mostrarErroresCompra();
-
     mostrarBorrados();
 
     mostrarRepetidas(participantes);
@@ -2586,6 +2671,11 @@ await actualizarConsulta(
         participantes.filter(({ datos }) => datos.estado === "Pagado").length;
 
     }
+
+
+    // Sin esperar: los avisos de "mismo comprobante" aparecen solos
+    marcarMismoComprobante(participantes, tarjetasPendientes)
+      .catch((error) => console.warn("No se pudieron comparar los comprobantes:", error));
 
 
     // =================================================

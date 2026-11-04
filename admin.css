@@ -1100,3 +1100,24 @@ button:disabled { opacity: .6; cursor: wait; }
 @media (max-width: 760px) {
   .facturacion-fila { grid-template-columns: 1fr; }
 }
+
+/* ======================================================
+   AVISOS ANTES DE APROBAR
+   ====================================================== */
+
+.card-avisos { display: grid; gap: 6px; margin: 8px 0; }
+
+.card-aviso {
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  border-radius: 10px;
+}
+
+.card-aviso.info { color: #1e3a8a; background: #eff6ff; }
+
+.card-aviso.alerta { color: #92400e; background: #fffbeb; border: 1px solid #fcd34d; }
+
+.card-aviso.grave { color: #fff; background: var(--rojo); }

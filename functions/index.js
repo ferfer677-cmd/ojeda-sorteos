@@ -3,8 +3,8 @@
 // ======================================================
 // Cuando una compra pasa a "Pagado" (el admin la aprueba, sola o con
 // "Aprobar todos"), se le manda a Meta un evento Purchase con el monto
-// real. Lleva el mismo ID de evento que el Píxel de la página
-// (metaEventId), así Meta no cuenta la compra dos veces.
+// real. Es la única "Purchase": la página, al enviar el comprobante,
+// solo manda "AddPaymentInfo". Así Meta cuenta las compras aprobadas.
 //
 // Token: secreto de Firebase META_CAPI_TOKEN (nunca en el código).
 //   firebase functions:secrets:set META_CAPI_TOKEN

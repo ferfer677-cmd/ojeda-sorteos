@@ -117,11 +117,10 @@ document.querySelectorAll("[data-compartir]").forEach((boton) => {
 // PÍXEL DE META (Facebook / Instagram)
 // ======================================================
 // Avisa a Meta cuando alguien elige un pack (InitiateCheckout)
-// y cuando envía el comprobante (Purchase, con el monto),
-// para optimizar las campañas hacia compradores.
-
-// idEvento: el mismo ID lo manda el servidor (API de Conversiones)
-// cuando se aprueba el pago, así Meta no cuenta la compra dos veces.
+// y cuando envía el comprobante (AddPaymentInfo, con el monto).
+// La compra (Purchase) la manda solo el servidor (API de
+// Conversiones) cuando el admin aprueba el pago: así Meta cuenta
+// únicamente las compras reales.
 function eventoMeta(evento, datos, idEvento) {
   try {
     if (typeof window.fbq === "function") {
@@ -1308,15 +1307,16 @@ multiplicadorPromo:
 
 
             // ------------------------------------------
-            // PÍXEL DE META: COMPRA
+            // PÍXEL DE META: ENVIÓ EL COMPROBANTE
             // ------------------------------------------
+            // No es "Purchase": esa la manda el servidor al aprobar
 
-            eventoMeta("Purchase", {
+            eventoMeta("AddPaymentInfo", {
               value: precioDelPack(chancesSeleccionadas),
               num_items: chancesSeleccionadas,
               content_name: `${chancesSeleccionadas} chances`,
               content_category: codigoPromoActivo || "sin clave"
-            }, meta.metaEventId);
+            });
 
 
             // ------------------------------------------
