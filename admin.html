@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="admin.css?v=21">
+<link rel="stylesheet" href="admin.css?v=22">
 </head>
 
 <body>
@@ -135,6 +135,7 @@
               <span>Ver el día</span>
               <input type="date" id="selectorDia">
             </label>
+            <button type="button" class="boton-comisiones" id="botonComisiones" aria-expanded="false">💸 Comisiones</button>
           </div>
 
         </div>
@@ -164,6 +165,56 @@
             <h4>Anuncio u orgánico</h4>
             <div id="diaClaves"></div>
           </div>
+
+        </div>
+
+        <!-- ===== COMISIONES (se abre con el botón) ===== -->
+        <div class="comisiones" id="comisiones" hidden>
+
+          <div class="comisiones-cabecera">
+            <h3>💸 Comisiones</h3>
+            <div class="diario-rango" id="modoComisiones">
+              <button type="button" data-modo="dia" aria-pressed="true">Día elegido</button>
+              <button type="button" data-modo="todo" aria-pressed="false">Todo el sorteo</button>
+            </div>
+          </div>
+
+          <p class="panel-bajada" id="comisionesPeriodo"></p>
+
+          <div class="comisiones-cuenta">
+
+            <div class="comisiones-fila">
+              <span>
+                📣 Recaudado por anuncios <small>(aprobadas, sin lo orgánico)</small>
+                <small class="comisiones-borradas" id="comisionesBorradas"></small>
+              </span>
+              <b id="comisionesAnuncios">$0</b>
+            </div>
+
+            <label class="comisiones-fila comisiones-gasto">
+              <span>➖ Gasto en anuncios <small>(en pesos)</small></span>
+              <input type="text" inputmode="numeric" id="gastoAnuncios" placeholder="0" autocomplete="off">
+            </label>
+
+            <div class="comisiones-fila comisiones-neto">
+              <span>= Ganancia para repartir</span>
+              <b id="comisionesNeto">$0</b>
+            </div>
+
+            <div class="comisiones-reparto">
+              <div>
+                <small>70%</small>
+                <b id="comisiones70">$0</b>
+              </div>
+              <div>
+                <small>30%</small>
+                <b id="comisiones30">$0</b>
+              </div>
+            </div>
+
+          </div>
+
+          <p class="comisiones-nota" id="comisionesNota">El gasto se guarda para cada día (y uno aparte para "Todo el sorteo").</p>
 
         </div>
 
@@ -236,7 +287,7 @@
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-<script type="module" src="admin.js?v=35"></script>
+<script type="module" src="admin.js?v=36"></script>
 
 <!-- Visor de comprobantes: se agranda en la misma página -->
 <div class="visor" id="visor" hidden>

@@ -8,7 +8,7 @@ import {
 
 import { nombreAbreviado } from "./firestore.js";
 
-import { mostrarIngresosDiarios } from "./admin-diario.js";
+import { mostrarIngresosDiarios, actualizarComisiones } from "./admin-diario.js?v=2";
 
 import {
   collection,
@@ -1196,6 +1196,9 @@ async function mostrarBorrados() {
     }
 
     pintarBorradosDelDia();
+
+    // La calculadora de comisiones descuenta las borradas de anuncios
+    actualizarComisiones();
 
   } catch (error) {
 
@@ -2646,7 +2649,13 @@ await actualizarConsulta(
     mostrarIngresosDiarios(participantes, {
       precioDeCompra,
       mostrarResumen,
-      nombreClave: nombreOrigenCompra
+      nombreClave: nombreOrigenCompra,
+      esDeAnuncio,
+      borrados: () => borradosCargados,
+      diaDeBorrado: (datos) =>
+        datos.fechaCompra?.toDate ? diaArgentina(datos.fechaCompra.toDate()) : "",
+      origenDeBorrado: (datos) =>
+        datos.origen || (/CLAVE MENOS/i.test(datos.pack || "") ? "📣 Anuncio" : "")
     });
 
 

@@ -3,6 +3,16 @@
 // ======================================================
 // Gráfico de barras por día y detalle del día elegido.
 // La plata cuenta el día en que se hizo la compra, en hora de Argentina.
+// Incluye la calculadora de comisiones (botón "💸 Comisiones").
+
+import { db } from "./firebase.js";
+
+import {
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 const ZONA = "America/Argentina/Buenos_Aires";
 
@@ -344,6 +354,171 @@ function pintar() {
   dibujarBarras(dias, totales);
   mostrarPeriodo(dias, totales);
   mostrarDetalle(totales);
+  pintarComisiones();
+
+}
+
+
+// ======================================================
+// COMISIONES
+// ======================================================
+// Recaudado por anuncios (compras aprobadas que vinieron de un
+// anuncio de Facebook o Instagram) menos lo que se gastó en
+// anuncios, y eso se reparte 70/30. Lo orgánico no entra.
+// Las compras de anuncios borradas ya no suman (no están en la
+// lista); se muestra cuánto fue, por el día en que se compraron.
+// El gasto se guarda en Firestore (gastos_anuncios/{día} o
+// gastos_anuncios/todo), así queda igual en la compu y en el celu.
+
+const PARTE_MAYOR = 0.7;
+
+let modoComisiones = "dia";
+
+// Gasto cargado por clave ("2026-11-04" o "todo")
+const gastos = new Map();
+
+const claveGasto = () => (modoComisiones === "todo" ? "todo" : diaElegido);
+
+const soloNumeros = (texto) => Number(String(texto || "").replace(/\D/g, "")) || 0;
+
+function recaudadoPorAnuncios() {
+  return compras
+    .filter(({ datos, dia }) =>
+      datos.estado === "Pagado" &&
+      ayudas.esDeAnuncio(datos) &&
+      (modoComisiones === "todo" || dia === diaElegido)
+    )
+    .reduce((suma, { datos }) => suma + ayudas.precioDeCompra(datos), 0);
+}
+
+// Borradas que venían de anuncios, en el día o en todo el sorteo
+function borradasDeAnuncios() {
+  const lista = (ayudas.borrados?.() || []).filter(({ datos }) =>
+    ayudas.origenDeBorrado(datos) === "📣 Anuncio" &&
+    (modoComisiones === "todo" || ayudas.diaDeBorrado(datos) === diaElegido)
+  );
+  return {
+    compras: lista.length,
+    monto: lista.reduce((suma, { datos }) => suma + (Number(datos.monto) || 0), 0)
+  };
+}
+
+export function actualizarComisiones() {
+  if (ayudas) pintarComisiones();
+}
+
+function pintarComisiones() {
+
+  const caja = document.getElementById("comisiones");
+
+  if (!caja || caja.hidden) return;
+
+  document.querySelectorAll("#modoComisiones button").forEach((boton) => {
+    boton.setAttribute("aria-pressed", String(boton.dataset.modo === modoComisiones));
+  });
+
+  document.getElementById("comisionesPeriodo").textContent =
+    modoComisiones === "todo"
+      ? "Todo el sorteo, hasta ahora"
+      : `${diaLargo(diaElegido)}${diaElegido === hoy() ? " (hasta ahora)" : ""}`;
+
+  const campo = document.getElementById("gastoAnuncios");
+  const clave = claveGasto();
+
+  // Al cambiar de día o de modo, trae el gasto guardado
+  if (campo.dataset.clave !== clave) {
+    campo.dataset.clave = clave;
+    campo.value = gastos.has(clave) ? formatear(gastos.get(clave)) : "";
+    if (!gastos.has(clave)) cargarGasto(clave);
+  }
+
+  const anuncios = recaudadoPorAnuncios();
+  const gasto = soloNumeros(campo.value);
+  const neto = anuncios - gasto;
+
+  document.getElementById("comisionesAnuncios").textContent = pesos(anuncios);
+
+  const borradas = borradasDeAnuncios();
+  document.getElementById("comisionesBorradas").textContent =
+    borradas.compras
+      ? `Ya descontado: ${pesos(borradas.monto)} de ${plural(borradas.compras, "compra")} de anuncios borrada${borradas.compras === 1 ? "" : "s"}`
+      : "Sin compras de anuncios borradas";
+  document.getElementById("comisionesNeto").textContent =
+    neto < 0 ? `-${pesos(-neto)}` : pesos(neto);
+  document.getElementById("comisionesNeto").classList.toggle("negativo", neto < 0);
+
+  const mayor = Math.round(neto * PARTE_MAYOR);
+  const menor = neto - mayor;
+  const conSigno = (monto) => (monto < 0 ? `-${pesos(-monto)}` : pesos(monto));
+
+  document.getElementById("comisiones70").textContent = conSigno(mayor);
+  document.getElementById("comisiones30").textContent = conSigno(menor);
+
+}
+
+const formatear = (monto) => (monto ? monto.toLocaleString("es-AR") : "");
+
+async function cargarGasto(clave) {
+  try {
+    const guardado = await getDoc(doc(db, "gastos_anuncios", clave));
+    gastos.set(clave, Number(guardado.get("monto")) || 0);
+    const campo = document.getElementById("gastoAnuncios");
+    // Si mientras tanto no cambió de día ni escribió nada
+    if (campo.dataset.clave === clave && !campo.value) {
+      campo.value = formatear(gastos.get(clave));
+      pintarComisiones();
+    }
+  } catch (error) {
+    console.warn("No se pudo leer el gasto de anuncios:", error);
+  }
+}
+
+// Una espera por día (o "todo"): cambiar de día no cancela lo anterior
+const esperasGuardar = new Map();
+
+function guardarGasto(clave, monto) {
+  clearTimeout(esperasGuardar.get(clave));
+  const nota = document.getElementById("comisionesNota");
+  esperasGuardar.set(clave, setTimeout(async () => {
+    try {
+      await setDoc(doc(db, "gastos_anuncios", clave), { monto, actualizado: serverTimestamp() });
+      nota.textContent = "✅ Gasto guardado.";
+    } catch (error) {
+      console.warn("No se pudo guardar el gasto de anuncios:", error);
+      nota.textContent = "⚠️ No se pudo guardar el gasto. La cuenta igual está bien.";
+    }
+  }, 700));
+}
+
+function prepararComisiones() {
+
+  const boton = document.getElementById("botonComisiones");
+  const caja = document.getElementById("comisiones");
+  const campo = document.getElementById("gastoAnuncios");
+
+  if (!boton || !caja) return;
+
+  boton.addEventListener("click", () => {
+    caja.hidden = !caja.hidden;
+    boton.setAttribute("aria-expanded", String(!caja.hidden));
+    pintarComisiones();
+    if (!caja.hidden) caja.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+
+  document.querySelectorAll("#modoComisiones button").forEach((opcion) => {
+    opcion.addEventListener("click", () => {
+      modoComisiones = opcion.dataset.modo;
+      pintarComisiones();
+    });
+  });
+
+  campo.addEventListener("input", () => {
+    const monto = soloNumeros(campo.value);
+    campo.value = formatear(monto);
+    gastos.set(claveGasto(), monto);
+    guardarGasto(claveGasto(), monto);
+    pintarComisiones();
+  });
 
 }
 
@@ -390,6 +565,7 @@ export function mostrarIngresosDiarios(participantes, funciones) {
 
   if (!panelListo) {
     prepararControles();
+    prepararComisiones();
     panelListo = true;
   }
 
