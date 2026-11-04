@@ -59,6 +59,8 @@
 
   .boton:disabled { opacity: .6; }
 
+  #formEntrar { flex-direction: column; }
+
   .sesion {
     display: flex;
     align-items: center;
@@ -144,7 +146,10 @@
 
   <!-- ===== ENTRAR ===== -->
   <section class="caja" id="entrar">
-    <button type="button" class="boton" id="botonEntrar">Entrar con Google</button>
+    <form id="formEntrar">
+      <input id="clave" type="password" placeholder="Contraseña" autocomplete="current-password" required>
+      <button type="submit" class="boton">Entrar</button>
+    </form>
     <p class="aviso" id="avisoEntrar" hidden></p>
   </section>
 
@@ -152,7 +157,7 @@
   <section id="buscar" hidden>
 
     <div class="sesion">
-      <span id="cuenta"></span>
+      <span>Sesión abierta en este dispositivo</span>
       <button type="button" id="botonSalir">Salir</button>
     </div>
 
@@ -171,20 +176,12 @@
 </main>
 
 <script type="module">
-  import { auth } from "./firebase.js";
-
-  import {
-    GoogleAuthProvider,
-    signInWithPopup,
-    signOut,
-    onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
 
   // =====================================================
   // SESIÓN
   // =====================================================
-  // Cualquiera puede entrar con Google, pero el servidor solo
-  // responde a las cuentas de la lista AYUDANTES (functions/index.js).
+  // La contraseña la controla el servidor (secreto CLAVE_BUSCADOR).
+  // Queda guardada en este dispositivo hasta tocar "Salir".
 
   const entrar = document.getElementById("entrar");
   const buscar = document.getElementById("buscar");
@@ -192,40 +189,87 @@
   const avisoBuscar = document.getElementById("avisoBuscar");
   const resultados = document.getElementById("resultados");
 
+  const GUARDADA = "buscadorClave";
+
+  let clave = "";
+  try { clave = localStorage.getItem(GUARDADA) || ""; } catch {}
+
   function avisar(lugar, mensaje, esError = false) {
     lugar.hidden = !mensaje;
     lugar.textContent = mensaje;
     lugar.classList.toggle("error", esError);
   }
 
-  document.getElementById("botonEntrar").addEventListener("click", async () => {
-    const proveedor = new GoogleAuthProvider();
-    proveedor.setCustomParameters({ prompt: "select_account" });
-    try {
-      await signInWithPopup(auth, proveedor);
-    } catch (error) {
-      avisar(avisoEntrar, "No se pudo entrar. Probá de nuevo.", true);
-    }
-  });
-
-  document.getElementById("botonSalir").addEventListener("click", () => signOut(auth));
-
-  onAuthStateChanged(auth, (usuario) => {
-    entrar.hidden = Boolean(usuario);
-    buscar.hidden = !usuario;
-    document.getElementById("cuenta").textContent = usuario ? usuario.email : "";
+  function mostrar() {
+    entrar.hidden = Boolean(clave);
+    buscar.hidden = !clave;
     resultados.innerHTML = "";
     avisar(avisoBuscar, "");
+  }
+
+  function cerrarSesion(mensaje = "") {
+    clave = "";
+    try { localStorage.removeItem(GUARDADA); } catch {}
+    mostrar();
+    avisar(avisoEntrar, mensaje, Boolean(mensaje));
+  }
+
+  async function pedir(cuerpo) {
+    const respuesta = await fetch("/api/buscar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cuerpo)
+    });
+    const datos = await respuesta.json().catch(() => ({}));
+    return { ok: respuesta.ok, datos };
+  }
+
+  document.getElementById("formEntrar").addEventListener("submit", async (evento) => {
+
+    evento.preventDefault();
+
+    const campo = document.getElementById("clave");
+    const boton = evento.submitter;
+
+    if (boton) boton.disabled = true;
+    avisar(avisoEntrar, "Entrando...");
+
+    try {
+
+      const { ok, datos } = await pedir({ clave: campo.value, entrar: true });
+
+      if (!ok) {
+        avisar(avisoEntrar, MENSAJES[datos.error] || "No se pudo entrar. Probá de nuevo.", true);
+        return;
+      }
+
+      clave = campo.value;
+      try { localStorage.setItem(GUARDADA, clave); } catch {}
+      campo.value = "";
+      avisar(avisoEntrar, "");
+      mostrar();
+
+    } catch {
+
+      avisar(avisoEntrar, "No se pudo entrar. Revisá la conexión.", true);
+
+    } finally {
+
+      if (boton) boton.disabled = false;
+
+    }
+
   });
 
+  document.getElementById("botonSalir").addEventListener("click", () => cerrarSesion());
 
   // =====================================================
   // BUSCAR
   // =====================================================
 
   const MENSAJES = {
-    SIN_PERMISO: "Esta cuenta no tiene permiso para buscar.",
-    SESION: "Se cerró la sesión. Salí y volvé a entrar.",
+    CLAVE: "Contraseña incorrecta.",
+    BLOQUEADO: "Demasiados intentos. Esperá 15 minutos y probá de nuevo.",
     CORTO: "Escribí un DNI completo o al menos 3 letras del nombre."
   };
 
@@ -303,20 +347,15 @@
 
     try {
 
-      const token = await auth.currentUser.getIdToken();
+      const { ok, datos } = await pedir({ clave, texto });
 
-      const respuesta = await fetch("/api/buscar", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ texto })
-      });
+      // Si cambiaron la contraseña, vuelve a pedirla
+      if (datos.error === "CLAVE" || datos.error === "BLOQUEADO") {
+        cerrarSesion(MENSAJES[datos.error]);
+        return;
+      }
 
-      const datos = await respuesta.json().catch(() => ({}));
-
-      if (!respuesta.ok) {
+      if (!ok) {
         avisar(avisoBuscar, MENSAJES[datos.error] || "No se pudo buscar. Probá de nuevo.", true);
         return;
       }
@@ -346,6 +385,8 @@
     }
 
   });
+
+  mostrar();
 </script>
 
 </body>

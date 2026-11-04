@@ -19,7 +19,6 @@ const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
-const { getAuth } = require("firebase-admin/auth");
 const { getStorage, getDownloadURL } = require("firebase-admin/storage");
 const crypto = require("node:crypto");
 
@@ -29,6 +28,7 @@ const CIERRE_COMPRAS = 1794607200000;
 initializeApp();
 
 const META_CAPI_TOKEN = defineSecret("META_CAPI_TOKEN");
+const CLAVE_BUSCADOR = defineSecret("CLAVE_BUSCADOR");
 
 // Píxel de ojedasorteos.com.ar (el mismo de index.html)
 const PIXEL_ID = "1685745569217221";
@@ -308,17 +308,26 @@ exports.ruleta = onRequest(
 // ======================================================
 // BUSCADOR DE COMPROBANTES (AYUDANTES)
 // ======================================================
-// Para quien ayuda a controlar pagos sin ser admin: entra con su
-// cuenta de Google en buscador.html y solo puede buscar por DNI o
-// nombre. La búsqueda se hace acá, así nunca descarga la lista entera
-// ni ve montos, teléfonos o totales.
-// Para dar o sacar acceso, cambiar esta lista y volver a publicar
-// (firebase deploy --only functions:buscarComprobantes).
+// Para quien ayuda a controlar pagos sin ser admin: entra con una
+// contraseña en buscador.html y solo puede buscar por DNI o nombre.
+// La búsqueda se hace acá, así nunca descarga la lista entera ni ve
+// montos, teléfonos o totales.
+//
+// Contraseña: secreto de Firebase CLAVE_BUSCADOR (nunca en el código).
+// Para ponerla o cambiarla (y sacarle el acceso a quien la tenía):
+//   firebase functions:secrets:set CLAVE_BUSCADOR
+//   firebase deploy --only functions:buscarComprobantes
 
-const AYUDANTES = [
-  "ferfer677@gmail.com",
-  "tazcan66@gmail.com"
-];
+// Después de 8 contraseñas mal desde una misma conexión, 15 minutos sin poder probar
+const INTENTOS_MAXIMOS = 8;
+const BLOQUEO_MS = 15 * 60 * 1000;
+const intentosFallidos = new Map();
+
+function claveCorrecta(clave) {
+  const esperada = crypto.createHash("sha256").update(CLAVE_BUSCADOR.value().trim()).digest();
+  const recibida = crypto.createHash("sha256").update(String(clave || "")).digest();
+  return crypto.timingSafeEqual(esperada, recibida);
+}
 
 const MAXIMO_RESULTADOS = 30;
 
@@ -357,7 +366,8 @@ exports.buscarComprobantes = onRequest(
   {
     region: "southamerica-east1",
     invoker: "public",
-    maxInstances: 3
+    maxInstances: 3,
+    secrets: [CLAVE_BUSCADOR]
   },
   async (pedido, respuesta) => {
 
@@ -368,23 +378,30 @@ exports.buscarComprobantes = onRequest(
       return;
     }
 
-    // Solo cuentas de Google de la lista
-    let usuario;
+    // Contraseña, con límite de intentos por conexión
+    const ip =
+      String(pedido.get("x-forwarded-for") || "").split(",")[0].trim() || pedido.ip || "";
 
-    try {
-      const token = String(pedido.get("Authorization") || "").replace(/^Bearer /, "");
-      usuario = await getAuth().verifyIdToken(token);
-    } catch {
-      respuesta.status(401).json({ error: "SESION" });
+    const fallos = intentosFallidos.get(ip);
+
+    if (fallos && fallos.cantidad >= INTENTOS_MAXIMOS && Date.now() < fallos.hasta) {
+      respuesta.status(429).json({ error: "BLOQUEADO" });
       return;
     }
 
-    if (
-      !AYUDANTES.includes(usuario.email) ||
-      !usuario.email_verified ||
-      usuario.firebase?.sign_in_provider !== "google.com"
-    ) {
-      respuesta.status(403).json({ error: "SIN_PERMISO" });
+    if (!claveCorrecta(pedido.body?.clave)) {
+      const cantidad = fallos && Date.now() < fallos.hasta ? fallos.cantidad + 1 : 1;
+      intentosFallidos.set(ip, { cantidad, hasta: Date.now() + BLOQUEO_MS });
+      logger.warn("Contraseña incorrecta en el buscador", { cantidad });
+      respuesta.status(403).json({ error: "CLAVE" });
+      return;
+    }
+
+    intentosFallidos.delete(ip);
+
+    // Solo para entrar: confirma la contraseña sin buscar nada
+    if (pedido.body?.entrar === true) {
+      respuesta.json({ ok: true });
       return;
     }
 
@@ -438,7 +455,7 @@ exports.buscarComprobantes = onRequest(
           .map(compraParaAyudante)
       );
 
-      logger.info("Búsqueda de ayudante", { email: usuario.email, cantidad: compras.length });
+      logger.info("Búsqueda en el buscador", { cantidad: compras.length });
 
       respuesta.json({ compras, hayMas: encontrados.length > MAXIMO_RESULTADOS });
 
