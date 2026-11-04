@@ -35,6 +35,7 @@ Helpers: `firestore.js` has `guardarParticipante()`, which defines the participa
 Pricing and pack logic are hardcoded in several places that are **not** in sync:
 - `script.js`: `preciosNormales` / `preciosConDescuento` (keyword `PALABRA_DESCUENTO = "MITAD"`), plus the "ENTERO" secret-offer packs (20/50 chances) defined in `index.html` and handled in `script.js`.
 - `admin.js`: `cantidadPorPack()` (parses chance counts out of the `pack` string) and `precioPorChances()`. These use different prices from `script.js`.
+- `functions/index.js`: `PACKS_COMUNES` / `PACKS_3X1`, the catalog the sub admin (`buscador.html`) uses to load purchases by hand. Ruleta promos come from `PREMIOS_RULETA` automatically.
 
 When you change packs or prices, update every location. `cantidadPorPack` matches substrings like `"10 CHANCE"`, so new pack labels must keep that format.
 

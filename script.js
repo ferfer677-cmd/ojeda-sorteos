@@ -409,6 +409,8 @@ let palabraClaveActiva = "";
 
 let descuentoPalabraClaveActivo = false;
 
+// Si cambian estos precios, cambiarlos también en functions/index.js
+// (PACKS_COMUNES, packs que carga a mano el sub admin)
 const preciosNormales = {
   1: 5000,
   3: 10000,

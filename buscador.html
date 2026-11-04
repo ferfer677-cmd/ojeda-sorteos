@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>Buscador de comprobantes</title>
+<title>Sub admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
@@ -133,6 +133,52 @@
 
   .estado.pagado { color: var(--verde); background: #e9f8f0; }
 
+  .etiqueta-mano {
+    display: inline-block;
+    margin: 6px 0 0 6px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #4338ca;
+    background: #eef2ff;
+    border-radius: 999px;
+  }
+
+  .aprobar {
+    display: block;
+    margin-top: 8px;
+    padding: 9px 12px;
+    font-size: 13px;
+    color: #fff;
+    background: var(--verde);
+  }
+
+  .aprobar:disabled { opacity: .6; }
+
+  /* Pestañas Buscar / Cargar */
+  .pestanas { display: flex; gap: 8px; margin-bottom: 12px; }
+
+  .pestanas button {
+    flex: 1;
+    padding: 11px;
+    color: var(--texto);
+    background: var(--borde);
+  }
+
+  .pestanas button[aria-selected="true"] { color: #fff; background: var(--oscuro); }
+
+  /* Cargar una compra a mano */
+  #formCargar { display: grid; gap: 10px; }
+
+  #formCargar label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; }
+
+  #formCargar select,
+  #formCargar input { width: 100%; padding: 12px; font: inherit; font-weight: 400; border: 1px solid var(--borde); border-radius: 12px; background: #fff; }
+
+  .dos-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .nota { margin: 0; font-size: 12px; color: var(--suave); }
+
   [hidden] { display: none !important; }
 </style>
 </head>
@@ -141,8 +187,8 @@
 
 <main class="contenedor">
 
-  <h1>🔎 Buscador de comprobantes</h1>
-  <p class="bajada">Buscá una compra por DNI o por nombre.</p>
+  <h1>🔎 Sub admin</h1>
+  <p class="bajada">Buscá compras por DNI o nombre, y cargá la de quien no pudo hacerlo.</p>
 
   <!-- ===== ENTRAR ===== -->
   <section class="caja" id="entrar">
@@ -161,21 +207,73 @@
       <button type="button" id="botonSalir">Salir</button>
     </div>
 
-    <div class="caja">
-      <form id="formulario">
-        <input id="texto" type="search" placeholder="DNI o nombre" autocomplete="off" required>
-        <button type="submit">Buscar</button>
-      </form>
+    <div class="pestanas" role="tablist">
+      <button type="button" role="tab" aria-selected="true" data-pestana="panelBuscar">🔎 Buscar</button>
+      <button type="button" role="tab" aria-selected="false" data-pestana="panelCargar">➕ Cargar compra</button>
     </div>
 
-    <p class="aviso" id="avisoBuscar" hidden></p>
-    <div id="resultados"></div>
+    <!-- Buscar -->
+    <div id="panelBuscar">
+
+      <div class="caja">
+        <form id="formulario">
+          <input id="texto" type="search" placeholder="DNI o nombre" autocomplete="off" required>
+          <button type="submit">Buscar</button>
+        </form>
+      </div>
+
+      <p class="aviso" id="avisoBuscar" hidden></p>
+      <div id="resultados"></div>
+
+    </div>
+
+    <!-- Cargar una compra a mano -->
+    <div id="panelCargar" hidden>
+
+      <div class="caja">
+        <form id="formCargar">
+
+          <label>
+            Chances
+            <select id="cargarPack" required>
+              <option value="">Cargando packs...</option>
+            </select>
+          </label>
+
+          <div class="dos-columnas">
+            <label>Nombre <input id="cargarNombre" maxlength="80" required></label>
+            <label>Apellido <input id="cargarApellido" maxlength="80" required></label>
+          </div>
+
+          <div class="dos-columnas">
+            <label>DNI <input id="cargarDni" inputmode="numeric" maxlength="12" required></label>
+            <label>Teléfono <input id="cargarTelefono" type="tel" maxlength="40" required></label>
+          </div>
+
+          <label>Instagram (opcional) <input id="cargarInstagram" maxlength="80" placeholder="@usuario"></label>
+
+          <label>
+            Comprobante
+            <input id="cargarArchivo" type="file" accept="image/*,application/pdf" required>
+          </label>
+
+          <button type="submit" class="boton">Cargar compra</button>
+
+          <p class="nota">Queda pendiente. Después la aprobás desde el resultado que aparece abajo.</p>
+
+        </form>
+
+        <p class="aviso" id="avisoCargar" hidden></p>
+      </div>
+
+    </div>
 
   </section>
 
 </main>
 
 <script type="module">
+  import { subirComprobante } from "./storage.js";
 
   // =====================================================
   // SESIÓN
@@ -270,8 +368,22 @@
   const MENSAJES = {
     CLAVE: "Contraseña incorrecta.",
     BLOQUEADO: "Demasiados intentos. Esperá 15 minutos y probá de nuevo.",
-    CORTO: "Escribí un DNI completo o al menos 3 letras del nombre."
+    CORTO: "Escribí un DNI completo o al menos 3 letras del nombre.",
+    CERRADO: "Las compras ya están cerradas.",
+    DATOS: "Revisá los datos: falta alguno o el DNI no es válido.",
+    SIN_COMPROBANTE: "No llegó el comprobante. Probá de nuevo.",
+    NO_PERMITIDA: "Solo podés aprobar las compras que cargaste vos.",
+    YA_APROBADA: "Esa compra ya estaba aprobada."
   };
+
+  // Contraseña cambiada o bloqueo: vuelve a pedirla
+  function sesionVencida(datos) {
+    if (datos.error === "CLAVE" || datos.error === "BLOQUEADO") {
+      cerrarSesion(MENSAJES[datos.error]);
+      return true;
+    }
+    return false;
+  }
 
   const fechaArgentina = (ms) =>
     ms
@@ -325,35 +437,83 @@
     const pagado = compra.estado === "Pagado";
     estado.className = "estado" + (pagado ? " pagado" : "");
     estado.style.fontStyle = "normal";
-    estado.textContent = pagado ? "Aprobado" : "Pendiente";
+    estado.textContent = pagado
+      ? `Aprobado${compra.cantidadNumeros ? ` · ${compra.cantidadNumeros} números` : ""}`
+      : "Pendiente";
 
     info.append(nombre, dni, pack, estado);
+
+    if (compra.cargadaAMano) {
+      const etiqueta = document.createElement("i");
+      etiqueta.className = "etiqueta-mano";
+      etiqueta.style.fontStyle = "normal";
+      etiqueta.textContent = "Cargada por vos";
+      info.appendChild(etiqueta);
+    }
+
+    // Solo las que cargó el sub admin y siguen pendientes
+    if (compra.cargadaAMano && !pagado) {
+
+      const aprobar = document.createElement("button");
+      aprobar.type = "button";
+      aprobar.className = "aprobar";
+      aprobar.textContent = "✅ Aprobar pago";
+
+      aprobar.addEventListener("click", async () => {
+
+        if (!confirm(`¿Aprobar la compra de ${compra.nombre}?\n\n${compra.pack}\n\nSe le asignan los números.`)) {
+          return;
+        }
+
+        aprobar.disabled = true;
+        aprobar.textContent = "⏳ Generando números...";
+
+        try {
+
+          const { ok, datos } = await pedir({ clave, accion: "aprobar", id: compra.id });
+
+          if (sesionVencida(datos)) return;
+
+          if (!ok) {
+            alert("❌ " + (MENSAJES[datos.error] || "No se pudo aprobar. Probá de nuevo."));
+          } else {
+            alert(`✅ Pago aprobado.\n\nSe asignaron ${datos.cantidad} números.`);
+          }
+
+          await buscarTexto(compra.dni);
+
+        } catch {
+
+          alert("❌ No se pudo aprobar. Revisá la conexión.");
+          aprobar.disabled = false;
+          aprobar.textContent = "✅ Aprobar pago";
+
+        }
+
+      });
+
+      info.appendChild(aprobar);
+
+    }
+
     fila.appendChild(info);
 
     return fila;
 
   }
 
-  document.getElementById("formulario").addEventListener("submit", async (evento) => {
+  async function buscarTexto(texto) {
 
-    evento.preventDefault();
-
-    const texto = document.getElementById("texto").value.trim();
-    const boton = evento.submitter;
+    document.getElementById("texto").value = texto;
 
     resultados.innerHTML = "";
     avisar(avisoBuscar, "Buscando...");
-    if (boton) boton.disabled = true;
 
     try {
 
       const { ok, datos } = await pedir({ clave, texto });
 
-      // Si cambiaron la contraseña, vuelve a pedirla
-      if (datos.error === "CLAVE" || datos.error === "BLOQUEADO") {
-        cerrarSesion(MENSAJES[datos.error]);
-        return;
-      }
+      if (sesionVencida(datos)) return;
 
       if (!ok) {
         avisar(avisoBuscar, MENSAJES[datos.error] || "No se pudo buscar. Probá de nuevo.", true);
@@ -377,6 +537,152 @@
     } catch (error) {
 
       avisar(avisoBuscar, "No se pudo buscar. Revisá la conexión.", true);
+
+    }
+
+  }
+
+  document.getElementById("formulario").addEventListener("submit", async (evento) => {
+
+    evento.preventDefault();
+
+    const boton = evento.submitter;
+
+    if (boton) boton.disabled = true;
+    await buscarTexto(document.getElementById("texto").value.trim());
+    if (boton) boton.disabled = false;
+
+  });
+
+
+  // =====================================================
+  // PESTAÑAS
+  // =====================================================
+
+  const pestanas = document.querySelectorAll("[data-pestana]");
+
+  function abrirPestana(id) {
+    pestanas.forEach((boton) => {
+      const activa = boton.dataset.pestana === id;
+      boton.setAttribute("aria-selected", String(activa));
+      document.getElementById(boton.dataset.pestana).hidden = !activa;
+    });
+    if (id === "panelCargar") cargarPacks();
+  }
+
+  pestanas.forEach((boton) =>
+    boton.addEventListener("click", () => abrirPestana(boton.dataset.pestana))
+  );
+
+
+  // =====================================================
+  // CARGAR UNA COMPRA A MANO
+  // =====================================================
+  // Los packs (comunes, 50% OFF y ruleta) los manda el servidor,
+  // con sus precios: si cambian allá, cambian acá solos.
+
+  const selectorPack = document.getElementById("cargarPack");
+  const avisoCargar = document.getElementById("avisoCargar");
+  let packsListos = false;
+
+  async function cargarPacks() {
+
+    if (packsListos) return;
+
+    try {
+
+      const { ok, datos } = await pedir({ clave, accion: "packs" });
+
+      if (sesionVencida(datos) || !ok) return;
+
+      selectorPack.innerHTML = '<option value="">Elegí las chances</option>';
+
+      const grupos = new Map();
+
+      datos.packs.forEach(({ id, grupo, texto }) => {
+        if (!grupos.has(grupo)) {
+          const nuevo = document.createElement("optgroup");
+          nuevo.label = grupo;
+          grupos.set(grupo, nuevo);
+          selectorPack.appendChild(nuevo);
+        }
+        const opcion = document.createElement("option");
+        opcion.value = id;
+        opcion.textContent = texto;
+        grupos.get(grupo).appendChild(opcion);
+      });
+
+      packsListos = true;
+
+      if (!datos.abierto) {
+        avisar(avisoCargar, MENSAJES.CERRADO, true);
+      }
+
+    } catch {
+
+      selectorPack.innerHTML = '<option value="">No se pudieron cargar los packs</option>';
+
+    }
+
+  }
+
+  document.getElementById("formCargar").addEventListener("submit", async (evento) => {
+
+    evento.preventDefault();
+
+    const formulario = evento.currentTarget;
+    const boton = evento.submitter;
+    const archivo = document.getElementById("cargarArchivo").files[0];
+    const valor = (id) => document.getElementById(id).value.trim();
+
+    if (!archivo) {
+      avisar(avisoCargar, "Elegí la foto del comprobante.", true);
+      return;
+    }
+
+    if (boton) boton.disabled = true;
+
+    try {
+
+      avisar(avisoCargar, "Subiendo comprobante... 0%");
+
+      const subido = await subirComprobante(archivo, (porcentaje) => {
+        avisar(avisoCargar, `Subiendo comprobante... ${Math.round(porcentaje)}%`);
+      });
+
+      avisar(avisoCargar, "Guardando la compra...");
+
+      const dni = valor("cargarDni");
+
+      const { ok, datos } = await pedir({
+        clave,
+        accion: "cargar",
+        packId: selectorPack.value,
+        nombre: valor("cargarNombre"),
+        apellido: valor("cargarApellido"),
+        dni,
+        telefono: valor("cargarTelefono"),
+        instagram: valor("cargarInstagram"),
+        comprobantePath: subido.path
+      });
+
+      if (sesionVencida(datos)) return;
+
+      if (!ok) {
+        avisar(avisoCargar, MENSAJES[datos.error] || "No se pudo cargar. Probá de nuevo.", true);
+        return;
+      }
+
+      formulario.reset();
+      avisar(avisoCargar, "");
+
+      // Muestra la compra recién cargada, lista para aprobar
+      abrirPestana("panelBuscar");
+      await buscarTexto(dni);
+
+    } catch (error) {
+
+      avisar(avisoCargar, "No se pudo subir el comprobante. Revisá la conexión y probá de nuevo.", true);
 
     } finally {
 

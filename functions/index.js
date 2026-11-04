@@ -308,10 +308,10 @@ exports.ruleta = onRequest(
 // ======================================================
 // BUSCADOR DE COMPROBANTES (AYUDANTES)
 // ======================================================
-// Para quien ayuda a controlar pagos sin ser admin: entra con una
-// contraseña en buscador.html y solo puede buscar por DNI o nombre.
-// La búsqueda se hace acá, así nunca descarga la lista entera ni ve
-// montos, teléfonos o totales.
+// Sub admin: entra con una contraseña en buscador.html. Puede buscar
+// por DNI o nombre, cargar a mano la compra de quien no pudo y aprobar
+// solo las que cargó él. Todo se hace acá, así nunca descarga la lista
+// entera ni ve totales.
 //
 // Contraseña: secreto de Firebase CLAVE_BUSCADOR (nunca en el código).
 // Para ponerla o cambiarla (y sacarle el acceso a quien la tenía):
@@ -334,8 +334,99 @@ const MAXIMO_RESULTADOS = 30;
 const sinAcentos = (texto) =>
   String(texto || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
+const pesos = (monto) => `$${Number(monto).toLocaleString("es-AR")}`;
+
 // La lista para buscar por nombre se guarda 2 minutos por instancia
 let listaNombres = { hasta: 0, docs: [] };
+
+
+// ------------------------------------------------------
+// PACKS PARA CARGAR A MANO
+// ------------------------------------------------------
+// Los mismos de la página. Si cambian los packs o los precios de
+// script.js (preciosNormales / preciosConDescuento) o de ruleta.js
+// (PACKS_3X1), cambiarlos también acá. Los de la ruleta salen solos
+// de PREMIOS_RULETA.
+
+const PACKS_COMUNES = [
+  { chances: 1, nombre: "UNA PARA PROBAR", precio: 5000, mitad: 2500 },
+  { chances: 3, nombre: "PROMO INICIAL", precio: 10000, mitad: 5000 },
+  { chances: 10, nombre: "POPULAR", precio: 18000, mitad: 9000 },
+  { chances: 30, nombre: "🚀 PACK PRO", precio: 38000, mitad: 19000 },
+  { chances: 50, nombre: "🔥 PACK GRANDE", precio: 50000, mitad: 25000 },
+  { chances: 100, nombre: "👑 PACK MÁXIMO", precio: 75000, mitad: 37500 }
+];
+
+const PACKS_3X1 = [
+  { paga: 1, recibe: 3, precio: 5000 },
+  { paga: 3, recibe: 9, precio: 10000 },
+  { paga: 10, recibe: 30, precio: 18000 }
+];
+
+// Cada pack: id, grupo, texto para elegir y lo que se guarda en la compra.
+// El texto de "pack" lleva "N CHANCES" y "$precio" (el admin los lee de ahí).
+function catalogoDePacks() {
+
+  const packs = [];
+
+  PACKS_COMUNES.forEach(({ chances, nombre, precio }) => {
+    packs.push({
+      id: `comun${chances}`,
+      grupo: "Comunes",
+      chances,
+      precio,
+      codigoPromo: "",
+      pack: `${nombre} • ${chances} CHANCE${chances === 1 ? "" : "S"} • ${pesos(precio)}`
+    });
+  });
+
+  PACKS_COMUNES.forEach(({ chances, nombre, mitad }) => {
+    packs.push({
+      id: `mitad${chances}`,
+      grupo: "Promo 50% OFF",
+      chances,
+      precio: mitad,
+      codigoPromo: "MANUAL50",
+      pack: `50% OFF • ${nombre} • ${chances} CHANCE${chances === 1 ? "" : "S"} • ${pesos(mitad)}`
+    });
+  });
+
+  PREMIOS_RULETA
+    .filter((premio) => premio.chances > 0 && premio.precio > 0)
+    .forEach(({ id, chances, precio, codigo }) => {
+      packs.push({
+        id: `ruleta_${id}`,
+        grupo: "Ruleta",
+        chances,
+        precio,
+        codigoPromo: codigo,
+        pack: `RULETA • ${chances} CHANCES • ${pesos(precio)}`
+      });
+    });
+
+  PACKS_3X1.forEach(({ paga, recibe, precio }) => {
+    packs.push({
+      id: `ruleta_3x1_${paga}`,
+      grupo: "Ruleta",
+      chances: recibe,
+      precio,
+      codigoPromo: "RULETA3X1",
+      pack: `RULETA • ${recibe} CHANCES • ${pesos(precio)}`
+    });
+  });
+
+  return packs.map((pack) => ({
+    ...pack,
+    texto: `${pack.chances} chance${pack.chances === 1 ? "" : "s"} · ${pesos(pack.precio)}` +
+      (pack.id.startsWith("ruleta_3x1") ? " (3x1)" : "")
+  }));
+
+}
+
+
+// ------------------------------------------------------
+// BUSCAR
+// ------------------------------------------------------
 
 async function compraParaAyudante(documento) {
 
@@ -352,15 +443,288 @@ async function compraParaAyudante(documento) {
   }
 
   return {
+    id: documento.id,
     nombre: `${datos.nombre || ""} ${datos.apellido || ""}`.trim(),
     dni: String(datos.dni || ""),
     pack: String(datos.pack || ""),
     estado: datos.estado || "",
     fecha: datos.fecha?.toMillis?.() || 0,
-    comprobante
+    comprobante,
+    // Solo las que cargó el sub admin las puede aprobar él
+    cargadaAMano: datos.cargadoPor === "subadmin",
+    cantidadNumeros: Array.isArray(datos.numeros) ? datos.numeros.length : 0
   };
 
 }
+
+async function buscar(db, textoPedido) {
+
+  const texto = String(textoPedido || "").trim().slice(0, 60);
+  const dni = texto.replace(/[^0-9]/g, "");
+  const esDni = /^[0-9.\s-]+$/.test(texto);
+
+  if (esDni ? dni.length < 6 : sinAcentos(texto).replace(/\s/g, "").length < 3) {
+    return { error: "CORTO" };
+  }
+
+  let encontrados;
+
+  if (esDni) {
+
+    const resultado =
+      await db.collection("participantes").where("dniNormalizado", "==", dni).get();
+
+    encontrados = resultado.docs;
+
+  } else {
+
+    if (Date.now() > listaNombres.hasta) {
+      const resultado = await db.collection("participantes").get();
+      listaNombres = { hasta: Date.now() + 2 * 60 * 1000, docs: resultado.docs };
+    }
+
+    const palabras = sinAcentos(texto).split(/\s+/).filter(Boolean);
+
+    encontrados = listaNombres.docs.filter((documento) => {
+      const datos = documento.data();
+      const nombre = sinAcentos(`${datos.nombre || ""} ${datos.apellido || ""}`);
+      return palabras.every((palabra) => nombre.includes(palabra));
+    });
+
+  }
+
+  // La chance gratis de la ruleta no tiene comprobante
+  encontrados =
+    encontrados.filter((documento) => documento.get("codigoPromo") !== "RULETAGRATIS");
+
+  const compras = await Promise.all(
+    encontrados
+      .sort((a, b) => (b.get("fecha")?.toMillis?.() || 0) - (a.get("fecha")?.toMillis?.() || 0))
+      .slice(0, MAXIMO_RESULTADOS)
+      .map(compraParaAyudante)
+  );
+
+  logger.info("Búsqueda en el buscador", { cantidad: compras.length });
+
+  return { compras, hayMas: encontrados.length > MAXIMO_RESULTADOS };
+
+}
+
+
+// ------------------------------------------------------
+// CARGAR UNA COMPRA A MANO
+// ------------------------------------------------------
+// El comprobante ya lo subió la página a comprobantes/ (como una
+// compra común). Acá se arma la compra con el pack del catálogo:
+// el precio nunca lo decide el navegador.
+
+const textoLimpio = (valor, maximo) => String(valor || "").trim().slice(0, maximo);
+
+async function cargarCompra(db, cuerpo) {
+
+  if (Date.now() >= CIERRE_COMPRAS) {
+    return { error: "CERRADO" };
+  }
+
+  const pack = catalogoDePacks().find((p) => p.id === cuerpo.packId);
+
+  const nombre = textoLimpio(cuerpo.nombre, 80);
+  const apellido = textoLimpio(cuerpo.apellido, 80);
+  const dni = textoLimpio(cuerpo.dni, 20);
+  const dniNormalizado = dni.replace(/\D/g, "");
+  const telefono = textoLimpio(cuerpo.telefono, 40);
+  const instagram = textoLimpio(cuerpo.instagram, 80);
+  const comprobantePath = textoLimpio(cuerpo.comprobantePath, 300);
+
+  if (
+    !pack || !nombre || !apellido || !telefono ||
+    dniNormalizado.length < 6 || dniNormalizado.length > 9 ||
+    !/^comprobantes\/[\w.\-]+$/.test(comprobantePath)
+  ) {
+    return { error: "DATOS" };
+  }
+
+  const archivo = getStorage().bucket().file(comprobantePath);
+
+  const [existe] = await archivo.exists();
+
+  if (!existe) {
+    return { error: "SIN_COMPROBANTE" };
+  }
+
+  const comprobanteURL = await getDownloadURL(archivo);
+
+  const nueva = await db.collection("participantes").add({
+    nombre,
+    apellido,
+    dni,
+    dniNormalizado,
+    telefono,
+    instagram,
+    pack: pack.pack,
+    chancesBase: pack.chances,
+    chancesFinales: pack.chances,
+    codigoPromo: pack.codigoPromo,
+    precioFinal: pack.precio,
+    multiplicadorPromo: 1,
+    comprobanteURL,
+    comprobantePath,
+    referido: "",
+    estado: "Esperando",
+    cargadoPor: "subadmin",
+    fecha: FieldValue.serverTimestamp()
+  });
+
+  listaNombres.hasta = 0;
+
+  logger.info("Compra cargada por el sub admin", { id: nueva.id, pack: pack.id });
+
+  return { ok: true, id: nueva.id };
+
+}
+
+
+// ------------------------------------------------------
+// APROBAR (solo las cargadas por el sub admin)
+// ------------------------------------------------------
+// Hace lo mismo que "APROBAR PAGO" del admin: números únicos de 6
+// cifras, ranking, top 5 público y "Ver mis números".
+
+// "Kevin Porchile" -> "Kevin P." (igual que firestore.js)
+function nombreAbreviado(nombre, apellido) {
+  const primerNombre = String(nombre || "").trim().split(/\s+/)[0] || "";
+  const partesApellido = String(apellido || "").trim().split(/\s+/).filter(Boolean);
+  const inicial = partesApellido.length
+    ? partesApellido[partesApellido.length - 1].charAt(0).toUpperCase() + "."
+    : "";
+  const resultado =
+    `${primerNombre.charAt(0).toUpperCase()}${primerNombre.slice(1).toLowerCase()} ${inicial}`.trim();
+  return resultado || "Participante";
+}
+
+async function actualizarRankingPublico(db) {
+
+  const mejores =
+    await db.collection("ranking").orderBy("chances", "desc").limit(5).get();
+
+  const top = mejores.docs.map((documento) => {
+    const partes = String(documento.get("nombre") || "").trim().split(/\s+/).filter(Boolean);
+    return {
+      nombre: nombreAbreviado(partes[0] || "", partes.slice(1).join(" ")),
+      chances: Number(documento.get("chances")) || 0
+    };
+  });
+
+  await db.collection("publico").doc("ranking").set({
+    top,
+    actualizado: FieldValue.serverTimestamp()
+  });
+
+}
+
+async function actualizarConsulta(db, dni) {
+
+  const compras =
+    await db.collection("participantes").where("dniNormalizado", "==", dni).get();
+
+  const aprobadas = compras.docs
+    .map((documento) => documento.data())
+    .filter((datos) => datos.estado === "Pagado" && Array.isArray(datos.numeros) && datos.numeros.length);
+
+  const consulta = db.collection("consultas").doc(dni);
+
+  if (!aprobadas.length) {
+    await consulta.delete();
+    return;
+  }
+
+  await consulta.set({
+    nombre: nombreAbreviado(aprobadas[0].nombre, aprobadas[0].apellido),
+    compras: aprobadas.map((datos) => ({
+      pack: datos.pack || "",
+      chances: Number(datos.chancesFinales) || datos.numeros.length,
+      numeros: datos.numeros
+    })),
+    actualizado: FieldValue.serverTimestamp()
+  });
+
+}
+
+async function aprobarCompra(db, id) {
+
+  const referencia = db.collection("participantes").doc(String(id || "").slice(0, 60) || "-");
+
+  const todas = await db.collection("participantes").get();
+
+  const compra = todas.docs.find((documento) => documento.id === referencia.id);
+  const datos = compra?.data();
+
+  if (!datos || datos.cargadoPor !== "subadmin") {
+    return { error: "NO_PERMITIDA" };
+  }
+
+  if (datos.estado === "Pagado") {
+    return { error: "YA_APROBADA" };
+  }
+
+  const cantidad = Number(datos.chancesFinales) || 0;
+
+  if (cantidad < 1 || cantidad > 1000) {
+    return { error: "DATOS" };
+  }
+
+  const usados = new Set();
+
+  todas.docs.forEach((documento) => {
+    const numeros = documento.get("numeros");
+    if (Array.isArray(numeros)) numeros.forEach((numero) => usados.add(String(numero)));
+  });
+
+  const numeros = [];
+
+  while (numeros.length < cantidad) {
+    const numero = String(crypto.randomInt(1000000)).padStart(6, "0");
+    if (!usados.has(numero)) {
+      usados.add(numero);
+      numeros.push(numero);
+    }
+  }
+
+  // En una transacción: si el admin la aprobó o borró recién, no se pisa
+  const aprobada = await db.runTransaction(async (tx) => {
+    const actual = await tx.get(referencia);
+    if (!actual.exists || actual.get("estado") === "Pagado") return false;
+    tx.update(referencia, {
+      estado: "Pagado",
+      chancesFinales: cantidad,
+      precioFinal: Number(datos.precioFinal) || 0,
+      numeros
+    });
+    return true;
+  });
+
+  if (!aprobada) {
+    return { error: "YA_APROBADA" };
+  }
+
+  const dni = datos.dniNormalizado || String(datos.dni || "").replace(/\D/g, "");
+
+  await db.collection("ranking").doc(dni).set({
+    dniNormalizado: dni,
+    nombre: `${datos.nombre || ""} ${datos.apellido || ""}`.replace(/\s+/g, " ").trim(),
+    chances: FieldValue.increment(cantidad)
+  }, { merge: true });
+
+  await Promise.all([actualizarRankingPublico(db), actualizarConsulta(db, dni)]);
+
+  listaNombres.hasta = 0;
+
+  logger.info("Compra aprobada por el sub admin", { id: referencia.id, cantidad });
+
+  return { ok: true, cantidad };
+
+}
+
 
 exports.buscarComprobantes = onRequest(
   {
@@ -405,70 +769,37 @@ exports.buscarComprobantes = onRequest(
       return;
     }
 
-    const texto = String(pedido.body?.texto || "").trim().slice(0, 60);
-    const dni = texto.replace(/[^0-9]/g, "");
-    const esDni = /^[0-9.\s-]+$/.test(texto);
-
-    if (esDni ? dni.length < 6 : sinAcentos(texto).replace(/\s/g, "").length < 3) {
-      respuesta.status(400).json({ error: "CORTO" });
-      return;
-    }
-
     const db = getFirestore();
+    const accion = pedido.body?.accion || "buscar";
 
     try {
 
-      let encontrados;
+      let resultado;
 
-      if (esDni) {
-
-        const resultado =
-          await db.collection("participantes").where("dniNormalizado", "==", dni).get();
-
-        encontrados = resultado.docs;
-
+      if (accion === "packs") {
+        resultado = {
+          packs: catalogoDePacks().map(({ id, grupo, texto }) => ({ id, grupo, texto })),
+          abierto: Date.now() < CIERRE_COMPRAS
+        };
+      } else if (accion === "cargar") {
+        resultado = await cargarCompra(db, pedido.body || {});
+      } else if (accion === "aprobar") {
+        resultado = await aprobarCompra(db, pedido.body?.id);
       } else {
-
-        if (Date.now() > listaNombres.hasta) {
-          const resultado = await db.collection("participantes").get();
-          listaNombres = { hasta: Date.now() + 2 * 60 * 1000, docs: resultado.docs };
-        }
-
-        const palabras = sinAcentos(texto).split(/\s+/).filter(Boolean);
-
-        encontrados = listaNombres.docs.filter((documento) => {
-          const datos = documento.data();
-          const nombre = sinAcentos(`${datos.nombre || ""} ${datos.apellido || ""}`);
-          return palabras.every((palabra) => nombre.includes(palabra));
-        });
-
+        resultado = await buscar(db, pedido.body?.texto);
       }
 
-      // La chance gratis de la ruleta no tiene comprobante
-      encontrados =
-        encontrados.filter((documento) => documento.get("codigoPromo") !== "RULETAGRATIS");
-
-      const compras = await Promise.all(
-        encontrados
-          .sort((a, b) => (b.get("fecha")?.toMillis?.() || 0) - (a.get("fecha")?.toMillis?.() || 0))
-          .slice(0, MAXIMO_RESULTADOS)
-          .map(compraParaAyudante)
-      );
-
-      logger.info("Búsqueda en el buscador", { cantidad: compras.length });
-
-      respuesta.json({ compras, hayMas: encontrados.length > MAXIMO_RESULTADOS });
+      respuesta.status(resultado.error ? 400 : 200).json(resultado);
 
     } catch (error) {
 
-      logger.error("Error en el buscador", { error: error.message });
+      logger.error("Error en el buscador", { accion, error: error.message });
       respuesta.status(500).json({ error: "BUSCADOR" });
 
     }
 
   }
 );
-
 
 // ======================================================
 // EVENTO "PURCHASE" AL APROBAR UN PAGO

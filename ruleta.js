@@ -19,6 +19,7 @@
   const GRADOS = 360 / PORCIONES.length;
 
   // 3x1: paga el pack normal y recibe el triple
+  // Si cambian, cambiarlos también en functions/index.js (PACKS_3X1)
   const PACKS_3X1 = [
     { paga: 1, recibe: 3, precio: 5000 },
     { paga: 3, recibe: 9, precio: 10000 },
