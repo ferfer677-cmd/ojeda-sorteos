@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boceto · Abrir en el navegador</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../estilo.css">
+
+<style>
+  body { background: #e5e7eb; }
+
+  .bocetos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 28px;
+    padding: 24px 16px 60px;
+  }
+
+  .telefono { width: 340px; max-width: 100%; }
+
+  .telefono h2 {
+    margin: 0 0 10px;
+    font-family: Poppins, sans-serif;
+    font-size: 15px;
+    text-align: center;
+    color: #374151;
+  }
+
+  /* Barra de la app de Instagram (simulada) */
+  .barra-app {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #111;
+    background: #fff;
+    border-radius: 22px 22px 0 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .barra-app span:last-child { font-size: 20px; line-height: 1; letter-spacing: 1px; }
+
+  .pantalla {
+    overflow: hidden;
+    background: #fff;
+    border: 8px solid #111;
+    border-radius: 30px;
+  }
+
+  .ventana { padding: 16px; }
+
+  .ventana h3 { margin: 0 0 10px; font-family: Poppins, sans-serif; font-size: 18px; }
+
+  .pack-elegido {
+    margin-bottom: 12px;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--verde-osc);
+    text-align: center;
+    background: var(--verde-claro);
+    border-radius: 10px;
+  }
+
+  .campo {
+    margin-bottom: 8px;
+    padding: 11px 12px;
+    font-size: 14px;
+    color: #9ca3af;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+  }
+
+  .adjuntar {
+    margin-top: 6px;
+    padding: 14px;
+    font-weight: 700;
+    text-align: center;
+    background: var(--fondo);
+    border: 2px dashed var(--borde);
+    border-radius: 12px;
+  }
+
+  .nota { max-width: 340px; margin: 10px auto 0; font-size: 12px; color: #4b5563; }
+
+  /* ===== Lo nuevo: aviso para abrir en el navegador ===== */
+
+  .aviso-navegador {
+    margin: 4px 0 10px;
+    padding: 12px;
+    background: #fff7f0;
+    border: 1px solid #fdba74;
+    border-radius: 12px;
+  }
+
+  .aviso-navegador b { display: block; font-size: 14px; color: #9a3412; }
+
+  .aviso-navegador p { margin: 4px 0 10px; font-size: 12.5px; line-height: 1.4; color: #7c2d12; }
+
+  .aviso-navegador a,
+  .aviso-navegador button {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    font: inherit;
+    font-weight: 800;
+    text-align: center;
+    text-decoration: none;
+    color: #fff;
+    background: var(--naranja);
+    border: 0;
+    border-radius: 10px;
+  }
+
+  .pasos-ios {
+    display: grid;
+    gap: 6px;
+    margin: 6px 0 10px;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    color: #7c2d12;
+  }
+
+  .pasos-ios li { display: flex; align-items: center; gap: 8px; }
+
+  .pasos-ios i {
+    display: inline-grid;
+    place-items: center;
+    min-width: 30px;
+    height: 26px;
+    font-style: normal;
+    font-weight: 800;
+    background: #fff;
+    border: 1px solid #fdba74;
+    border-radius: 8px;
+  }
+
+  .aviso-navegador .secundario {
+    margin-top: 6px;
+    color: #9a3412;
+    background: #fff;
+    border: 1px solid #fdba74;
+  }
+</style>
+</head>
+
+<body>
+<div class="bocetos">
+
+  <!-- ===================== ANDROID ===================== -->
+  <div class="telefono">
+    <h2>Android, dentro de Instagram</h2>
+    <div class="pantalla">
+      <div class="barra-app"><span>✕ ojedasorteos.com.ar</span><span>⋮</span></div>
+      <div class="ventana">
+        <h3>Datos para transferir</h3>
+        <div class="pack-elegido">POPULAR • 10 CHANCES • $18.000</div>
+        <div class="campo">Nombre</div>
+        <div class="campo">DNI</div>
+        <div class="campo">Teléfono</div>
+
+        <div class="aviso-navegador">
+          <b>⚠️ Estás dentro de Instagram</b>
+          <p>Acá la carga del comprobante puede fallar. Abrí la página en Chrome y completá ahí, es un toque.</p>
+          <a href="#">🌐 Abrir en Chrome</a>
+        </div>
+
+        <div class="adjuntar">📷 ADJUNTAR CAPTURA DEL COMPROBANTE</div>
+      </div>
+    </div>
+    <p class="nota">Toca el botón y se abre la misma página en Chrome, con la compra lista para seguir. Si no tiene Chrome, se abre en su navegador.</p>
+  </div>
+
+
+  <!-- ===================== IPHONE ===================== -->
+  <div class="telefono">
+    <h2>iPhone, dentro de Instagram</h2>
+    <div class="pantalla">
+      <div class="barra-app"><span>✕ ojedasorteos.com.ar</span><span>⋯</span></div>
+      <div class="ventana">
+        <h3>Datos para transferir</h3>
+        <div class="pack-elegido">POPULAR • 10 CHANCES • $18.000</div>
+        <div class="campo">Nombre</div>
+        <div class="campo">DNI</div>
+        <div class="campo">Teléfono</div>
+
+        <div class="aviso-navegador">
+          <b>⚠️ Estás dentro de Instagram</b>
+          <p>Acá la carga del comprobante puede fallar. Abrí la página en Safari:</p>
+          <ol class="pasos-ios">
+            <li><i>⋯</i> Tocá los 3 puntitos arriba a la derecha</li>
+            <li><i>🧭</i> Elegí "Abrir en el navegador"</li>
+          </ol>
+          <button type="button">📋 Copiar el link</button>
+        </div>
+
+        <div class="adjuntar">📷 ADJUNTAR CAPTURA DEL COMPROBANTE</div>
+      </div>
+    </div>
+    <p class="nota">En iPhone no se puede abrir Safari solo: le explicamos los 2 toques. "Copiar el link" sirve para pegarlo en Safari si no encuentra la opción.</p>
+  </div>
+
+</div>
+
+<p class="nota" style="max-width:700px;text-align:center">Este aviso aparece <b>solo</b> a quien está dentro de Instagram o Facebook. Quien entra desde Chrome o Safari ve la compra como siempre. Si sigue adentro igual, puede subir el comprobante como ahora.</p>
+</body>
+</html>

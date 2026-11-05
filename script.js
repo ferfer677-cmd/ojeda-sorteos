@@ -310,6 +310,142 @@ function mostrarErrorEnvio(mensaje, codigo, pack) {
 
 
 // ======================================================
+// SOLO CAPTURAS DEL COMPROBANTE
+// ======================================================
+// Imágenes (jpg, png, heic de iPhone, etc.). Algunos Android no
+// informan el tipo del archivo: ahí se mira la extensión.
+
+function esCaptura(archivo) {
+  if (!archivo) return false;
+  if (String(archivo.type || "").startsWith("image/")) return true;
+  return !archivo.type && /\.(jpe?g|png|webp|heic|heif|gif|bmp)$/i.test(archivo.name || "");
+}
+
+
+// ======================================================
+// ABRIR EN EL NAVEGADOR
+// ======================================================
+// Dentro de Instagram o Facebook la subida del comprobante falla
+// más (el navegador de la app corta subidas largas). Solo en ese
+// caso, la compra muestra un aviso:
+//   Android: botón que abre la misma página en Chrome, con el pack
+//            y la palabra clave elegidos (?pack=10&clave=50).
+//   iPhone:  Apple no deja abrir Safari solo: se explican los
+//            2 toques y se puede copiar el link.
+// La URL conserva los parámetros del anuncio (fbclid, utm).
+
+const navegador = navigator.userAgent || "";
+
+const appInterna =
+  /Instagram/i.test(navegador) ? "Instagram" :
+  /FBAN|FBAV|FB_IAB|FBIOS|FB4A/i.test(navegador) ? "Facebook" :
+  "";
+
+const esIphone = /iPhone|iPad|iPod/i.test(navegador);
+const esAndroid = /Android/i.test(navegador);
+
+// Link a esta página, con el pack y la clave para seguir donde estaba
+function linkParaSeguir() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("pack");
+  url.searchParams.delete("clave");
+  const pack = document.body.dataset.packElegido;
+  if (pack) url.searchParams.set("pack", pack);
+  if (pack && palabraClaveActiva) url.searchParams.set("clave", palabraClaveActiva);
+  url.hash = "";
+  return url.toString();
+}
+
+function prepararAvisoNavegador() {
+
+  const aviso = document.getElementById("avisoNavegador");
+
+  if (!aviso || !appInterna || !(esIphone || esAndroid)) return;
+
+  aviso.hidden = false;
+
+  const titulo = document.createElement("b");
+  titulo.textContent = `⚠️ Estás dentro de ${appInterna}`;
+
+  const texto = document.createElement("p");
+
+  if (esAndroid) {
+
+    texto.textContent =
+      "Acá la carga del comprobante puede fallar. Abrí la página en Chrome y completá ahí, es un toque.";
+
+    const boton = document.createElement("a");
+    boton.textContent = "🌐 Abrir en Chrome";
+    boton.href = "#";
+
+    boton.addEventListener("click", (evento) => {
+      evento.preventDefault();
+      const destino = linkParaSeguir();
+      const sinEsquema = destino.replace(/^https?:\/\//, "");
+      // Si no tiene Chrome, abre el navegador que tenga
+      window.location.href =
+        `intent://${sinEsquema}#Intent;scheme=https;package=com.android.chrome;` +
+        `S.browser_fallback_url=${encodeURIComponent(destino)};end`;
+    });
+
+    aviso.append(titulo, texto, boton);
+
+  } else {
+
+    texto.textContent = "Acá la carga del comprobante puede fallar. Abrí la página en Safari:";
+
+    const pasos = document.createElement("ol");
+    pasos.className = "pasos-navegador";
+    pasos.innerHTML =
+      "<li><i>⋯</i> Tocá los 3 puntitos arriba a la derecha</li>" +
+      "<li><i>🧭</i> Elegí \"Abrir en el navegador\"</li>";
+
+    const copiar = document.createElement("button");
+    copiar.type = "button";
+    copiar.textContent = "📋 Copiar el link";
+
+    copiar.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(linkParaSeguir());
+        copiar.textContent = "✅ Link copiado: pegalo en Safari";
+      } catch {
+        copiar.textContent = "No se pudo copiar: usá los 3 puntitos de arriba";
+      }
+    });
+
+    aviso.append(titulo, texto, pasos, copiar);
+
+  }
+
+}
+
+prepararAvisoNavegador();
+
+// Al llegar desde "Abrir en Chrome": aplica la clave y abre el pack
+function seguirDondeEstaba() {
+
+  const parametros = new URLSearchParams(window.location.search);
+  const pack = parametros.get("pack");
+  const clave = parametros.get("clave");
+
+  if (!pack) return;
+
+  const campo = document.getElementById("codigoDescuento");
+
+  if (clave && campo) {
+    campo.value = clave;
+    document.getElementById("btnAplicarDescuento")?.click();
+  }
+
+  document.querySelector(`.pack-card[data-chances="${CSS.escape(pack)}"]`)?.click();
+
+}
+
+// Después de que se preparan los packs y la palabra clave
+document.addEventListener("DOMContentLoaded", () => setTimeout(seguirDondeEstaba, 300));
+
+
+// ======================================================
 // AYUDA POR WHATSAPP
 // ======================================================
 // Botón flotante "¿Problemas con tu compra?" y botón dentro de la
@@ -614,6 +750,9 @@ window.abrirModalPromo = function(
 
   chancesSeleccionadas = chances;
 
+  // Las promos no se pueden reabrir desde otro navegador
+  delete document.body.dataset.packElegido;
+
   codigoPromoActivo =
     codigoPromo || "";
 
@@ -828,17 +967,32 @@ ofertaEnteroOverlay?.addEventListener("click", (e) => {
         "change",
         () => {
 
+          // Solo capturas (imágenes): los PDF tardan y fallan al subir
+          if (
+            comprobante.files.length > 0 &&
+            !esCaptura(comprobante.files[0])
+          ) {
+
+            comprobante.value = "";
+
+            alert(
+              "Subí una captura de pantalla (foto) del comprobante, no un PDF.\n\n" +
+              "Sacale una captura al comprobante en tu app del banco y adjuntala."
+            );
+
+          }
+
           if (
             comprobante.files.length > 0
           ) {
 
             uploadBtn.innerHTML =
-              "✅ COMPROBANTE SELECCIONADO";
+              "✅ CAPTURA SELECCIONADA";
 
           } else {
 
             uploadBtn.innerHTML =
-              "📷 ADJUNTAR COMPROBANTE";
+              "📷 ADJUNTAR CAPTURA DEL COMPROBANTE";
 
           }
 
@@ -895,6 +1049,9 @@ ofertaEnteroOverlay?.addEventListener("click", (e) => {
 
             // La palabra clave queda guardada en la compra (codigoPromo)
             codigoPromoActivo = palabraClaveActiva;
+
+            // Para "Abrir en Chrome": reabre este mismo pack
+            document.body.dataset.packElegido = String(cantidad);
 
             precioPromoActivo = 0;
 
@@ -1302,7 +1459,17 @@ setInterval(
             });
 
             alert(
-              "Debés adjuntar un comprobante."
+              "Debés adjuntar una captura del comprobante."
+            );
+
+            return;
+
+          }
+
+          if (!esCaptura(archivo)) {
+
+            alert(
+              "Subí una captura de pantalla (foto) del comprobante, no un PDF."
             );
 
             return;

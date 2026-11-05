@@ -2110,3 +2110,73 @@ body.participaciones-cerradas .ayuda-float { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .ayuda-float { animation: none; }
 }
+
+
+/* Aviso debajo de "Adjuntar captura del comprobante" */
+.upload-ayuda {
+  margin: -4px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--suave);
+}
+
+.upload-ayuda b { color: var(--texto); }
+
+
+/* ======================================================
+   ABRIR EN EL NAVEGADOR (solo dentro de Instagram o Facebook)
+   ====================================================== */
+
+.aviso-navegador {
+  padding: 12px;
+  background: #fff7f0;
+  border: 1px solid #fdba74;
+  border-radius: 12px;
+}
+
+.aviso-navegador[hidden] { display: none; }
+
+.aviso-navegador b { display: block; font-size: 14px; color: #9a3412; }
+
+.aviso-navegador p { margin: 4px 0 10px; font-size: 12.5px; line-height: 1.4; color: #7c2d12; }
+
+.aviso-navegador a,
+.aviso-navegador button {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  font: inherit;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+  color: #fff;
+  background: var(--naranja);
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.pasos-navegador {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: #7c2d12;
+}
+
+.pasos-navegador li { display: flex; align-items: center; gap: 8px; }
+
+.pasos-navegador i {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  height: 26px;
+  font-style: normal;
+  font-weight: 800;
+  background: #fff;
+  border: 1px solid #fdba74;
+  border-radius: 8px;
+}
