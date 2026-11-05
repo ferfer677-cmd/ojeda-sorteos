@@ -590,8 +590,6 @@ if (btnAplicarDescuento) {
         mensaje.style.color = "#008a43";
       }
 
-      tirarConfeti();
-
     } else {
       palabraClaveActiva = "";
       descuentoPalabraClaveActivo = false;
