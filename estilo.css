@@ -2047,3 +2047,66 @@ body.con-barra-compra .purchase-notification { bottom: 86px; }
   .cupon-pasos li { opacity: 1; transition: none; }
   .confeti-clave { display: none; }
 }
+
+
+/* ======================================================
+   AYUDA POR WHATSAPP (script.js, abrirAyudaWhatsapp)
+   ====================================================== */
+
+/* Flotante, abajo a la izquierda (el canal está a la derecha) */
+.ayuda-float {
+  position: fixed;
+  left: 16px;
+  bottom: 22px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100vw - 100px);
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--texto);
+  background: #fff;
+  border: 2px solid var(--naranja);
+  border-radius: 999px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .18);
+  cursor: pointer;
+  transition: bottom .2s ease;
+  animation: ayuda-aviso 6s ease-in-out infinite;
+}
+
+/* Un saltito cada tanto para que se vea */
+@keyframes ayuda-aviso {
+  0%, 88%, 100% { transform: none; }
+  92% { transform: translateY(-5px); }
+  96% { transform: translateY(0); }
+}
+
+body.con-barra-compra .ayuda-float { bottom: 92px; }
+
+/* Con la compra abierta se usa el botón de adentro */
+body.modal-open .ayuda-float,
+body.participaciones-cerradas .ayuda-float { display: none; }
+
+/* Dentro de la compra, debajo de "Adjuntar comprobante" */
+.ayuda-comprobante {
+  width: 100%;
+  padding: 11px 12px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #9a3412;
+  text-align: center;
+  background: #fff7f0;
+  border: 1px dashed var(--naranja);
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.ayuda-comprobante b { color: #128c7e; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ayuda-float { animation: none; }
+}

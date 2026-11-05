@@ -310,6 +310,49 @@ function mostrarErrorEnvio(mensaje, codigo, pack) {
 
 
 // ======================================================
+// AYUDA POR WHATSAPP
+// ======================================================
+// Botón flotante "¿Problemas con tu compra?" y botón dentro de la
+// compra "¿No te deja subir el comprobante?". Abren WhatsApp de
+// soporte con lo que la persona ya completó, para que mande ahí
+// el comprobante.
+
+function abrirAyudaWhatsapp() {
+
+  const valor = (id) =>
+    document.getElementById(id)?.value.trim() || "";
+
+  const comprando =
+    document.getElementById("purchaseModal")?.classList.contains("show");
+
+  const pack =
+    comprando ? document.getElementById("selectedPack")?.textContent.trim() : "";
+
+  const texto = comprando
+    ? [
+        "Hola! No puedo subir el comprobante en la página.",
+        pack ? `Pack: ${pack}` : "",
+        valor("nombre") ? `Nombre: ${valor("nombre")} ${valor("apellido")}`.trim() : "",
+        valor("dniCompra") ? `DNI: ${valor("dniCompra")}` : "",
+        valor("telefono") ? `Teléfono: ${valor("telefono")}` : "",
+        "Te mando el comprobante por acá."
+      ].filter(Boolean).join("\n")
+    : "Hola! Necesito ayuda con mi compra del sorteo.";
+
+  window.open(
+    `https://wa.me/${WHATSAPP_COMPRAS}?text=${encodeURIComponent(texto)}`,
+    "_blank",
+    "noopener"
+  );
+
+}
+
+document.querySelectorAll("[data-ayuda-wp]").forEach((boton) => {
+  boton.addEventListener("click", abrirAyudaWhatsapp);
+});
+
+
+// ======================================================
 // TODO EL SISTEMA
 // ======================================================
 

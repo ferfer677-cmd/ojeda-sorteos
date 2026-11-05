@@ -35,7 +35,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="estilo.css?v=11">
+  <link rel="stylesheet" href="estilo.css?v=12">
 
   <!-- META PIXEL -->
   <script>
@@ -345,17 +345,17 @@
       <div class="cupon-sello" aria-hidden="true"><span><big>50%</big>OFF</span></div>
       <div>
         <h3>¿Querés pagar la mitad?</h3>
-        <p>Pedí la palabra clave por WhatsApp y todas las chances salen a mitad de precio.</p>
+        <p>La palabra clave está en nuestro canal de WhatsApp. Con ella todas las chances salen a mitad de precio.</p>
       </div>
     </div>
 
     <ol class="cupon-pasos">
-      <li><span aria-hidden="true">💬</span>Escribinos por WhatsApp</li>
-      <li><span aria-hidden="true">🔑</span>Te pasamos la palabra</li>
+      <li><span aria-hidden="true">📢</span>Entrá al canal de WhatsApp</li>
+      <li><span aria-hidden="true">🔑</span>Copiá la palabra clave</li>
       <li><span aria-hidden="true">💸</span>Pegala acá y pagá la mitad</li>
     </ol>
 
-    <a class="cupon-wp" href="https://wa.me/5492494527588?text=Hola!%20Quiero%20la%20palabra%20clave%20%F0%9F%94%91" target="_blank" rel="noopener">💬 Pedila por WhatsApp</a>
+    <a class="cupon-wp" href="https://whatsapp.com/channel/0029Vb5dDFT0bIdhfmabL11s" target="_blank" rel="noopener">📢 Buscala en el canal de WhatsApp</a>
 
     <div class="palabra-clave-form">
       <input
@@ -578,6 +578,15 @@
 
 
 <!-- ==================================================
+     BOTÓN FLOTANTE: AYUDA POR WHATSAPP (script.js, AYUDA)
+================================================== -->
+
+<button type="button" class="ayuda-float" data-ayuda-wp>
+  <span aria-hidden="true">🆘</span> ¿Problemas con tu compra?
+</button>
+
+
+<!-- ==================================================
      BOTÓN FLOTANTE: CANAL DE WHATSAPP
 ================================================== -->
 
@@ -641,6 +650,10 @@
       <label class="upload-btn" for="comprobante">📷 ADJUNTAR COMPROBANTE</label>
 
       <input type="file" id="comprobante" accept="image/*,.pdf" hidden>
+
+      <button type="button" class="ayuda-comprobante" data-ayuda-wp>
+        🆘 ¿No te deja subir el comprobante? <b>Mandalo por WhatsApp</b>
+      </button>
 
       <button type="submit">ENVIAR COMPROBANTE</button>
 
@@ -713,7 +726,7 @@
 <!-- Fecha de cierre, fotos y "un cartel por vez" (va antes que el resto) -->
 <script src="./carteles.js?v=8"></script>
 
-<script type="module" src="./script.js?v=29"></script>
+<script type="module" src="./script.js?v=30"></script>
 
 <!-- Carteles al entrar (cartel-cierre.js y cartel-proximo.js): desactivados
      el 24/10/2026 para que la página sea más limpia. Para volver a
