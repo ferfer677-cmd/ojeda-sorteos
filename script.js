@@ -499,6 +499,11 @@ if (btnAplicarDescuento) {
     // Los códigos "MITAD" (50% OFF) y "ENTERO" (oferta secreta)
     // se dieron de baja el 16/10/2026.
 
+    if (codigo === CODIGO_3XHOY) {
+      abrirPromo3xHoy(mensaje);
+      return;
+    }
+
     if (PALABRAS_DESCUENTO.includes(codigo)) {
       palabraClaveActiva = codigo;
       descuentoPalabraClaveActivo = true;
@@ -527,7 +532,8 @@ if (btnAplicarDescuento) {
 window.abrirModalPromo = function(
   chances,
   precio,
-  codigoPromo = ""
+  codigoPromo = "",
+  etiqueta = "RULETA"
 ) {
 
   chancesSeleccionadas = chances;
@@ -539,7 +545,7 @@ window.abrirModalPromo = function(
     Number(precio) || 0;
 
   packSeleccionado =
-    `RULETA • ${chances} CHANCES • $${Number(precio).toLocaleString("es-AR")}`;
+    `${etiqueta} • ${chances} CHANCE${chances === 1 ? "" : "S"} • $${Number(precio).toLocaleString("es-AR")}`;
 
   if (selectedPack) {
     selectedPack.innerText =
@@ -557,6 +563,153 @@ window.abrirModalPromo = function(
   }
 
 };
+
+
+// ==================================================
+// CÓDIGO "3XHOY": 3 PROMOS HASTA LAS 23:10 DEL 04/11/2026
+// ==================================================
+// Al escribir el código sale un cartel con 3 packs y la cuenta
+// regresiva hasta VENCE_3XHOY. Después de esa hora el código ya
+// no funciona.
+// Si se cambian estos packs, cambiarlos también en
+// functions/index.js (PACKS_3XHOY, para el sub admin).
+
+const CODIGO_3XHOY = "3XHOY";
+// 04/11/2026 23:10 hora de Argentina
+const VENCE_3XHOY = Date.parse("2026-11-04T23:10:00-03:00");
+
+const PACKS_3XHOY = [
+  { chances: 1, precio: 1500 },
+  { chances: 20, precio: 9999 },
+  { chances: 100, precio: 19999 }
+];
+
+let reloj3xHoy = null;
+
+function abrirPromo3xHoy(mensaje) {
+
+  const vence = VENCE_3XHOY;
+
+  if (Date.now() >= vence) {
+    if (mensaje) {
+      mensaje.innerText = "⏰ ESA PROMO YA TERMINÓ.";
+      mensaje.style.color = "#dc2626";
+    }
+    return;
+  }
+
+  if (mensaje) {
+    mensaje.innerText = "✅ ¡CÓDIGO ACTIVADO! ELEGÍ TU PROMO ANTES DE QUE TERMINE EL TIEMPO.";
+    mensaje.style.color = "#008a43";
+  }
+
+  document.getElementById("promo3xHoy")?.remove();
+  clearInterval(reloj3xHoy);
+
+  const fondo = document.createElement("div");
+  fondo.id = "promo3xHoy";
+  fondo.className = "cierre-overlay promo-3xhoy";
+  fondo.setAttribute("role", "dialog");
+  fondo.setAttribute("aria-modal", "true");
+
+  const tarjeta = document.createElement("div");
+  tarjeta.className = "cierre-card";
+
+  const cerrarBoton = document.createElement("button");
+  cerrarBoton.type = "button";
+  cerrarBoton.className = "cierre-cerrar";
+  cerrarBoton.setAttribute("aria-label", "Cerrar");
+  cerrarBoton.textContent = "✕";
+
+  const etiqueta = document.createElement("span");
+  etiqueta.className = "cierre-etiqueta";
+  etiqueta.textContent = "CÓDIGO 3XHOY";
+
+  const titulo = document.createElement("h2");
+  titulo.className = "cierre-titulo";
+  titulo.textContent = "🔥 Promo exclusiva";
+
+  const bajada = document.createElement("p");
+  bajada.className = "cierre-subtitulo";
+  bajada.textContent = "Promo hasta las 23:10 hs. Elegí la tuya:";
+
+  const contador = document.createElement("div");
+  contador.className = "cierre-contador";
+  contador.innerHTML =
+    '<div class="cierre-caja"><span data-min>0</span><small>MIN</small></div>' +
+    '<div class="cierre-caja"><span data-seg>00</span><small>SEG</small></div>';
+
+  const lista = document.createElement("div");
+  lista.className = "promo-3xhoy-lista";
+
+  PACKS_3XHOY.forEach(({ chances, precio }) => {
+
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.className = "promo-3xhoy-pack";
+
+    const cantidad = document.createElement("b");
+    cantidad.textContent = `${chances} chance${chances === 1 ? "" : "s"}`;
+
+    const valor = document.createElement("strong");
+    valor.textContent = "$" + precio.toLocaleString("es-AR");
+
+    const unitario = document.createElement("small");
+    unitario.textContent = "$" + Math.round(precio / chances).toLocaleString("es-AR") + " por chance";
+
+    boton.append(cantidad, unitario, valor);
+
+    boton.addEventListener("click", () => {
+      cerrar();
+      window.abrirModalPromo(chances, precio, CODIGO_3XHOY, "PROMO 3XHOY");
+    });
+
+    lista.appendChild(boton);
+
+  });
+
+  tarjeta.append(cerrarBoton, etiqueta, titulo, bajada, contador, lista);
+  fondo.appendChild(tarjeta);
+  document.body.appendChild(fondo);
+
+  function cerrar() {
+    clearInterval(reloj3xHoy);
+    fondo.remove();
+  }
+
+  function actualizar() {
+
+    const resta = Math.max(0, vence - Date.now());
+    const segundos = Math.ceil(resta / 1000);
+
+    contador.querySelector("[data-min]").textContent = String(Math.floor(segundos / 60));
+    contador.querySelector("[data-seg]").textContent = String(segundos % 60).padStart(2, "0");
+
+    fondo.classList.toggle("urgente", segundos <= 30);
+
+    if (!resta) {
+      clearInterval(reloj3xHoy);
+      bajada.textContent = "⏰ La promo terminó a las 23:10 hs";
+      lista.querySelectorAll("button").forEach((boton) => { boton.disabled = true; });
+      if (mensaje) {
+        mensaje.innerText = "⏰ ESA PROMO YA TERMINÓ.";
+        mensaje.style.color = "#dc2626";
+      }
+    }
+
+  }
+
+  actualizar();
+  reloj3xHoy = setInterval(actualizar, 250);
+
+  cerrarBoton.addEventListener("click", cerrar);
+  fondo.addEventListener("click", (evento) => {
+    if (evento.target === fondo) cerrar();
+  });
+
+  requestAnimationFrame(() => fondo.classList.add("activo"));
+
+}
 
 
 const ofertaEnteroOverlay = document.getElementById("ofertaEnteroOverlay");

@@ -1837,3 +1837,45 @@ body.con-barra-compra .purchase-notification { bottom: 86px; }
   font-size: 11px;
   color: var(--suave);
 }
+
+
+/* ======================================================
+   CÓDIGO 3XHOY (script.js, abrirPromo3xHoy)
+   ====================================================== */
+
+.promo-3xhoy { z-index: 1050; }
+
+.promo-3xhoy-lista { display: grid; gap: 10px; }
+
+.promo-3xhoy-pack {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "cantidad precio" "unitario precio";
+  align-items: center;
+  gap: 2px 12px;
+  padding: 14px 16px;
+  font: inherit;
+  text-align: left;
+  color: var(--texto);
+  background: #fff;
+  border: 2px solid var(--borde);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: border-color .15s ease, transform .15s ease;
+}
+
+.promo-3xhoy-pack:hover,
+.promo-3xhoy-pack:focus-visible { border-color: var(--verde); transform: translateY(-1px); }
+
+.promo-3xhoy-pack:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+.promo-3xhoy-pack b { grid-area: cantidad; font-family: 'Poppins', sans-serif; font-size: 17px; }
+
+.promo-3xhoy-pack small { grid-area: unitario; font-size: 12px; color: var(--suave); }
+
+.promo-3xhoy-pack strong {
+  grid-area: precio;
+  font-family: 'Poppins', sans-serif;
+  font-size: 20px;
+  color: var(--verde);
+}

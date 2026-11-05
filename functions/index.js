@@ -357,6 +357,15 @@ const PACKS_COMUNES = [
   { chances: 100, nombre: "👑 PACK MÁXIMO", precio: 75000, mitad: 37500 }
 ];
 
+// Código "3XHOY" (script.js, PACKS_3XHOY): hasta el 04/11/2026 23:10
+const VENCE_3XHOY = Date.parse("2026-11-04T23:10:00-03:00");
+
+const PACKS_3XHOY = [
+  { chances: 1, precio: 1500 },
+  { chances: 20, precio: 9999 },
+  { chances: 100, precio: 19999 }
+];
+
 const PACKS_3X1 = [
   { paga: 1, recibe: 3, precio: 5000 },
   { paga: 3, recibe: 9, precio: 10000 },
@@ -388,6 +397,17 @@ function catalogoDePacks() {
       precio: mitad,
       codigoPromo: "MANUAL50",
       pack: `50% OFF • ${nombre} • ${chances} CHANCE${chances === 1 ? "" : "S"} • ${pesos(mitad)}`
+    });
+  });
+
+  (Date.now() < VENCE_3XHOY ? PACKS_3XHOY : []).forEach(({ chances, precio }) => {
+    packs.push({
+      id: `3xhoy${chances}`,
+      grupo: "Promo 3XHOY",
+      chances,
+      precio,
+      codigoPromo: "3XHOY",
+      pack: `PROMO 3XHOY • ${chances} CHANCE${chances === 1 ? "" : "S"} • ${pesos(precio)}`
     });
   });
 
