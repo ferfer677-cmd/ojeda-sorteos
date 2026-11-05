@@ -8,7 +8,7 @@ import {
 
 import { nombreAbreviado } from "./firestore.js";
 
-import { mostrarIngresosDiarios, actualizarComisiones } from "./admin-diario.js?v=2";
+import { mostrarIngresosDiarios, actualizarComisiones } from "./admin-diario.js?v=3";
 
 import {
   collection,

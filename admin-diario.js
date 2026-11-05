@@ -319,6 +319,8 @@ function mostrarDetalle(totales) {
   document.getElementById("diaTitulo").textContent = diaLargo(diaElegido);
   document.getElementById("diaMonto").textContent = pesos(total.monto);
   document.getElementById("diaCompras").textContent = total.compras.toLocaleString("es-AR");
+  document.getElementById("diaTicket").textContent =
+    total.compras ? `Ticket promedio: ${pesos(total.monto / total.compras)}` : "";
   document.getElementById("diaPendiente").textContent =
     porAprobar ? `+ ${pesos(porAprobar)} por aprobar` : "Nada por aprobar";
 

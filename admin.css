@@ -1221,3 +1221,5 @@ button:disabled { opacity: .6; cursor: wait; }
 .comisiones-borradas { display: block; margin-top: 3px; color: var(--rojo) !important; }
 
 .facturacion.oculto .comisiones-borradas { filter: blur(8px); user-select: none; }
+
+#diaTicket { font-weight: 600; color: var(--texto); }
