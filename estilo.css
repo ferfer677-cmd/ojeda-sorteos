@@ -1879,3 +1879,171 @@ body.con-barra-compra .purchase-notification { bottom: 86px; }
   font-size: 20px;
   color: var(--verde);
 }
+
+
+/* ======================================================
+   PALABRA CLAVE: CUPÓN ANIMADO
+   ====================================================== */
+/* Los pasos se iluminan desde script.js (CUPÓN DE PALABRA CLAVE) */
+
+.cupon-clave {
+  position: relative;
+  overflow: hidden;
+  padding: 18px;
+  background: #fff;
+  border: 2px dashed var(--naranja);
+  border-radius: 18px;
+}
+
+/* Muescas de cupón */
+.cupon-clave::before,
+.cupon-clave::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  margin-top: -11px;
+  background: var(--fondo);
+  border: 2px dashed var(--naranja);
+  border-radius: 50%;
+}
+
+.cupon-clave::before { left: -13px; }
+.cupon-clave::after { right: -13px; }
+
+/* Brillo que cruza el cupón */
+.cupon-brillo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 106, 0, .14) 50%, transparent 60%);
+  transform: translateX(-100%);
+  animation: cupon-brillo 3.2s ease-in-out infinite;
+}
+
+@keyframes cupon-brillo { 60%, 100% { transform: translateX(100%); } }
+
+.cupon-cabecera { position: relative; display: flex; align-items: center; gap: 12px; }
+
+.cupon-sello {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.05;
+  text-align: center;
+  color: #fff;
+  background: var(--naranja);
+  border-radius: 50%;
+  animation: cupon-latido 1.6s ease-in-out infinite;
+}
+
+.cupon-sello big { display: block; font-size: 20px; }
+
+@keyframes cupon-latido { 50% { transform: scale(1.08) rotate(-4deg); } }
+
+.cupon-cabecera h3 { margin: 0; font-family: 'Poppins', sans-serif; font-size: 18px; line-height: 1.2; }
+
+.cupon-cabecera p { margin: 3px 0 0; font-size: 13px; color: var(--suave); }
+
+.cupon-pasos {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cupon-pasos li {
+  padding: 9px 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  background: #fff7f0;
+  border-radius: 10px;
+  opacity: .45;
+  transition: opacity .3s ease, transform .3s ease, background .3s ease;
+}
+
+.cupon-pasos li span { display: block; margin-bottom: 3px; font-size: 20px; }
+
+.cupon-pasos li.activo { opacity: 1; transform: translateY(-2px); background: #ffe8d6; }
+
+.cupon-wp {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  padding: 14px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  color: #fff;
+  background: #25d366;
+  border-radius: 14px;
+}
+
+/* Onda que sale del botón */
+.cupon-wp::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 0 rgba(37, 211, 102, .55);
+  animation: cupon-onda 2s ease-out infinite;
+}
+
+@keyframes cupon-onda { to { box-shadow: 0 0 0 14px rgba(37, 211, 102, 0); } }
+
+.cupon-clave .palabra-clave-form { position: relative; margin-top: 12px; }
+
+.cupon-clave .palabra-clave-form input {
+  padding: 13px 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border: 2px solid var(--borde);
+  border-radius: 12px;
+}
+
+.cupon-clave .palabra-clave-form input::placeholder { font-weight: 500; letter-spacing: 0; }
+
+.cupon-clave .palabra-clave-form button {
+  padding: 0 18px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--verde);
+  border-radius: 12px;
+}
+
+.cupon-clave #mensajeDescuento { position: relative; }
+
+/* Confeti al aplicar bien la clave */
+.confeti-clave {
+  position: fixed;
+  top: -10px;
+  z-index: 2000;
+  width: 8px;
+  height: 14px;
+  pointer-events: none;
+  animation: confeti-caer 1.6s ease-in forwards;
+}
+
+@keyframes confeti-caer { to { transform: translateY(105vh) rotate(540deg); opacity: .8; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .cupon-brillo,
+  .cupon-sello,
+  .cupon-wp::after { animation: none; }
+  .cupon-pasos li { opacity: 1; transition: none; }
+  .confeti-clave { display: none; }
+}

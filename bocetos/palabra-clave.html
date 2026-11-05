@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boceto · Palabra clave</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --fondo: #f3f4f7;
+    --tarjeta: #ffffff;
+    --borde: #e3e5ea;
+    --texto: #111827;
+    --suave: #6b7280;
+    --verde: #00a650;
+    --verde-osc: #008a43;
+    --verde-claro: #e9f8f0;
+    --naranja: #ff6a00;
+    --rojo: #dc2626;
+    --oscuro: #0f172a;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: Inter, system-ui, sans-serif;
+    color: var(--texto);
+    background: var(--fondo);
+  }
+
+  .pagina { max-width: 460px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  .titulo-boceto {
+    margin: 34px 0 10px;
+    font-family: Poppins, sans-serif;
+    font-size: 15px;
+    color: var(--suave);
+  }
+
+  .titulo-boceto:first-child { margin-top: 0; }
+
+  .nota {
+    margin: 8px 0 0;
+    font-size: 12px;
+    color: var(--suave);
+  }
+
+  /* Formulario común a las tres */
+  .form { display: flex; gap: 8px; }
+
+  .form input {
+    flex: 1;
+    min-width: 0;
+    padding: 13px 14px;
+    font: inherit;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 2px solid var(--borde);
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .form input::placeholder { font-weight: 500; letter-spacing: 0; text-transform: none; }
+
+  .form input:focus { outline: none; border-color: var(--verde); }
+
+  .form button {
+    padding: 0 18px;
+    font: inherit;
+    font-weight: 800;
+    color: #fff;
+    background: var(--verde);
+    border: 0;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+
+  .mensaje { min-height: 18px; margin-top: 8px; font-size: 13px; font-weight: 700; }
+
+  .redes { display: flex; gap: 8px; margin-top: 12px; }
+
+  .redes a {
+    flex: 1;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    color: var(--texto);
+    background: #fff;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+  }
+
+  .redes a.wp { color: #fff; background: #25d366; border-color: #25d366; }
+
+  .redes a.ig { color: #fff; background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af); border: 0; }
+
+
+  /* ======================================================
+     A · CUPÓN CON BRILLO
+     ====================================================== */
+
+  .cupon {
+    position: relative;
+    overflow: hidden;
+    padding: 18px 18px 16px;
+    background: #fff;
+    border: 2px dashed var(--naranja);
+    border-radius: 18px;
+  }
+
+  /* Muescas de cupón */
+  .cupon::before,
+  .cupon::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 22px;
+    height: 22px;
+    margin-top: -11px;
+    background: var(--fondo);
+    border: 2px dashed var(--naranja);
+    border-radius: 50%;
+  }
+
+  .cupon::before { left: -13px; }
+  .cupon::after { right: -13px; }
+
+  /* Brillo que cruza */
+  .brillo {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(105deg, transparent 40%, rgba(255, 106, 0, .14) 50%, transparent 60%);
+    transform: translateX(-100%);
+    animation: brillo 3.2s ease-in-out infinite;
+  }
+
+  @keyframes brillo { 60%, 100% { transform: translateX(100%); } }
+
+  .cupon-cabecera { display: flex; align-items: center; gap: 12px; }
+
+  .sello {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    font-family: Poppins, sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.05;
+    text-align: center;
+    color: #fff;
+    background: var(--naranja);
+    border-radius: 50%;
+    animation: latido 1.6s ease-in-out infinite;
+  }
+
+  .sello big { display: block; font-size: 20px; }
+
+  @keyframes latido { 50% { transform: scale(1.08) rotate(-4deg); } }
+
+  .cupon h3 { margin: 0; font-family: Poppins, sans-serif; font-size: 18px; line-height: 1.2; }
+
+  .cupon p.bajada { margin: 3px 0 0; font-size: 13px; color: var(--suave); }
+
+  .pasos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin: 14px 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pasos li {
+    padding: 9px 6px;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: center;
+    background: #fff7f0;
+    border-radius: 10px;
+    opacity: .45;
+    transition: opacity .3s ease, transform .3s ease;
+  }
+
+  .pasos li span { display: block; margin-bottom: 3px; font-size: 20px; }
+
+  .pasos li.activo { opacity: 1; transform: translateY(-2px); background: #ffe8d6; }
+
+
+  /* ======================================================
+     B · CANDADO DE PRECIOS SECRETOS
+     ====================================================== */
+
+  .candado {
+    position: relative;
+    padding: 2px;
+    border-radius: 20px;
+    background: linear-gradient(120deg, #00a650, #ff6a00, #7c3aed, #00a650);
+    background-size: 300% 300%;
+    animation: borde 5s linear infinite;
+  }
+
+  @keyframes borde { to { background-position: 300% 0; } }
+
+  .candado-dentro {
+    padding: 18px;
+    color: #fff;
+    background: var(--oscuro);
+    border-radius: 18px;
+  }
+
+  .candado-cabecera { display: flex; align-items: center; gap: 12px; }
+
+  .icono-candado {
+    font-size: 38px;
+    animation: sacudida 3s ease-in-out infinite;
+    transform-origin: 50% 10%;
+  }
+
+  @keyframes sacudida {
+    0%, 70%, 100% { transform: rotate(0); }
+    74% { transform: rotate(-14deg); }
+    78% { transform: rotate(12deg); }
+    82% { transform: rotate(-8deg); }
+    86% { transform: rotate(5deg); }
+  }
+
+  .candado h3 { margin: 0; font-family: Poppins, sans-serif; font-size: 19px; }
+
+  .candado p.bajada { margin: 3px 0 0; font-size: 13px; color: #cbd5e1; }
+
+  /* Precios "secretos" que se revelan */
+  .precios-secretos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin: 14px 0;
+  }
+
+  .precio-secreto {
+    padding: 10px 6px;
+    text-align: center;
+    background: rgba(255, 255, 255, .06);
+    border-radius: 10px;
+  }
+
+  .precio-secreto small { display: block; font-size: 11px; color: #94a3b8; }
+
+  .precio-secreto s { display: block; font-size: 12px; color: #94a3b8; }
+
+  .precio-secreto b {
+    display: block;
+    font-family: Poppins, sans-serif;
+    font-size: 16px;
+    color: #4ade80;
+    filter: blur(6px);
+    transition: filter .6s ease;
+  }
+
+  .candado.abierto .precio-secreto b { filter: none; }
+
+  .candado .form input { color: var(--texto); }
+
+  .candado .mensaje { color: #4ade80; }
+
+
+  /* ======================================================
+     C · COMPACTA CON PRECIO QUE CAMBIA
+     ====================================================== */
+
+  .compacta {
+    padding: 16px;
+    background: linear-gradient(135deg, #e9f8f0, #fff);
+    border: 1px solid #bfe9d2;
+    border-radius: 18px;
+  }
+
+  .compacta-fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+  .compacta h3 { margin: 0; font-family: Poppins, sans-serif; font-size: 17px; }
+
+  .compacta p.bajada { margin: 2px 0 0; font-size: 13px; color: var(--suave); }
+
+  /* Ejemplo de precio que baja solo */
+  .ejemplo {
+    flex: none;
+    min-width: 108px;
+    padding: 8px 10px;
+    text-align: center;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0, 166, 80, .15);
+  }
+
+  .ejemplo small { display: block; font-size: 10.5px; color: var(--suave); }
+
+  .ejemplo .viejo { display: block; font-size: 13px; color: var(--suave); text-decoration: line-through; }
+
+  .ejemplo .nuevo {
+    display: block;
+    font-family: Poppins, sans-serif;
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--verde);
+    animation: cambia 4s ease-in-out infinite;
+  }
+
+  @keyframes cambia {
+    0%, 35% { opacity: 0; transform: translateY(8px); }
+    45%, 90% { opacity: 1; transform: none; }
+    100% { opacity: 0; transform: translateY(-8px); }
+  }
+
+  .compacta .form { margin-top: 12px; }
+
+  .compacta .form input { animation: llamado 2.4s ease-in-out infinite; }
+
+  .compacta .form input:focus { animation: none; }
+
+  @keyframes llamado { 50% { border-color: var(--verde); box-shadow: 0 0 0 4px rgba(0, 166, 80, .15); } }
+
+
+  /* Éxito: confeti simple */
+  .confeti {
+    position: fixed;
+    top: -10px;
+    width: 8px;
+    height: 14px;
+    pointer-events: none;
+    animation: caer 1.6s ease-in forwards;
+  }
+
+  @keyframes caer { to { transform: translateY(105vh) rotate(540deg); opacity: .8; } }
+
+  /* Sin animaciones si la persona lo pidió en su celular */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .precio-secreto b { filter: none; }
+  }
+</style>
+</head>
+
+<body>
+<main class="pagina">
+
+  <!-- ===================== A ===================== -->
+  <h2 class="titulo-boceto">A · Cupón con brillo y pasos</h2>
+
+  <section class="cupon" data-boceto>
+    <div class="brillo"></div>
+
+    <div class="cupon-cabecera">
+      <div class="sello"><span><big>50%</big>OFF</span></div>
+      <div>
+        <h3>¿Querés pagar la mitad?</h3>
+        <p class="bajada">Conseguí la palabra clave y todas las chances salen a mitad de precio.</p>
+      </div>
+    </div>
+
+    <ol class="pasos">
+      <li><span>📲</span>Seguinos en Instagram o el canal</li>
+      <li><span>🔑</span>Copiá la palabra clave</li>
+      <li><span>💸</span>Pegala acá y pagá la mitad</li>
+    </ol>
+
+    <div class="form">
+      <input placeholder="Escribí la palabra clave" aria-label="Palabra clave">
+      <button type="button">Aplicar</button>
+    </div>
+    <div class="mensaje"></div>
+
+    <div class="redes">
+      <a class="ig" href="#">📸 Pedila en Instagram</a>
+      <a class="wp" href="#">💬 Canal de WhatsApp</a>
+    </div>
+  </section>
+  <p class="nota">Los pasos se van iluminando uno por uno. El sello late y un brillo cruza el cupón.</p>
+
+
+  <!-- ===================== B ===================== -->
+  <h2 class="titulo-boceto">B · Candado de precios secretos</h2>
+
+  <section class="candado" data-boceto>
+    <div class="candado-dentro">
+
+      <div class="candado-cabecera">
+        <div class="icono-candado">🔒</div>
+        <div>
+          <h3>Precios secretos</h3>
+          <p class="bajada">Desbloquealos con la palabra clave</p>
+        </div>
+      </div>
+
+      <div class="precios-secretos">
+        <div class="precio-secreto"><small>10 chances</small><s>$18.000</s><b>$9.000</b></div>
+        <div class="precio-secreto"><small>30 chances</small><s>$38.000</s><b>$19.000</b></div>
+        <div class="precio-secreto"><small>100 chances</small><s>$75.000</s><b>$37.500</b></div>
+      </div>
+
+      <div class="form">
+        <input placeholder="Palabra clave" aria-label="Palabra clave">
+        <button type="button">Desbloquear</button>
+      </div>
+      <div class="mensaje"></div>
+
+      <div class="redes">
+        <a class="ig" href="#">📸 Pedila en Instagram</a>
+        <a class="wp" href="#">💬 Canal de WhatsApp</a>
+      </div>
+
+    </div>
+  </section>
+  <p class="nota">El borde cambia de color, el candado se sacude cada tanto y los precios están borrosos hasta que pone la clave.</p>
+
+
+  <!-- ===================== C ===================== -->
+  <h2 class="titulo-boceto">C · Compacta con ejemplo de precio</h2>
+
+  <section class="compacta" data-boceto>
+
+    <div class="compacta-fila">
+      <div>
+        <h3>🔑 ¿Tenés la palabra clave?</h3>
+        <p class="bajada">Con la clave pagás la mitad en cualquier pack.</p>
+      </div>
+      <div class="ejemplo">
+        <small>10 chances</small>
+        <span class="viejo">$18.000</span>
+        <span class="nuevo">$9.000</span>
+      </div>
+    </div>
+
+    <div class="form">
+      <input placeholder="Escribila acá" aria-label="Palabra clave">
+      <button type="button">Aplicar</button>
+    </div>
+    <div class="mensaje"></div>
+
+    <p class="nota" style="margin-top:4px">¿No la tenés? Pedila por <a href="#">Instagram</a> o en el <a href="#">canal de WhatsApp</a>.</p>
+
+  </section>
+  <p class="nota">Ocupa poco lugar. El precio de ejemplo aparece solo y el campo titila suave para invitar a escribir.</p>
+
+  <p class="nota" style="margin-top:30px">Para probar: escribí <b>PRUEBA</b> en cualquiera (en la página real van las claves de verdad).</p>
+
+</main>
+
+<script>
+  // Solo para el boceto: "PRUEBA" simula una clave correcta
+  const colores = ["#00a650", "#ff6a00", "#7c3aed", "#facc15", "#ef4444"];
+
+  function confeti() {
+    for (let i = 0; i < 40; i++) {
+      const pieza = document.createElement("i");
+      pieza.className = "confeti";
+      pieza.style.left = Math.random() * 100 + "vw";
+      pieza.style.background = colores[i % colores.length];
+      pieza.style.animationDelay = Math.random() * 0.4 + "s";
+      document.body.appendChild(pieza);
+      setTimeout(() => pieza.remove(), 2200);
+    }
+  }
+
+  document.querySelectorAll("[data-boceto]").forEach((caja) => {
+    const input = caja.querySelector("input");
+    const mensaje = caja.querySelector(".mensaje");
+    const aplicar = () => {
+      const ok = input.value.trim().toUpperCase() === "PRUEBA";
+      mensaje.textContent = ok ? "✅ ¡Listo! Tenés 50% OFF en todas las chances." : "❌ Esa palabra no es correcta.";
+      mensaje.style.color = ok ? "" : "#dc2626";
+      if (ok) {
+        caja.classList.add("abierto");
+        const candado = caja.querySelector(".icono-candado");
+        if (candado) candado.textContent = "🔓";
+        confeti();
+      }
+    };
+    caja.querySelector("button").addEventListener("click", aplicar);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") aplicar(); });
+  });
+
+  // A: los pasos se iluminan uno por uno
+  const pasos = document.querySelectorAll(".pasos li");
+  let paso = 0;
+  setInterval(() => {
+    pasos.forEach((li, i) => li.classList.toggle("activo", i === paso));
+    paso = (paso + 1) % pasos.length;
+  }, 1300);
+</script>
+</body>
+</html>

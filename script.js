@@ -480,6 +480,39 @@ function actualizarPreciosDescuento() {
 
 }
 
+// ==================================================
+// CUPÓN DE PALABRA CLAVE (animación)
+// ==================================================
+// Los 3 pasos del cupón se iluminan de a uno, y al acertar la
+// clave cae confeti. Sin movimiento si el celular lo pide.
+
+const sinMovimiento =
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+const pasosCupon = document.querySelectorAll(".cupon-pasos li");
+
+if (pasosCupon.length && !sinMovimiento) {
+  let pasoCupon = 0;
+  setInterval(() => {
+    pasosCupon.forEach((paso, i) => paso.classList.toggle("activo", i === pasoCupon));
+    pasoCupon = (pasoCupon + 1) % pasosCupon.length;
+  }, 1300);
+}
+
+function tirarConfeti() {
+  if (sinMovimiento) return;
+  const colores = ["#00a650", "#ff6a00", "#7c3aed", "#facc15", "#ef4444"];
+  for (let i = 0; i < 40; i++) {
+    const pieza = document.createElement("i");
+    pieza.className = "confeti-clave";
+    pieza.style.left = Math.random() * 100 + "vw";
+    pieza.style.background = colores[i % colores.length];
+    pieza.style.animationDelay = Math.random() * 0.4 + "s";
+    document.body.appendChild(pieza);
+    setTimeout(() => pieza.remove(), 2200);
+  }
+}
+
 const btnAplicarDescuento = document.getElementById("btnAplicarDescuento");
 
 // Enter en el campo también aplica la palabra clave
@@ -513,6 +546,8 @@ if (btnAplicarDescuento) {
         mensaje.innerText = "✅ ¡PALABRA CLAVE ACTIVADA! TENÉS 50% OFF EN TODAS LAS CHANCES.";
         mensaje.style.color = "#008a43";
       }
+
+      tirarConfeti();
 
     } else {
       palabraClaveActiva = "";
