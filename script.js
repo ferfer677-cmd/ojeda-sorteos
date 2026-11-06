@@ -711,8 +711,10 @@ if (btnAplicarDescuento) {
     // Los códigos "MITAD" (50% OFF) y "ENTERO" (oferta secreta)
     // se dieron de baja el 16/10/2026.
 
-    if (codigo === CODIGO_3XHOY) {
-      abrirPromo3xHoy(mensaje);
+    const promoConReloj = PROMOS_CON_RELOJ.find((promo) => promo.codigo === codigo);
+
+    if (promoConReloj) {
+      abrirPromo3xHoy(mensaje, promoConReloj);
       return;
     }
 
@@ -781,17 +783,20 @@ window.abrirModalPromo = function(
 
 
 // ==================================================
-// CÓDIGO "3XHOY": 3 PROMOS HASTA LAS 23:10 DEL 04/11/2026
+// CÓDIGOS CON RELOJ: "3XHOY" Y "REVIERNES"
 // ==================================================
 // Al escribir el código sale un cartel con 3 packs y la cuenta
-// regresiva hasta VENCE_3XHOY. Después de esa hora el código ya
+// regresiva hasta "vence". Después de esa hora el código ya
 // no funciona.
-// Si se cambian estos packs, cambiarlos también en
-// functions/index.js (PACKS_3XHOY, para el sub admin).
+// Si se cambian estos packs o códigos, cambiarlos también en
+// functions/index.js (PROMOS_CON_RELOJ, para el sub admin).
 
-const CODIGO_3XHOY = "3XHOY";
-// 04/11/2026 23:10 hora de Argentina
-const VENCE_3XHOY = Date.parse("2026-11-04T23:10:00-03:00");
+const PROMOS_CON_RELOJ = [
+  // 04/11/2026 23:10 hora de Argentina
+  { codigo: "3XHOY", vence: Date.parse("2026-11-04T23:10:00-03:00"), hora: "23:10" },
+  // 06/11/2026 12:45 hora de Argentina
+  { codigo: "REVIERNES", vence: Date.parse("2026-11-06T12:45:00-03:00"), hora: "12:45" }
+];
 
 const PACKS_3XHOY = [
   { chances: 1, precio: 1500 },
@@ -801,9 +806,9 @@ const PACKS_3XHOY = [
 
 let reloj3xHoy = null;
 
-function abrirPromo3xHoy(mensaje) {
+function abrirPromo3xHoy(mensaje, promo) {
 
-  const vence = VENCE_3XHOY;
+  const { codigo, vence, hora } = promo;
 
   if (Date.now() >= vence) {
     if (mensaje) {
@@ -838,7 +843,7 @@ function abrirPromo3xHoy(mensaje) {
 
   const etiqueta = document.createElement("span");
   etiqueta.className = "cierre-etiqueta";
-  etiqueta.textContent = "CÓDIGO 3XHOY";
+  etiqueta.textContent = `CÓDIGO ${codigo}`;
 
   const titulo = document.createElement("h2");
   titulo.className = "cierre-titulo";
@@ -846,11 +851,12 @@ function abrirPromo3xHoy(mensaje) {
 
   const bajada = document.createElement("p");
   bajada.className = "cierre-subtitulo";
-  bajada.textContent = "Promo hasta las 23:10 hs. Elegí la tuya:";
+  bajada.textContent = `Promo hasta las ${hora} hs. Elegí la tuya:`;
 
   const contador = document.createElement("div");
   contador.className = "cierre-contador";
   contador.innerHTML =
+    '<div class="cierre-caja" data-caja-horas><span data-horas>0</span><small>HS</small></div>' +
     '<div class="cierre-caja"><span data-min>0</span><small>MIN</small></div>' +
     '<div class="cierre-caja"><span data-seg>00</span><small>SEG</small></div>';
 
@@ -876,7 +882,7 @@ function abrirPromo3xHoy(mensaje) {
 
     boton.addEventListener("click", () => {
       cerrar();
-      window.abrirModalPromo(chances, precio, CODIGO_3XHOY, "PROMO 3XHOY");
+      window.abrirModalPromo(chances, precio, codigo, `PROMO ${codigo}`);
     });
 
     lista.appendChild(boton);
@@ -897,14 +903,18 @@ function abrirPromo3xHoy(mensaje) {
     const resta = Math.max(0, vence - Date.now());
     const segundos = Math.ceil(resta / 1000);
 
-    contador.querySelector("[data-min]").textContent = String(Math.floor(segundos / 60));
+    const horas = Math.floor(segundos / 3600);
+    contador.querySelector("[data-caja-horas]").hidden = !horas;
+    contador.querySelector("[data-horas]").textContent = String(horas);
+    contador.querySelector("[data-min]").textContent =
+      horas ? String(Math.floor(segundos / 60) % 60).padStart(2, "0") : String(Math.floor(segundos / 60));
     contador.querySelector("[data-seg]").textContent = String(segundos % 60).padStart(2, "0");
 
     fondo.classList.toggle("urgente", segundos <= 30);
 
     if (!resta) {
       clearInterval(reloj3xHoy);
-      bajada.textContent = "⏰ La promo terminó a las 23:10 hs";
+      bajada.textContent = `⏰ La promo terminó a las ${hora} hs`;
       lista.querySelectorAll("button").forEach((boton) => { boton.disabled = true; });
       if (mensaje) {
         mensaje.innerText = "⏰ ESA PROMO YA TERMINÓ.";

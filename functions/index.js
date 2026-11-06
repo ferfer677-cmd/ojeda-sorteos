@@ -357,8 +357,11 @@ const PACKS_COMUNES = [
   { chances: 100, nombre: "👑 PACK MÁXIMO", precio: 75000, mitad: 37500 }
 ];
 
-// Código "3XHOY" (script.js, PACKS_3XHOY): hasta el 04/11/2026 23:10
-const VENCE_3XHOY = Date.parse("2026-11-04T23:10:00-03:00");
+// Códigos con reloj (script.js, PROMOS_CON_RELOJ): mismos 3 packs
+const PROMOS_CON_RELOJ = [
+  { codigo: "3XHOY", vence: Date.parse("2026-11-04T23:10:00-03:00") },
+  { codigo: "REVIERNES", vence: Date.parse("2026-11-06T12:45:00-03:00") }
+];
 
 const PACKS_3XHOY = [
   { chances: 1, precio: 1500 },
@@ -400,16 +403,20 @@ function catalogoDePacks() {
     });
   });
 
-  (Date.now() < VENCE_3XHOY ? PACKS_3XHOY : []).forEach(({ chances, precio }) => {
-    packs.push({
-      id: `3xhoy${chances}`,
-      grupo: "Promo 3XHOY",
-      chances,
-      precio,
-      codigoPromo: "3XHOY",
-      pack: `PROMO 3XHOY • ${chances} CHANCE${chances === 1 ? "" : "S"} • ${pesos(precio)}`
+  PROMOS_CON_RELOJ
+    .filter(({ vence }) => Date.now() < vence)
+    .forEach(({ codigo }) => {
+      PACKS_3XHOY.forEach(({ chances, precio }) => {
+        packs.push({
+          id: `${codigo.toLowerCase()}${chances}`,
+          grupo: `Promo ${codigo}`,
+          chances,
+          precio,
+          codigoPromo: codigo,
+          pack: `PROMO ${codigo} • ${chances} CHANCE${chances === 1 ? "" : "S"} • ${pesos(precio)}`
+        });
+      });
     });
-  });
 
   PREMIOS_RULETA
     .filter((premio) => premio.chances > 0 && premio.precio > 0)
