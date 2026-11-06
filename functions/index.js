@@ -13,7 +13,7 @@
 // crear en Firestore el documento privado/meta con el campo
 // testEventCode = "TEST12345" (el código que da Meta). Borrarlo al terminar.
 
-const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
+const { onDocumentUpdated, onDocumentWritten } = require("firebase-functions/v2/firestore");
 const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
@@ -642,30 +642,38 @@ async function actualizarRankingPublico(db) {
 
 }
 
+// En una transacción: si se aprueban 2 compras del mismo DNI casi
+// juntas, la segunda no pisa a la primera con datos viejos.
 async function actualizarConsulta(db, dni) {
 
-  const compras =
-    await db.collection("participantes").where("dniNormalizado", "==", dni).get();
-
-  const aprobadas = compras.docs
-    .map((documento) => documento.data())
-    .filter((datos) => datos.estado === "Pagado" && Array.isArray(datos.numeros) && datos.numeros.length);
+  if (!dni) return;
 
   const consulta = db.collection("consultas").doc(dni);
 
-  if (!aprobadas.length) {
-    await consulta.delete();
-    return;
-  }
+  await db.runTransaction(async (tx) => {
 
-  await consulta.set({
-    nombre: nombreAbreviado(aprobadas[0].nombre, aprobadas[0].apellido),
-    compras: aprobadas.map((datos) => ({
-      pack: datos.pack || "",
-      chances: Number(datos.chancesFinales) || datos.numeros.length,
-      numeros: datos.numeros
-    })),
-    actualizado: FieldValue.serverTimestamp()
+    const compras =
+      await tx.get(db.collection("participantes").where("dniNormalizado", "==", dni));
+
+    const aprobadas = compras.docs
+      .map((documento) => documento.data())
+      .filter((datos) => datos.estado === "Pagado" && Array.isArray(datos.numeros) && datos.numeros.length);
+
+    if (!aprobadas.length) {
+      tx.delete(consulta);
+      return;
+    }
+
+    tx.set(consulta, {
+      nombre: nombreAbreviado(aprobadas[0].nombre, aprobadas[0].apellido),
+      compras: aprobadas.map((datos) => ({
+        pack: datos.pack || "",
+        chances: Number(datos.chancesFinales) || datos.numeros.length,
+        numeros: datos.numeros
+      })),
+      actualizado: FieldValue.serverTimestamp()
+    });
+
   });
 
 }
@@ -735,7 +743,8 @@ async function aprobarCompra(db, id) {
     chances: FieldValue.increment(cantidad)
   }, { merge: true });
 
-  await Promise.all([actualizarRankingPublico(db), actualizarConsulta(db, dni)]);
+  // "Ver mis números" lo actualiza verMisNumerosAlDia (al cambiar la compra)
+  await actualizarRankingPublico(db);
 
   listaNombres.hasta = 0;
 
@@ -835,6 +844,51 @@ exports.buscarComprobantes = onRequest(
 // ======================================================
 // EVENTO "PURCHASE" AL APROBAR UN PAGO
 // ======================================================
+
+// ======================================================
+// "VER MIS NÚMEROS" SIEMPRE AL DÍA
+// ======================================================
+// Cada vez que una compra se aprueba, se edita o se borra (desde el
+// admin, el sub admin o donde sea), el servidor rearma consultas/{dni}.
+// Antes lo hacía el navegador del admin y a veces quedaba viejo
+// (2 compras del mismo DNI aprobadas casi juntas, o un corte a mitad).
+
+const CAMPOS_DE_CONSULTA = ["estado", "numeros", "chancesFinales", "pack", "nombre", "apellido", "dniNormalizado"];
+
+exports.verMisNumerosAlDia = onDocumentWritten(
+  {
+    document: "participantes/{id}",
+    region: "southamerica-east1",
+    retry: true
+  },
+  async (evento) => {
+
+    const antes = evento.data?.before.data() || null;
+    const despues = evento.data?.after.data() || null;
+
+    // Compra nueva sin aprobar: el público todavía no ve nada
+    if (!antes && despues?.estado !== "Pagado") return;
+
+    const cambio = CAMPOS_DE_CONSULTA.some(
+      (campo) => JSON.stringify(antes?.[campo] ?? null) !== JSON.stringify(despues?.[campo] ?? null)
+    );
+
+    if (!cambio) return;
+
+    const dniDe = (datos) =>
+      datos ? String(datos.dniNormalizado || datos.dni || "").replace(/\D/g, "") : "";
+
+    const dnis = new Set([dniDe(antes), dniDe(despues)].filter(Boolean));
+
+    const db = getFirestore();
+
+    for (const dni of dnis) {
+      await actualizarConsulta(db, dni);
+    }
+
+  }
+);
+
 
 exports.compraAprobadaAMeta = onDocumentUpdated(
   {

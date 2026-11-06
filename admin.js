@@ -1062,7 +1062,7 @@ async function eliminarCompra(id, datos) {
     await actualizarRanking(datos, -numerosAsignados);
   }
 
-  await actualizarConsulta(dniDe(datos));
+  // "Ver mis números" lo actualiza el servidor (verMisNumerosAlDia)
 
 }
 
@@ -2467,10 +2467,7 @@ await actualizarRanking(
   cantidad
 );
 
-// Actualizar "Ver mis números"
-await actualizarConsulta(
-  dniDe(datos)
-);
+// "Ver mis números" lo actualiza el servidor (verMisNumerosAlDia)
 
                 alert(
                   `✅ Pago aprobado.\n\nSe asignaron ${cantidad} números.`
@@ -3002,10 +2999,7 @@ await actualizarRanking(
         }
 
 
-        // Actualizar "Ver mis números" solo de los aprobados
-        for (const dni of dnisAprobados) {
-          await actualizarConsulta(dni);
-        }
+        // "Ver mis números" lo actualiza el servidor (verMisNumerosAlDia)
 
         alert(
           `✅ ${aprobados} pagos aprobados.`
