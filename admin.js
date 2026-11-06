@@ -1642,6 +1642,74 @@ function mostrarResumen(elemento, filas) {
 }
 
 
+// =====================================================
+// FACTURACIÓN POR PROMO CON RELOJ (3XHOY, REVIERNES...)
+// =====================================================
+// Solo las promos extra con cuenta regresiva (script.js,
+// PROMOS_CON_RELOJ). Se reconocen por el pack "PROMO <CÓDIGO> • ...",
+// así una promo nueva aparece sola. MITAD, 50 y la ruleta no entran.
+
+function mostrarPromosConReloj(participantes) {
+
+  const elemento = document.getElementById("statPromos");
+
+  if (!elemento) return;
+
+  const promos = new Map();
+
+  participantes.forEach(({ datos }) => {
+
+    const pack = String(datos.pack || "");
+    const codigo = String(datos.codigoPromo || "").trim().toUpperCase();
+
+    if (!codigo || !pack.toUpperCase().startsWith(`PROMO ${codigo} `)) return;
+
+    if (!promos.has(codigo)) {
+      promos.set(codigo, { compras: 0, monto: 0, pendientes: 0, packs: {} });
+    }
+
+    const promo = promos.get(codigo);
+
+    if (datos.estado !== "Pagado") {
+      promo.pendientes++;
+      return;
+    }
+
+    const monto = precioDeCompra(datos);
+    const chances = Number(datos.chancesFinales) || 0;
+
+    promo.compras++;
+    promo.monto += monto;
+    sumarCompra(promo.packs, `${chances} chance${chances === 1 ? "" : "s"}`, monto);
+
+  });
+
+  if (!promos.size) {
+    elemento.textContent = "Todavía no hay compras con promos extra";
+    return;
+  }
+
+  const filas = [];
+
+  promos.forEach((promo, codigo) => {
+
+    filas.push({
+      nombre: `🔑 ${codigo}` + (promo.pendientes ? ` · ⏳ ${promo.pendientes} por aprobar` : ""),
+      compras: promo.compras,
+      monto: promo.monto
+    });
+
+    Object.entries(promo.packs)
+      .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+      .forEach(([nombre, grupo]) => filas.push({ nombre, ...grupo, sangria: true }));
+
+  });
+
+  mostrarResumen(elemento, filas);
+
+}
+
+
 // Suma una compra en un grupo { compras, monto }
 function sumarCompra(grupos, clave, monto) {
   grupos[clave] = grupos[clave] || { compras: 0, monto: 0 };
@@ -2675,6 +2743,9 @@ await actualizarRanking(
       }
 
     }
+
+
+    mostrarPromosConReloj(participantes);
 
 
     if (tituloAnuncio) {
