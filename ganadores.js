@@ -20,6 +20,13 @@
 
 const IG = "https://www.instagram.com/sorteo_ojeda_/reel/";
 
+// Instagram @sorteo_ojeda_ inhabilitado (07/11/2026): sus links no se muestran.
+// Al recuperarlo, poner false y subir ?v= de ganadores.js en index.html.
+const IG_SORTEO_CAIDO = true;
+
+const linkVisible = (url) =>
+  IG_SORTEO_CAIDO && String(url || "").includes("instagram.com/sorteo_ojeda_") ? "" : url || "";
+
 const SORTEOS_ANTERIORES = [
   {
     titulo: "Yamaha MT-07",
@@ -336,10 +343,12 @@ const ENTREGAS_VISIBLES = 3;
       resena.dataset.extra = "si";
     }
 
-    const caja = document.createElement(foto.link ? "a" : "div");
+    const link = linkVisible(foto.link);
+
+    const caja = document.createElement(link ? "a" : "div");
     caja.className = "resena-foto" + (foto.formato === "ancho" ? " ancho" : "");
-    if (foto.link) {
-      caja.href = foto.link;
+    if (link) {
+      caja.href = link;
       caja.target = "_blank";
       caja.rel = "noopener";
     }
@@ -398,7 +407,7 @@ const ENTREGAS_VISIBLES = 3;
 
     resena.append(caja, sello, texto);
 
-    if (foto.link) {
+    if (link) {
       const verLink = document.createElement("span");
       verLink.className = "resena-instagram";
       verLink.textContent = "Ver en Instagram ↗";
@@ -468,7 +477,7 @@ const ENTREGAS_VISIBLES = 3;
 
     tarjeta.appendChild(lista);
 
-    if (sorteo.video) {
+    if (linkVisible(sorteo.video)) {
       const video = document.createElement("a");
       video.className = "ganadores-video";
       video.href = sorteo.video;
