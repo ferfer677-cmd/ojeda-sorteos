@@ -363,6 +363,8 @@ const PROMOS_CON_RELOJ = [
   { codigo: "REVIERNES", vence: Date.parse("2026-11-06T22:07:00-03:00") }
 ];
 
+const DIAS_PROMO_VENCIDA = 7;
+
 const PACKS_3XHOY = [
   { chances: 1, precio: 1500 },
   { chances: 20, precio: 9999 },
@@ -403,13 +405,18 @@ function catalogoDePacks() {
     });
   });
 
+  // Seba puede cargar comprobantes atrasados de una promo hasta 7 días después de que venció
   PROMOS_CON_RELOJ
-    .filter(({ vence }) => Date.now() < vence)
-    .forEach(({ codigo }) => {
+    .filter(({ vence }) => Date.now() < vence + DIAS_PROMO_VENCIDA * 24 * 60 * 60 * 1000)
+    .forEach(({ codigo, vence }) => {
+      const vencida = Date.now() >= vence;
+      const diaVence = new Date(vence).toLocaleDateString("es-AR", {
+        timeZone: "America/Argentina/Buenos_Aires", day: "2-digit", month: "2-digit"
+      });
       PACKS_3XHOY.forEach(({ chances, precio }) => {
         packs.push({
           id: `${codigo.toLowerCase()}${chances}`,
-          grupo: `Promo ${codigo}`,
+          grupo: vencida ? `Promo ${codigo} (venció ${diaVence})` : `Promo ${codigo}`,
           chances,
           precio,
           codigoPromo: codigo,
