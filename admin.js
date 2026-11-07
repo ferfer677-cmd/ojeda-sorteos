@@ -2965,7 +2965,7 @@ if (aprobarTodos) {
 
       const confirmar =
         confirm(
-          "¿Aprobar TODOS los pagos pendientes?"
+          "¿Aprobar TODOS los pagos pendientes y DEJAR todas las sin revisar?"
         );
 
 
@@ -2982,6 +2982,8 @@ if (aprobarTodos) {
 
         let aprobados = 0;
 
+        let dejadas = 0;
+
         const dnisAprobados = new Set();
 
 
@@ -2992,6 +2994,21 @@ if (aprobarTodos) {
 
           const datos =
             participante.datos;
+
+
+          // Aprobada sola: DEJAR (ahí sale el Purchase de Meta)
+          if (esSinRevisar(datos)) {
+
+            await updateDoc(doc(db, "participantes", participante.id), {
+              revisada: true,
+              revisadaEn: serverTimestamp()
+            });
+
+            dejadas++;
+
+            continue;
+
+          }
 
 
           if (
@@ -3140,7 +3157,7 @@ await actualizarRanking(
         // "Ver mis números" lo actualiza el servidor (verMisNumerosAlDia)
 
         alert(
-          `✅ ${aprobados} pagos aprobados.`
+          `✅ ${aprobados} pagos aprobados y ${dejadas} sin revisar dejadas.`
         );
 
 
