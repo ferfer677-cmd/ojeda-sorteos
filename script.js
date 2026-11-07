@@ -794,8 +794,8 @@ window.abrirModalPromo = function(
 const PROMOS_CON_RELOJ = [
   // 04/11/2026 23:10 hora de Argentina
   { codigo: "3XHOY", vence: Date.parse("2026-11-04T23:10:00-03:00"), hora: "23:10" },
-  // 06/11/2026 12:45 hora de Argentina
-  { codigo: "REVIERNES", vence: Date.parse("2026-11-06T12:45:00-03:00"), hora: "12:45" }
+  // 06/11/2026 22:07 hora de Argentina (17 min desde que se publicó)
+  { codigo: "REVIERNES", vence: Date.parse("2026-11-06T22:07:00-03:00"), hora: "22:07" }
 ];
 
 const PACKS_3XHOY = [

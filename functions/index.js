@@ -360,7 +360,7 @@ const PACKS_COMUNES = [
 // Códigos con reloj (script.js, PROMOS_CON_RELOJ): mismos 3 packs
 const PROMOS_CON_RELOJ = [
   { codigo: "3XHOY", vence: Date.parse("2026-11-04T23:10:00-03:00") },
-  { codigo: "REVIERNES", vence: Date.parse("2026-11-06T12:45:00-03:00") }
+  { codigo: "REVIERNES", vence: Date.parse("2026-11-06T22:07:00-03:00") }
 ];
 
 const PACKS_3XHOY = [
