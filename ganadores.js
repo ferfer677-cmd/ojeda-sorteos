@@ -10,7 +10,9 @@
 //   nombre: si no hay usuario (o la cuenta ya no existe), se muestra el nombre sin link
 // video (opcional): link a la publicación del sorteo en Instagram
 // foto (opcional): imagen de la entrega; al tocarla abre fotoVideo (o video)
-// fotos (opcional): varias fotos: [{ src, link, alt, ganador }]
+// fotos (opcional): varias fotos: [{ src, link, alt, ganador, aparte }]
+//   aparte: true para mostrar otra tarjeta del mismo ganador
+//   frase (opcional): lo que dijo el ganador, entre comillas en la tarjeta
 //   ganador: a qué ganador de la lista corresponde la foto (0 = el primero)
 //   formato: "ancho" para fotos horizontales, así no se recortan de los costados
 // entrega: "pendiente" si el premio todavía no se entregó
@@ -24,9 +26,10 @@ const SORTEOS_ANTERIORES = [
     fecha: "Octubre 2026",
     video: IG + "Dek8dFfkc-c/",
     fotos: [
+      { src: "assets/ganadores/mt07-enzo.jpg", link: "https://www.instagram.com/e.speed420/", alt: "@e.speed420 con la Yamaha MT-07 que ganó", ganador: 0 },
+      { src: "assets/ganadores/mt07-enzo-2.jpg", link: "https://www.instagram.com/e.speed420/", alt: "El hijo de @e.speed420 sonriendo al lado de la Yamaha MT-07 que ganó su papá", ganador: 0, aparte: true, frase: "Cuando fui a buscar al peque a la escuela y le di la noticia 😄" },
       { src: "assets/ganadores/mt07-flete.jpg", link: IG + "DelG-xYROIP/", alt: "La Yamaha MT-07 embalada y atada en la camioneta del flete, en camino a su ganador" }
     ],
-    entrega: "pendiente",
     ganadores: [
       { premio: "🏍️ Yamaha MT-07", ig: "e.speed420", ciudad: "San Luis capital" },
       { premio: "💵 $50.000", ig: "alcarazgaston" },
@@ -306,7 +309,8 @@ const ENTREGAS_VISIBLES = 3;
 
       const indice = foto.ganador || 0;
 
-      if (usados.has(indice) || !sorteo.ganadores[indice]) {
+      // aparte: true = otra tarjeta más del mismo ganador
+      if ((usados.has(indice) && !foto.aparte) || !sorteo.ganadores[indice]) {
         return;
       }
 
@@ -378,6 +382,19 @@ const ENTREGAS_VISIBLES = 3;
 
     if (!ganador.ciudad) {
       texto.lastChild.textContent = sorteo.fecha;
+    }
+
+    // Lo que dijo el ganador sobre esta foto
+    if (foto.frase) {
+      texto.appendChild(parrafo(`“${foto.frase}”`, "resena-frase"));
+    }
+
+    // La primera entrega (la del sorteo más reciente)
+    if (indice === 0) {
+      const reciente = document.createElement("span");
+      reciente.className = "resena-reciente";
+      reciente.textContent = "🏆 Ganador más reciente";
+      texto.prepend(reciente);
     }
 
     resena.append(caja, sello, texto);

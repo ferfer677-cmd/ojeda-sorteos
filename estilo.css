@@ -810,6 +810,29 @@ main section.compartir {
 
 .verificado.pendiente { background: var(--naranja); }
 
+/* Frase del ganador en su foto (ganadores.js, "frase") */
+.resena-texto .resena-frase {
+  margin-top: 6px;
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.35;
+  opacity: .95;
+}
+
+/* Cartel de la entrega del sorteo más reciente (ganadores.js) */
+.resena-reciente {
+  display: inline-block;
+  margin-bottom: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  color: #3b2a00;
+  background: linear-gradient(135deg, #ffe08a, #f5b700);
+  border-radius: 999px;
+  box-shadow: 0 2px 10px rgba(245, 183, 0, .45);
+}
+
 .resena-instagram {
   position: absolute;
   top: 12px;
