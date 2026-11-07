@@ -27,7 +27,6 @@ const SORTEOS_ANTERIORES = [
     video: IG + "Dek8dFfkc-c/",
     fotos: [
       { src: "assets/ganadores/mt07-enzo.jpg", link: "https://www.instagram.com/e.speed420/", alt: "@e.speed420 con la Yamaha MT-07 que ganó", ganador: 0 },
-      { src: "assets/ganadores/mt07-enzo-2.jpg", link: "https://www.instagram.com/e.speed420/", alt: "El hijo de @e.speed420 sonriendo al lado de la Yamaha MT-07 que ganó su papá", ganador: 0, aparte: true, frase: "Cuando fui a buscar al peque a la escuela y le di la noticia 😄" },
       { src: "assets/ganadores/mt07-flete.jpg", link: IG + "DelG-xYROIP/", alt: "La Yamaha MT-07 embalada y atada en la camioneta del flete, en camino a su ganador" }
     ],
     ganadores: [
