@@ -18,7 +18,7 @@ const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
 const { initializeApp } = require("firebase-admin/app");
-const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestore");
 const { getStorage, getDownloadURL } = require("firebase-admin/storage");
 const crypto = require("node:crypto");
 
@@ -581,6 +581,21 @@ async function cargarCompra(db, cuerpo) {
 
   const comprobanteURL = await getDownloadURL(archivo);
 
+  // Día al que corresponde la compra (lo elige el sub admin con ◀ ▶).
+  // Hoy: la hora de ahora. Otro día: ese día a las 12:00 de Argentina.
+  const hoy =
+    new Intl.DateTimeFormat("en-CA", { timeZone: "America/Argentina/Buenos_Aires" }).format(new Date());
+
+  const dia = /^\d{4}-\d{2}-\d{2}$/.test(cuerpo.dia || "") ? cuerpo.dia : hoy;
+
+  const mediodia = Date.parse(`${dia}T12:00:00-03:00`);
+
+  if (!Number.isFinite(mediodia) || dia > hoy || Date.now() - mediodia > 32 * 24 * 60 * 60 * 1000) {
+    return { error: "DATOS" };
+  }
+
+  const fecha = dia === hoy ? FieldValue.serverTimestamp() : Timestamp.fromMillis(mediodia);
+
   const nueva = await db.collection("participantes").add({
     nombre,
     apellido,
@@ -599,7 +614,8 @@ async function cargarCompra(db, cuerpo) {
     referido: "",
     estado: "Esperando",
     cargadoPor: "subadmin",
-    fecha: FieldValue.serverTimestamp()
+    diaCompra: dia,
+    fecha
   });
 
   listaNombres.hasta = 0;
