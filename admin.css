@@ -397,6 +397,31 @@ button:disabled { opacity: .6; cursor: wait; }
   border-radius: 10px;
 }
 
+/* Aprobada sola al recibir el comprobante, falta que el admin la revise */
+.card-sin-revisar {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px #fde68a;
+}
+
+.sin-revisar-sello {
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 10px;
+}
+
+.dejar-btn {
+  padding: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--verde);
+  border: 0;
+  border-radius: 10px;
+}
+
 .eliminar-btn {
   padding: 9px;
   font-size: 13px;

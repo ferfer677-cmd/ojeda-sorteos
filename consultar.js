@@ -54,7 +54,7 @@ boton.addEventListener(
       if (!compras.length) {
 
         resultado.textContent =
-          "No encontramos números para ese DNI. Si compraste hace poco, tu pago todavía se está verificando.";
+          "No encontramos números para ese DNI. Si enviaste el comprobante recién, esperá unos segundos y probá de nuevo.";
 
         return;
 

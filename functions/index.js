@@ -1,8 +1,8 @@
 // ======================================================
 // API DE CONVERSIONES DE META
 // ======================================================
-// Cuando una compra pasa a "Pagado" (el admin la aprueba, sola o con
-// "Aprobar todos"), se le manda a Meta un evento Purchase con el monto
+// Cuando una compra queda "Pagado" y revisada (el admin la aprueba o toca
+// DEJAR en una aprobada sola), se le manda a Meta un evento Purchase con el monto
 // real. Es la única "Purchase": la página, al enviar el comprobante,
 // solo manda "AddPaymentInfo". Así Meta cuenta las compras aprobadas.
 //
@@ -13,7 +13,7 @@
 // crear en Firestore el documento privado/meta con el campo
 // testEventCode = "TEST12345" (el código que da Meta). Borrarlo al terminar.
 
-const { onDocumentUpdated, onDocumentWritten } = require("firebase-functions/v2/firestore");
+const { onDocumentCreated, onDocumentUpdated, onDocumentWritten } = require("firebase-functions/v2/firestore");
 const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const logger = require("firebase-functions/logger");
@@ -708,6 +708,44 @@ async function actualizarConsulta(db, dni) {
 
 }
 
+// Números únicos de 6 cifras que no tenga ninguna otra compra
+function numerosNuevos(todas, cantidad) {
+
+  const usados = new Set();
+
+  todas.docs.forEach((documento) => {
+    const numeros = documento.get("numeros");
+    if (Array.isArray(numeros)) numeros.forEach((numero) => usados.add(String(numero)));
+  });
+
+  const numeros = [];
+
+  while (numeros.length < cantidad) {
+    const numero = String(crypto.randomInt(1000000)).padStart(6, "0");
+    if (!usados.has(numero)) {
+      usados.add(numero);
+      numeros.push(numero);
+    }
+  }
+
+  return numeros;
+
+}
+
+async function sumarAlRanking(db, datos, cantidad) {
+
+  const dni = datos.dniNormalizado || String(datos.dni || "").replace(/\D/g, "");
+
+  if (!dni) return;
+
+  await db.collection("ranking").doc(dni).set({
+    dniNormalizado: dni,
+    nombre: `${datos.nombre || ""} ${datos.apellido || ""}`.replace(/\s+/g, " ").trim(),
+    chances: FieldValue.increment(cantidad)
+  }, { merge: true });
+
+}
+
 async function aprobarCompra(db, id) {
 
   const referencia = db.collection("participantes").doc(String(id || "").slice(0, 60) || "-");
@@ -731,22 +769,7 @@ async function aprobarCompra(db, id) {
     return { error: "DATOS" };
   }
 
-  const usados = new Set();
-
-  todas.docs.forEach((documento) => {
-    const numeros = documento.get("numeros");
-    if (Array.isArray(numeros)) numeros.forEach((numero) => usados.add(String(numero)));
-  });
-
-  const numeros = [];
-
-  while (numeros.length < cantidad) {
-    const numero = String(crypto.randomInt(1000000)).padStart(6, "0");
-    if (!usados.has(numero)) {
-      usados.add(numero);
-      numeros.push(numero);
-    }
-  }
+  const numeros = numerosNuevos(todas, cantidad);
 
   // En una transacción: si el admin la aprobó o borró recién, no se pisa
   const aprobada = await db.runTransaction(async (tx) => {
@@ -765,13 +788,7 @@ async function aprobarCompra(db, id) {
     return { error: "YA_APROBADA" };
   }
 
-  const dni = datos.dniNormalizado || String(datos.dni || "").replace(/\D/g, "");
-
-  await db.collection("ranking").doc(dni).set({
-    dniNormalizado: dni,
-    nombre: `${datos.nombre || ""} ${datos.apellido || ""}`.replace(/\s+/g, " ").trim(),
-    chances: FieldValue.increment(cantidad)
-  }, { merge: true });
+  await sumarAlRanking(db, datos, cantidad);
 
   // "Ver mis números" lo actualiza verMisNumerosAlDia (al cambiar la compra)
   await actualizarRankingPublico(db);
@@ -872,6 +889,111 @@ exports.buscarComprobantes = onRequest(
 );
 
 // ======================================================
+// APROBACIÓN AUTOMÁTICA AL RECIBIR EL COMPROBANTE
+// ======================================================
+// Apenas alguien envía su comprobante, el servidor le asigna los
+// números y la compra queda "Pagado" con revisada: false. En el admin
+// aparece "🕵️ Sin revisar": el admin la deja (✔ DEJAR) o la elimina.
+// El "Purchase" de Meta sale recién cuando el admin la deja.
+//
+// Si los datos no cierran (chances que no coinciden con el pack o un
+// precio demasiado bajo), queda "Esperando" para aprobar a mano como antes.
+
+const CHANCES_MAXIMAS_AUTO = 400;
+// El pack más barato por chance es 400 chances a $39.999 (~$100 cada una)
+const PRECIO_MINIMO_POR_CHANCE = 99;
+const PRECIO_MINIMO_AUTO = 1500;
+
+// Chances y precio leídos del texto del pack ("... • 20 CHANCES • $9.999")
+function packDeLaCompra(datos) {
+  const texto = String(datos.pack || "").toUpperCase();
+  const chances = Number((texto.match(/(\d+)\s*CHANCE/) || [])[1]) || 0;
+  const precio = Number(((texto.match(/\$\s*([\d.]+)/) || [])[1] || "").replace(/\./g, "")) || 0;
+  return { chances, precio };
+}
+
+function motivoParaNoAprobarSola(datos) {
+
+  if (datos.estado !== "Esperando") return "estado";
+  if (datos.cargadoPor === "subadmin") return "subadmin";
+
+  const cantidad = Number(datos.chancesFinales);
+  const { chances, precio } = packDeLaCompra(datos);
+
+  if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > CHANCES_MAXIMAS_AUTO) return "cantidad";
+  if (chances !== cantidad) return "pack";
+
+  // La chance gratis de la ruleta la crea el servidor: no tiene precio
+  if (datos.codigoPromo === "RULETAGRATIS") return cantidad === 1 ? "" : "pack";
+
+  const monto = precio || Number(datos.precioFinal) || 0;
+
+  if (monto < PRECIO_MINIMO_AUTO || monto < cantidad * PRECIO_MINIMO_POR_CHANCE) return "precio";
+
+  return "";
+
+}
+
+exports.aprobarAlRecibir = onDocumentCreated(
+  {
+    document: "participantes/{id}",
+    region: "southamerica-east1",
+    retry: true
+  },
+  async (evento) => {
+
+    const datos = evento.data?.data();
+
+    if (!datos) return;
+
+    const motivo = motivoParaNoAprobarSola(datos);
+
+    if (motivo) {
+      if (motivo !== "estado" && motivo !== "subadmin") {
+        logger.info("Compra para aprobar a mano", { id: evento.params.id, motivo });
+      }
+      return;
+    }
+
+    const db = getFirestore();
+    const referencia = evento.data.ref;
+    const cantidad = Number(datos.chancesFinales);
+    const sinRevisar = datos.codigoPromo !== "RULETAGRATIS";
+    const { precio } = packDeLaCompra(datos);
+
+    const todas = await db.collection("participantes").get();
+    const numeros = numerosNuevos(todas, cantidad);
+
+    // Si el admin la aprobó o la borró en el medio, no se toca
+    const aprobada = await db.runTransaction(async (tx) => {
+      const actual = await tx.get(referencia);
+      if (!actual.exists || actual.get("estado") !== "Esperando") return false;
+      tx.update(referencia, {
+        estado: "Pagado",
+        numeros,
+        chancesFinales: cantidad,
+        precioFinal: precio || Number(datos.precioFinal) || 0,
+        autoAprobada: true,
+        revisada: !sinRevisar,
+        aprobadaEn: FieldValue.serverTimestamp()
+      });
+      return true;
+    });
+
+    if (!aprobada) return;
+
+    await sumarAlRanking(db, datos, cantidad);
+    await actualizarRankingPublico(db);
+
+    listaNombres.hasta = 0;
+
+    logger.info("Compra aprobada sola al recibirla", { id: evento.params.id, cantidad });
+
+  }
+);
+
+
+// ======================================================
 // EVENTO "PURCHASE" AL APROBAR UN PAGO
 // ======================================================
 
@@ -937,12 +1059,15 @@ exports.compraAprobadaAMeta = onDocumentUpdated(
       return;
     }
 
-    // Solo cuando pasa a "Pagado", y una sola vez
+    // Solo cuando queda aprobada y revisada, y una sola vez. Las que se
+    // aprueban solas (revisada: false) salen cuando el admin toca DEJAR.
+    const lista = (datos) => datos.estado === "Pagado" && datos.revisada !== false;
+
     if (
       !antes ||
       !despues ||
-      antes.estado === "Pagado" ||
-      despues.estado !== "Pagado" ||
+      lista(antes) ||
+      !lista(despues) ||
       despues.metaCapi?.enviado
     ) {
       return;

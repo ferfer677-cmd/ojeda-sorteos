@@ -1231,7 +1231,12 @@ function haceCuanto(ms) {
   return `hace ${Math.round(horas / 24)} días`;
 }
 
-const estadoCorto = (datos) => (datos.estado === "Pagado" ? "aprobada" : "pendiente");
+// Aprobada sola al recibir el comprobante (aprobarAlRecibir en functions/index.js),
+// todavía sin que el admin la revise
+const esSinRevisar = (datos) => datos.estado === "Pagado" && datos.revisada === false;
+
+const estadoCorto = (datos) =>
+  esSinRevisar(datos) ? "sin revisar" : datos.estado === "Pagado" ? "aprobada" : "pendiente";
 
 // Compras por DNI (sin la chance gratis de la ruleta)
 function agruparPorDni(participantes) {
@@ -2239,8 +2244,11 @@ async function cargarParticipantes(
         const deAnuncio =
           esDeAnuncio(datos);
 
+        const sinRevisar =
+          esSinRevisar(datos);
+
         card.className =
-          `card ${datos.estado === "Pagado" ? "card-pagado" : "card-pendiente"}` +
+          `card ${sinRevisar ? "card-pendiente card-sin-revisar" : datos.estado === "Pagado" ? "card-pagado" : "card-pendiente"}` +
           (deAnuncio ? " card-anuncio" : " card-organico");
 
         if (deAnuncio) {
@@ -2272,11 +2280,11 @@ async function cargarParticipantes(
           (datos.instagram || "").toString().replace(/^@+/, "").trim();
 
         const avisos =
-          datos.estado !== "Pagado" && datos.codigoPromo !== "RULETAGRATIS"
+          (datos.estado !== "Pagado" || sinRevisar) && datos.codigoPromo !== "RULETAGRATIS"
             ? avisosDeCompra(id, datos, comprasPorDni)
             : [];
 
-        if (datos.estado !== "Pagado") {
+        if (datos.estado !== "Pagado" || sinRevisar) {
           tarjetasPendientes.set(id, card);
         }
 
@@ -2337,7 +2345,10 @@ async function cargarParticipantes(
           <div class="admin-actions">
 
             ${
-              datos.estado !== "Pagado"
+              sinRevisar
+                ? `<span class="sin-revisar-sello">🕵️ Sin revisar · ya tiene sus números</span>
+                   <button class="dejar-btn" type="button">✔ DEJAR</button>`
+                : datos.estado !== "Pagado"
                 ? `<button class="aprobar-btn" type="button">✅ APROBAR PAGO</button>`
                 : `<span class="aprobado-sello">✅ Aprobado</span>${
                     // Si Meta recibió la compra (API de Conversiones, functions/index.js)
@@ -2574,6 +2585,52 @@ await actualizarRanking(
 
 
         // =============================================
+        // DEJAR (aprobada sola: el admin la revisó y está bien)
+        // =============================================
+        // Recién acá sale el "Purchase" de Meta (compraAprobadaAMeta)
+
+        const dejar =
+          card.querySelector(".dejar-btn");
+
+        if (dejar) {
+
+          dejar.addEventListener("click", async () => {
+
+            const alertas =
+              [...card.querySelectorAll(".card-aviso.alerta, .card-aviso.grave")]
+                .map((aviso) => aviso.textContent);
+
+            if (alertas.length && !confirm(`¿Dejar esta compra?\n\nOJO:\n${alertas.join("\n")}`)) {
+              return;
+            }
+
+            try {
+
+              dejar.disabled = true;
+              dejar.innerText = "⏳ GUARDANDO...";
+
+              await updateDoc(doc(db, "participantes", id), {
+                revisada: true,
+                revisadaEn: serverTimestamp()
+              });
+
+              await cargarParticipantes();
+
+            } catch (error) {
+
+              console.error("ERROR AL DEJAR:", error);
+              alert("❌ No se pudo guardar.\n\n" + error.message);
+              dejar.disabled = false;
+              dejar.innerText = "✔ DEJAR";
+
+            }
+
+          });
+
+        }
+
+
+        // =============================================
         // ELIMINAR
         // =============================================
 
@@ -2633,7 +2690,8 @@ await actualizarRanking(
         // =============================================
 
         if (
-          datos.estado === "Pagado"
+          datos.estado === "Pagado" &&
+          !sinRevisar
         ) {
 
           pagados.appendChild(
@@ -2698,10 +2756,19 @@ await actualizarRanking(
 
     if (recaudacionPendiente) {
 
+      const sinRevisarTotal =
+        participantes.filter(({ datos }) => esSinRevisar(datos));
+
+      const montoSinRevisar =
+        sinRevisarTotal.reduce((suma, { datos }) => suma + precioDeCompra(datos), 0);
+
       recaudacionPendiente.textContent =
-        porAprobar > 0
+        (porAprobar > 0
           ? `+ $${porAprobar.toLocaleString("es-AR")} por aprobar`
-          : "Nada por aprobar";
+          : "Nada por aprobar") +
+        (sinRevisarTotal.length
+          ? ` · 🕵️ ${sinRevisarTotal.length} sin revisar ($${montoSinRevisar.toLocaleString("es-AR")}, ya sumadas)`
+          : "");
 
     }
 
@@ -2770,7 +2837,7 @@ await actualizarRanking(
     // Totales (sin el filtro del buscador)
     if (statPendientes) {
       statPendientes.textContent =
-        participantes.filter(({ datos }) => datos.estado !== "Pagado").length;
+        participantes.filter(({ datos }) => datos.estado !== "Pagado" || esSinRevisar(datos)).length;
     }
 
     if (statPagados) {

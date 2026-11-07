@@ -3260,9 +3260,8 @@ if (btnConsultar && resultadoNumeros) {
               </p>
 
               <p>
-                Si compraste hace poco, tu pago
-                todavía se está verificando: los
-                números aparecen cuando se aprueba.
+                Si enviaste el comprobante recién,
+                esperá unos segundos y probá de nuevo.
               </p>
             </div>
           `;

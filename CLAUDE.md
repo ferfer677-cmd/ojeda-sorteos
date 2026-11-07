@@ -24,7 +24,7 @@ Each HTML page loads its own module. Everything shares `firebase.js`, which expo
 | `detectar_comprobantes_duplicados.html` | inline module | Standalone tool that scans Storage `comprobantes/` for duplicate receipt files |
 | `buscador.html` | inline module | Sub admin for a helper: password login, search by DNI/name, load purchases by hand and approve only those (all through the `buscarComprobantes` function at `/api/buscar`) |
 
-Cloud Functions (`functions/index.js`, Node 22, `southamerica-east1`): `miIp`, `ruleta` (`/api/ruleta`), `buscarComprobantes` (`/api/buscar`, secret `CLAVE_BUSCADOR`) and `compraAprobadaAMeta` (sends the only Meta `Purchase` when a purchase becomes "Pagado", secret `META_CAPI_TOKEN`). Deploy them with `firebase deploy --only functions:<name>`.
+Cloud Functions (`functions/index.js`, Node 22, `southamerica-east1`): `miIp`, `ruleta` (`/api/ruleta`), `buscarComprobantes` (`/api/buscar`, secret `CLAVE_BUSCADOR`) `aprobarAlRecibir` (on create: assigns numbers right away and sets `estado: "Pagado"`, `revisada: false`; the admin then taps ✔ DEJAR or deletes it; purchases whose chances/price don't match the pack stay "Esperando" for manual approval) and `compraAprobadaAMeta` (sends the only Meta `Purchase` when a purchase is "Pagado" and not `revisada: false`, secret `META_CAPI_TOKEN`). Deploy them with `firebase deploy --only functions:<name>`.
 
 Helpers: `firestore.js` has `guardarParticipante()`, which defines the participant document shape. `storage.js` has `subirComprobante()`, a resumable upload to `comprobantes/<timestamp>_<name>` with a progress callback.
 
