@@ -94,7 +94,14 @@
 
     const centro = document.createElement("div");
     centro.className = "cielo-centro";
-    centro.textContent = "👼";
+    // Mitra papal dibujada (blanca con bordes y cruz dorados)
+    centro.innerHTML =
+      '<svg viewBox="0 0 40 48" width="46" height="55" aria-hidden="true">' +
+      '<path d="M12 38 L10 47 L15 47 L16 38 Z M24 38 L25 47 L30 47 L28 38 Z" fill="#fff" stroke="#c9970f" stroke-width="1.5"/>' +
+      '<path d="M7 38 L5 16 Q13 12 20 2 Q27 12 35 16 L33 38 Z" fill="#fff" stroke="#c9970f" stroke-width="2" stroke-linejoin="round"/>' +
+      '<path d="M7 31 L33 31" stroke="#e0ad1c" stroke-width="3"/>' +
+      '<path d="M20 11 L20 24 M15 16 L25 16" stroke="#c9970f" stroke-width="3" stroke-linecap="round"/>' +
+      '</svg>';
     rueda.appendChild(centro);
 
     return rueda;

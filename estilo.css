@@ -1995,9 +1995,9 @@ body.con-barra-compra .purchase-notification { bottom: 86px; }
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 58px;
-  height: 58px;
-  margin: -29px 0 0 -29px;
+  width: 72px;
+  height: 72px;
+  margin: -36px 0 0 -36px;
   display: grid;
   place-items: center;
   font-size: 32px;
