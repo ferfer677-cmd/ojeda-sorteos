@@ -2,8 +2,8 @@
 // RULETA DEL CIELO (palabra clave "PAPALEON")
 // ======================================================
 // Se abre al escribir PAPALEON en la palabra clave (script.js).
-// Un giro por celular: el premio queda guardado y al volver a
-// escribir la palabra se muestra el mismo. Todos los premios son
+// El premio queda guardado en el celular: al volver a escribir la
+// palabra se muestra el mismo. Se puede volver a girar las veces que quiera. Todos los premios son
 // ofertas para comprar; se pagan por transferencia como siempre.
 //
 // Si se cambian estos packs, el vencimiento o las probabilidades,
@@ -43,6 +43,12 @@
     } catch {
       return null;
     }
+  }
+
+  function borrarPremio() {
+    try {
+      localStorage.removeItem(GUARDADO);
+    } catch {}
   }
 
   function guardarPremio(premio) {
@@ -140,7 +146,17 @@
       window.abrirModalPromo(premio.chances, premio.precio, CODIGO, `PROMO ${CODIGO}`);
     });
 
-    contenido.append(titulo, detalle, premioCaja, comprar);
+    // Si no le gusta el premio, puede volver a girar las veces que quiera
+    const reintentar = document.createElement("button");
+    reintentar.type = "button";
+    reintentar.className = "cielo-reintentar";
+    reintentar.textContent = "🔄 Girar de vuelta";
+    reintentar.addEventListener("click", () => {
+      borrarPremio();
+      abrir();
+    });
+
+    contenido.append(titulo, detalle, premioCaja, comprar, reintentar);
 
     if (recienGanado) lluviaDelCielo(fondo);
 
@@ -199,7 +215,7 @@
 
     const bajada = document.createElement("p");
     bajada.className = "cielo-bajada";
-    bajada.textContent = "Un solo giro. Todos los premios son packs de chances a precio de regalo.";
+    bajada.textContent = "Todos los premios son packs de chances a precio de regalo. Si no te gusta, girás de vuelta.";
 
     const marco = document.createElement("div");
     marco.className = "cielo-marco";
@@ -214,7 +230,7 @@
     const probabilidades = document.createElement("small");
     probabilidades.className = "cielo-probabilidades";
     probabilidades.textContent =
-      `Todos los premios tienen la misma probabilidad (1 en ${PREMIOS.length}). Un giro por persona.`;
+      `Todos los premios tienen la misma probabilidad (1 en ${PREMIOS.length}).`;
 
     girar.addEventListener("click", () => {
 

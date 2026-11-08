@@ -2025,6 +2025,21 @@ body.con-barra-compra .purchase-notification { bottom: 86px; }
 
 .cielo-boton:disabled { opacity: .75; cursor: wait; }
 
+.cielo-reintentar {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  font-family: "Poppins", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0c3a66;
+  background: rgba(255, 255, 255, .75);
+  border: 2px dashed #6cc4f5;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
 .cielo-probabilidades {
   display: block;
   margin-top: 10px;
