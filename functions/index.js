@@ -357,11 +357,24 @@ const PACKS_COMUNES = [
   { chances: 100, nombre: "👑 PACK MÁXIMO", precio: 75000, mitad: 37500 }
 ];
 
+// Ruleta del Cielo (ruleta-cielo.js, PREMIOS): mismos packs y precios
+const PACKS_PAPALEON = [
+  { chances: 5, precio: 3000 },
+  { chances: 15, precio: 5999 },
+  { chances: 40, precio: 9999 },
+  { chances: 120, precio: 19999 },
+  { chances: 400, precio: 49999 },
+  { chances: 1000, precio: 99999 }
+];
+
 // Códigos con reloj (script.js, PROMOS_CON_RELOJ): mismos 3 packs
 const PROMOS_CON_RELOJ = [
   { codigo: "3XHOY", vence: Date.parse("2026-11-04T23:10:00-03:00") },
-  { codigo: "REVIERNES", vence: Date.parse("2026-11-06T22:07:00-03:00") }
+  { codigo: "REVIERNES", vence: Date.parse("2026-11-06T22:07:00-03:00") },
+  // Ruleta del Cielo (ruleta-cielo.js): sus propios packs
+  { codigo: "PAPALEON", vence: Date.parse("2026-11-08T23:00:00-03:00"), packs: PACKS_PAPALEON }
 ];
+
 
 const DIAS_PROMO_VENCIDA = 7;
 
@@ -408,12 +421,12 @@ function catalogoDePacks() {
   // Seba puede cargar comprobantes atrasados de una promo hasta 7 días después de que venció
   PROMOS_CON_RELOJ
     .filter(({ vence }) => Date.now() < vence + DIAS_PROMO_VENCIDA * 24 * 60 * 60 * 1000)
-    .forEach(({ codigo, vence }) => {
+    .forEach(({ codigo, vence, packs: propios }) => {
       const vencida = Date.now() >= vence;
       const diaVence = new Date(vence).toLocaleDateString("es-AR", {
         timeZone: "America/Argentina/Buenos_Aires", day: "2-digit", month: "2-digit"
       });
-      PACKS_3XHOY.forEach(({ chances, precio }) => {
+      (propios || PACKS_3XHOY).forEach(({ chances, precio }) => {
         packs.push({
           id: `${codigo.toLowerCase()}${chances}`,
           grupo: vencida ? `Promo ${codigo} (venció ${diaVence})` : `Promo ${codigo}`,

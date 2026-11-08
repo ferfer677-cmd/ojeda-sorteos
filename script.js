@@ -711,6 +711,18 @@ if (btnAplicarDescuento) {
     // Los códigos "MITAD" (50% OFF) y "ENTERO" (oferta secreta)
     // se dieron de baja el 16/10/2026.
 
+    // Ruleta del Cielo (ruleta-cielo.js), vence el 08/11/2026 23:00
+    if (window.RuletaCielo && codigo === window.RuletaCielo.CODIGO) {
+      const abierta = window.RuletaCielo.abrir();
+      if (mensaje) {
+        mensaje.innerText = abierta
+          ? "✅ ¡CÓDIGO ACTIVADO! GIRÁ LA RULETA DEL CIELO."
+          : "⏰ LA RULETA DEL CIELO YA TERMINÓ.";
+        mensaje.style.color = abierta ? "#008a43" : "#dc2626";
+      }
+      return;
+    }
+
     const promoConReloj = PROMOS_CON_RELOJ.find((promo) => promo.codigo === codigo);
 
     if (promoConReloj) {

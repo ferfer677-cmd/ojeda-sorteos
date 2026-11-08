@@ -1826,6 +1826,247 @@ body.con-barra-compra .purchase-notification { bottom: 86px; }
 }
 
 
+/* ======================================================
+   RULETA DEL CIELO (ruleta-cielo.js, palabra PAPALEON)
+   ====================================================== */
+
+.cielo-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 860;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow: hidden;
+  background: rgba(12, 74, 110, .55);
+}
+
+.cielo-caja {
+  position: relative;
+  width: 100%;
+  max-width: 390px;
+  max-height: 94vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 24px 18px 18px;
+  text-align: center;
+  color: #0c3a66;
+  background:
+    radial-gradient(circle at 50% -10%, rgba(255, 236, 160, .95), rgba(255, 236, 160, 0) 45%),
+    linear-gradient(180deg, #8fd3ff 0%, #c9ecff 55%, #f2faff 100%);
+  border: 3px solid #e7c25a;
+  border-radius: 24px;
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, .5), 0 20px 50px rgba(12, 74, 110, .45);
+}
+
+/* Nubes que pasan despacio */
+.cielo-nube {
+  position: absolute;
+  width: 90px;
+  height: 30px;
+  background: #fff;
+  border-radius: 30px;
+  opacity: .85;
+  pointer-events: none;
+  animation: cielo-nube 18s linear infinite;
+}
+
+.cielo-nube::before,
+.cielo-nube::after {
+  content: "";
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.cielo-nube::before { width: 40px; height: 40px; top: -20px; left: 14px; }
+.cielo-nube::after { width: 30px; height: 30px; top: -13px; left: 44px; }
+
+.cielo-nube-1 { top: 70px; left: -100px; }
+.cielo-nube-2 { top: 230px; left: -100px; transform: scale(.7); animation-duration: 24s; animation-delay: -9s; }
+.cielo-nube-3 { top: 400px; left: -100px; transform: scale(.85); animation-duration: 21s; animation-delay: -15s; }
+
+@keyframes cielo-nube {
+  to { left: 110%; }
+}
+
+.cielo-cerrar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  color: #0c3a66;
+  background: rgba(255, 255, 255, .8);
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.cielo-contenido { position: relative; z-index: 1; }
+
+.cielo-etiqueta {
+  display: inline-block;
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  color: #7a5a00;
+  background: linear-gradient(135deg, #fff3c4, #f5d36b);
+  border-radius: 999px;
+}
+
+.cielo-titulo {
+  margin: 10px 34px 6px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 22px;
+  line-height: 1.2;
+  color: #0c3a66;
+  text-shadow: 0 2px 0 #fff;
+}
+
+.cielo-bajada { margin: 0 0 6px; font-size: 14px; line-height: 1.45; color: #1e4f80; }
+
+/* La aureola dorada marca el premio, arriba y al centro */
+.cielo-marco {
+  position: relative;
+  width: min(290px, 100%);
+  margin: 26px auto 14px;
+}
+
+.cielo-marco::before {
+  content: "😇";
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  z-index: 2;
+  font-size: 30px;
+  line-height: 1;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .25));
+}
+
+.cielo-marco::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  z-index: 2;
+  border: 10px solid transparent;
+  border-top: 16px solid #d4a514;
+  border-bottom: 0;
+  transform: translateX(-50%);
+}
+
+.cielo-rueda {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  background: conic-gradient(
+    #6cc4f5 0deg 60deg, #ffffff 60deg 120deg,
+    #6cc4f5 120deg 180deg, #ffffff 180deg 240deg,
+    #6cc4f5 240deg 300deg, #ffffff 300deg 360deg
+  );
+  border: 7px solid #e7c25a;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px #fff, 0 0 26px rgba(255, 214, 90, .8);
+  transition: transform 4.5s cubic-bezier(.12, .7, .15, 1);
+}
+
+.cielo-rueda span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 104px;
+  margin-top: -16px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  color: #0c3a66;
+  transform-origin: 0 16px;
+}
+
+.cielo-rueda span b { font-size: 15px; font-weight: 900; }
+
+.cielo-centro {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 58px;
+  height: 58px;
+  margin: -29px 0 0 -29px;
+  display: grid;
+  place-items: center;
+  font-size: 32px;
+  background: radial-gradient(circle, #fffbe8, #f5d36b);
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 16px rgba(255, 214, 90, .9);
+}
+
+.cielo-boton {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 14px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: #5a3f00;
+  background: linear-gradient(135deg, #fff1b8, #e9b930);
+  border: 2px solid #fff;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(212, 165, 20, .45);
+  cursor: pointer;
+}
+
+.cielo-boton:disabled { opacity: .75; cursor: wait; }
+
+.cielo-probabilidades {
+  display: block;
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #3b6a96;
+}
+
+.cielo-premio {
+  display: grid;
+  gap: 2px;
+  margin: 14px auto 10px;
+  padding: 16px;
+  background: rgba(255, 255, 255, .85);
+  border: 2px solid #e7c25a;
+  border-radius: 18px;
+}
+
+.cielo-premio b { font-size: 22px; }
+.cielo-premio strong { font-size: 34px; color: #b8860b; }
+.cielo-premio small { font-size: 12px; color: #3b6a96; }
+
+/* Plumas y estrellitas que caen al ganar */
+.cielo-pluma {
+  position: absolute;
+  top: -30px;
+  z-index: 3;
+  font-style: normal;
+  pointer-events: none;
+  animation: cielo-cae 3.2s ease-in forwards;
+}
+
+@keyframes cielo-cae {
+  to { transform: translateY(105vh) rotate(260deg); opacity: .2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cielo-nube { animation: none; }
+  .cielo-rueda { transition-duration: .2s; }
+}
+
+
 /* Botón "Ya compré: ver mis números": oscuro, para que se vea sobre el blanco */
 .boton-sec.consultar-btn {
   font-weight: 700;
