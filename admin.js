@@ -3468,6 +3468,99 @@ if (exportarSorteo) {
 
 
 // =====================================================
+// EXPORTAR COMPRADORES (una fila por DNI)
+// =====================================================
+// Nombre, DNI, teléfono e Instagram de cada comprador, con cuántas
+// compras hizo, sus chances y cuánto pagó. Se baja como Excel en
+// esta compu: son datos personales, no compartir el archivo.
+
+const exportarCompradores =
+  document.getElementById("exportarCompradores");
+
+if (exportarCompradores) {
+
+  exportarCompradores.addEventListener("click", async () => {
+
+    if (typeof XLSX === "undefined") {
+      alert("❌ No está cargada la librería de Excel.");
+      return;
+    }
+
+    exportarCompradores.disabled = true;
+
+    try {
+
+      const participantes = await obtenerParticipantes();
+      const compradores = new Map();
+
+      participantes.forEach(({ datos }) => {
+
+        const dni = String(datos.dniNormalizado || datos.dni || "").replace(/\D/g, "");
+        const clave = dni || `sin-dni-${String(datos.telefono || "")}`;
+        const fecha = datos.fecha?.toDate ? datos.fecha.toDate() : null;
+        const pagada = datos.estado === "Pagado";
+
+        if (!compradores.has(clave)) {
+          compradores.set(clave, {
+            Nombre: "", Apellido: "", DNI: dni, "Teléfono": "", Instagram: "",
+            "Compras aprobadas": 0, "Compras sin aprobar": 0, Chances: 0,
+            "Total pagado": 0, "Última compra": null
+          });
+        }
+
+        const fila = compradores.get(clave);
+        const masNueva = !fila["Última compra"] || (fecha && fecha > fila["Última compra"]);
+
+        // Los datos de contacto se toman de la compra más reciente que los tenga
+        if (masNueva || !fila.Nombre) {
+          fila.Nombre = String(datos.nombre || fila.Nombre).trim();
+          fila.Apellido = String(datos.apellido || fila.Apellido).trim();
+        }
+        if (masNueva || !fila["Teléfono"]) fila["Teléfono"] = String(datos.telefono || fila["Teléfono"]).trim();
+        if (masNueva || !fila.Instagram) fila.Instagram = String(datos.instagram || fila.Instagram).trim();
+        if (fecha && masNueva) fila["Última compra"] = fecha;
+
+        if (pagada) {
+          fila["Compras aprobadas"]++;
+          fila.Chances += Array.isArray(datos.numeros) ? datos.numeros.length : Number(datos.chancesFinales) || 0;
+          fila["Total pagado"] += precioDeCompra(datos);
+        } else {
+          fila["Compras sin aprobar"]++;
+        }
+
+      });
+
+      const filas = [...compradores.values()]
+        .sort((a, b) => b["Total pagado"] - a["Total pagado"])
+        .map((fila) => ({
+          ...fila,
+          "Última compra": fila["Última compra"]
+            ? fila["Última compra"].toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" })
+            : ""
+        }));
+
+      const hoja = XLSX.utils.json_to_sheet(filas);
+      hoja["!cols"] = [16, 16, 12, 16, 22, 10, 10, 9, 13, 20].map((wch) => ({ wch }));
+
+      const libro = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(libro, hoja, "Compradores");
+
+      const hoy = new Date().toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" }).replace(/\//g, "-");
+      XLSX.writeFile(libro, `compradores-${hoy}.xlsx`);
+
+    } catch (error) {
+      console.error("ERROR EXPORTANDO COMPRADORES:", error);
+      alert("❌ No se pudo exportar.\n\n" + error.message);
+    } finally {
+      exportarCompradores.disabled = false;
+    }
+
+  });
+
+}
+
+
+// =====================================================
 // INICIO
 // =====================================================
 
