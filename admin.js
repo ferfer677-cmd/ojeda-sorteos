@@ -955,7 +955,8 @@ function esc(valor) {
 const FUENTES_META = ["meta", "facebook", "fb", "instagram", "ig", "msg", "an"];
 
 // Cada palabra clave se anuncia en una sola red
-const RED_POR_CLAVE = { "50": "instagram", "MENOS": "facebook" };
+// "50" queda para las compras viejas (se cambió por "VERANO" el 09/11/2026)
+const RED_POR_CLAVE = { "VERANO": "instagram", "50": "instagram", "MENOS": "facebook" };
 
 function redDeClave(datos) {
   return RED_POR_CLAVE[String(datos.codigoPromo || "").trim().toUpperCase()] || "";
@@ -999,14 +1000,14 @@ function origenCompra(datos) {
 }
 
 
-// Palabras clave que se publicitan en anuncios. "50" es orgánica
+// Palabras clave que se publicitan en anuncios. "VERANO" (antes "50") es orgánica
 // (se comparte en Instagram sin pagar).
 const CLAVES_DE_ANUNCIO = ["MENOS"];
 
 // Anuncio: vino de un anuncio de Facebook o Instagram (los parámetros
 // del anuncio en la URL, o una palabra clave de anuncio). Orgánico:
 // todo lo demás (bio, posts, historias, WhatsApp, boca en boca, la
-// palabra "50", la ruleta).
+// palabra "VERANO", la ruleta).
 function esDeAnuncio(datos) {
   const origen = origenCompra(datos);
   const clave = String(datos.codigoPromo || "").trim().toUpperCase();

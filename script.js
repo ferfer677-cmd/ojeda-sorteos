@@ -579,8 +579,9 @@ if (successBtn && successModal) {
 // distinto: la compra guarda cuál se usó (codigoPromo) y el admin
 // muestra cuántas entradas trajo cada una.
 // "ULTIMO" (70% OFF) se dio de baja el 24/10/2026.
+// "50" se cambió por "VERANO" el 09/11/2026.
 
-const PALABRAS_DESCUENTO = ["50", "MENOS"];
+const PALABRAS_DESCUENTO = ["VERANO", "MENOS"];
 
 // La palabra que activó el descuento ("" = sin descuento)
 let palabraClaveActiva = "";
