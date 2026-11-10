@@ -200,6 +200,35 @@ h1, h2, h3 {
   background: #111;
 }
 
+/* ===== Resaltados del encabezado de la página 3x1 ===== */
+
+.resaltado-exclusivo {
+  background: linear-gradient(120deg, rgba(255, 106, 0, .18), rgba(0, 166, 80, .18));
+  color: var(--naranja);
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-weight: 800;
+}
+
+.precio-linea { flex-direction: column; align-items: flex-start; gap: 0; }
+
+.triple-grande {
+  font-family: 'Poppins', sans-serif;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--naranja);
+  text-shadow: 0 0 10px rgba(255, 106, 0, .45);
+}
+
+.precio-linea + .descuento {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--verde-osc);
+}
+
 /* ===== "3X1 · TRIPLICÁ TUS CHANCES" gigante sobre el carrusel (solo 3x1.html) ===== */
 
 .mega-3x1 {
