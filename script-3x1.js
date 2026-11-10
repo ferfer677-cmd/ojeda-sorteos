@@ -1,0 +1,3621 @@
+import { db, storage } from "./firebase.js";
+
+import {
+  collection,
+  getDocs,
+  getDoc,
+  doc,
+  onSnapshot,
+  query,
+  where,
+  orderBy,
+  limit
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+import { guardarParticipante } from "./firestore.js";
+import { subirComprobante } from "./storage.js";
+import { registrarErrorCompra } from "./errores-compra.js";
+
+import {
+  ref,
+  listAll,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-storage.js";
+
+
+// ======================================================
+// REFERIDO
+// ======================================================
+
+const urlParams =
+  new URLSearchParams(window.location.search);
+
+// Link personal: ?ref=<DNI de quien compartió> (solo números)
+const referido =
+  (urlParams.get("ref") || "").replace(/\D/g, "");
+
+if (referido) {
+
+  localStorage.setItem(
+    "referido",
+    referido
+  );
+
+  console.log(
+    "Referido detectado:",
+    referido
+  );
+
+}
+
+
+// ======================================================
+// COMPARTIR EL SORTEO (link personal)
+// ======================================================
+// Quien ya participó comparte ojedasorteos.com.ar/?ref=<su DNI>.
+// Si alguien compra desde ese link, la compra guarda "referido"
+// y quien compartió entra al sorteo de $50.000 (ver admin).
+
+const LINK_SORTEO = "https://ojedasorteos.com.ar/";
+
+// Los llena el bloque principal (preciosNormales)
+let preciosNormalesPublicos = {};
+
+function miDni() {
+  try {
+    return localStorage.getItem("ojedaMiDni") || "";
+  } catch {
+    return "";
+  }
+}
+
+function guardarMiDni(dni) {
+  const limpio = String(dni || "").replace(/\D/g, "");
+  if (!limpio) return;
+  try {
+    localStorage.setItem("ojedaMiDni", limpio);
+  } catch {}
+}
+
+async function compartirSorteo() {
+
+  const dni = miDni();
+
+  const url =
+    dni ? `${LINK_SORTEO}?ref=${dni}` : LINK_SORTEO;
+
+  const texto =
+    "🏍️ Sorteo de una Yamaha MT-07 + 3 premios de $500.000. " +
+    "Viernes 13/11 en vivo. Participá desde $5.000 👇";
+
+  try {
+
+    if (navigator.share) {
+      await navigator.share({ title: "Sorteo Yamaha MT-07", text: texto, url });
+      return;
+    }
+
+    await navigator.clipboard.writeText(`${texto}
+${url}`);
+    alert("✅ Link copiado. Pegalo en WhatsApp, Instagram o donde quieras.");
+
+  } catch (error) {
+    // Cerrar el menú de compartir no es un error
+    if (error?.name !== "AbortError") {
+      prompt("Copiá este link y compartilo:", url);
+    }
+  }
+
+}
+
+document.querySelectorAll("[data-compartir]").forEach((boton) => {
+  boton.addEventListener("click", compartirSorteo);
+});
+
+
+// ======================================================
+// PÍXEL DE META (Facebook / Instagram)
+// ======================================================
+// Avisa a Meta cuando alguien elige un pack (InitiateCheckout)
+// y cuando envía el comprobante (AddPaymentInfo, con el monto).
+// La compra (Purchase) la manda solo el servidor (API de
+// Conversiones) cuando el admin aprueba el pago: así Meta cuenta
+// únicamente las compras reales.
+function eventoMeta(evento, datos, idEvento) {
+  try {
+    if (typeof window.fbq === "function") {
+      window.fbq(
+        "track",
+        evento,
+        { currency: "ARS", ...datos },
+        idEvento ? { eventID: idEvento } : undefined
+      );
+    }
+  } catch (error) {
+    console.warn("No se pudo enviar el evento a Meta:", error);
+  }
+}
+
+
+// ======================================================
+// DATOS DE META PARA LA API DE CONVERSIONES
+// ======================================================
+// Se guardan con la compra; los usa la Cloud Function
+// (functions/index.js) para avisarle a Meta cuando se aprueba.
+//   fbc: de qué anuncio vino (cookie _fbc o el fbclid de la URL)
+//   fbp: identificador del navegador que pone el Píxel (cookie _fbp)
+
+// Si se entra desde un anuncio, la URL trae ?fbclid=...: se guarda
+// por si el Píxel no llega a crear la cookie _fbc
+(function guardarFbclid() {
+  const fbclid = new URLSearchParams(location.search).get("fbclid");
+  if (!fbclid) return;
+  try {
+    localStorage.setItem("ojedaFbc", `fb.1.${Date.now()}.${fbclid}`);
+  } catch {}
+})();
+
+// Etiqueta de los anuncios (?utm_source=meta&utm_campaign=...): se guarda
+// 30 días, porque la persona puede comprar después de ver el anuncio
+const DIAS_ETIQUETA_ANUNCIO = 30;
+
+(function guardarEtiquetaAnuncio() {
+  const url = new URLSearchParams(location.search);
+  if (!url.get("utm_source")) return;
+  try {
+    localStorage.setItem("ojedaUtm", JSON.stringify({
+      utmSource: url.get("utm_source"),
+      utmMedium: url.get("utm_medium") || "",
+      utmCampaign: url.get("utm_campaign") || "",
+      utmContent: url.get("utm_content") || "",
+      fecha: Date.now()
+    }));
+  } catch {}
+})();
+
+function leerEtiquetaAnuncio() {
+  try {
+    const { fecha, ...etiqueta } =
+      JSON.parse(localStorage.getItem("ojedaUtm") || "{}");
+    const vigente =
+      Date.now() - Number(fecha) < DIAS_ETIQUETA_ANUNCIO * 864e5;
+    return vigente ? etiqueta : {};
+  } catch {
+    return {};
+  }
+}
+
+function leerCookie(nombre) {
+  const par = document.cookie
+    .split("; ")
+    .find((c) => c.startsWith(nombre + "="));
+  return par ? decodeURIComponent(par.slice(nombre.length + 1)) : "";
+}
+
+// IP del comprador, para la API de Conversiones (Meta la pide junto con el
+// navegador). Se pide a /api/mi-ip (functions/index.js) al elegir un pack.
+// Si tarda o falla, la compra sigue igual, sin IP.
+let pedidoIp = null;
+
+function leerIpCliente() {
+  pedidoIp = pedidoIp ||
+    fetch("/api/mi-ip", { cache: "no-store", signal: AbortSignal.timeout(4000) })
+      .then((respuesta) => respuesta.json())
+      .then((datos) => String(datos.ip || ""))
+      .catch(() => "");
+  return pedidoIp;
+}
+
+function datosParaMeta() {
+
+  let fbcGuardado = "";
+  try {
+    fbcGuardado = localStorage.getItem("ojedaFbc") || "";
+  } catch {}
+
+  const idEvento =
+    globalThis.crypto?.randomUUID?.() ||
+    `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+  return {
+    metaEventId: idEvento,
+    fbc: leerCookie("_fbc") || fbcGuardado,
+    fbp: leerCookie("_fbp"),
+    userAgent: navigator.userAgent,
+    paginaUrl: location.origin + location.pathname,
+    ...leerEtiquetaAnuncio()
+  };
+
+}
+
+
+// ======================================================
+// NO SE PUDO ENVIAR: SEGUIR POR WHATSAPP
+// ======================================================
+// Si el comprobante no se puede cargar, la compra sigue por WhatsApp
+// con los datos ya escritos en el mensaje.
+
+const WHATSAPP_COMPRAS = "5492494527588";
+
+function mostrarErrorEnvio(mensaje, codigo, pack) {
+
+  document.getElementById("errorEnvio")?.remove();
+
+  const valor = (id) =>
+    document.getElementById(id)?.value.trim() || "";
+
+  const texto = [
+    "Hola! No pude cargar el comprobante en la página.",
+    pack ? `Pack: ${pack}` : "",
+    `Nombre: ${valor("nombre")} ${valor("apellido")}`.trim(),
+    valor("dniCompra") ? `DNI: ${valor("dniCompra")}` : "",
+    valor("telefono") ? `Teléfono: ${valor("telefono")}` : "",
+    "Te mando el comprobante por acá."
+  ].filter(Boolean).join("\n");
+
+  const fondo = document.createElement("div");
+  fondo.id = "errorEnvio";
+  fondo.className = "cierre-overlay error-envio";
+  fondo.setAttribute("role", "dialog");
+  fondo.setAttribute("aria-modal", "true");
+
+  const tarjeta = document.createElement("div");
+  tarjeta.className = "cierre-card";
+
+  const titulo = document.createElement("h2");
+  titulo.className = "cierre-titulo";
+  titulo.textContent = "⚠️ No se pudo enviar";
+
+  const explicacion = document.createElement("p");
+  explicacion.className = "cierre-texto";
+  explicacion.textContent = mensaje;
+
+  const ayuda = document.createElement("p");
+  ayuda.className = "cierre-texto";
+  ayuda.innerHTML =
+    "Si no podés cargarlo, <strong>mandanos todo por WhatsApp</strong>: " +
+    "el comprobante y tus datos. Te anotamos nosotros.";
+
+  const whatsapp = document.createElement("a");
+  whatsapp.className = "cierre-cta proximo-cta";
+  whatsapp.href =
+    `https://wa.me/${WHATSAPP_COMPRAS}?text=${encodeURIComponent(texto)}`;
+  whatsapp.target = "_blank";
+  whatsapp.rel = "noopener";
+  whatsapp.textContent = "📲 Enviar por WhatsApp";
+
+  const reintentar = document.createElement("button");
+  reintentar.type = "button";
+  reintentar.className = "error-envio-reintentar";
+  reintentar.textContent = "Probar de nuevo";
+
+  const detalle = document.createElement("small");
+  detalle.className = "error-envio-codigo";
+  detalle.textContent = `Código: ${codigo}`;
+
+  tarjeta.append(titulo, explicacion, ayuda, whatsapp, reintentar, detalle);
+  fondo.appendChild(tarjeta);
+  document.body.appendChild(fondo);
+
+  const cerrar = () => fondo.remove();
+
+  reintentar.addEventListener("click", cerrar);
+  fondo.addEventListener("click", (evento) => {
+    if (evento.target === fondo) cerrar();
+  });
+
+  requestAnimationFrame(() => fondo.classList.add("activo"));
+
+}
+
+
+// ======================================================
+// SOLO CAPTURAS DEL COMPROBANTE
+// ======================================================
+// Imágenes (jpg, png, heic de iPhone, etc.). Algunos Android no
+// informan el tipo del archivo: ahí se mira la extensión.
+
+function esCaptura(archivo) {
+  if (!archivo) return false;
+  if (String(archivo.type || "").startsWith("image/")) return true;
+  return !archivo.type && /\.(jpe?g|png|webp|heic|heif|gif|bmp)$/i.test(archivo.name || "");
+}
+
+
+// ======================================================
+// ABRIR EN EL NAVEGADOR
+// ======================================================
+// Dentro de Instagram o Facebook la subida del comprobante falla
+// más (el navegador de la app corta subidas largas). Solo en ese
+// caso, la compra muestra un aviso:
+//   Android: botón que abre la misma página en Chrome, con el pack
+//            y la palabra clave elegidos (?pack=10&clave=50).
+//   iPhone:  Apple no deja abrir Safari solo: se explican los
+//            2 toques y se puede copiar el link.
+// La URL conserva los parámetros del anuncio (fbclid, utm).
+
+const navegador = navigator.userAgent || "";
+
+const appInterna =
+  /Instagram/i.test(navegador) ? "Instagram" :
+  /FBAN|FBAV|FB_IAB|FBIOS|FB4A/i.test(navegador) ? "Facebook" :
+  "";
+
+const esIphone = /iPhone|iPad|iPod/i.test(navegador);
+const esAndroid = /Android/i.test(navegador);
+
+// Link a esta página, con el pack y la clave para seguir donde estaba
+function linkParaSeguir() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("pack");
+  url.searchParams.delete("clave");
+  const pack = document.body.dataset.packElegido;
+  if (pack) url.searchParams.set("pack", pack);
+  if (pack && palabraClaveActiva) url.searchParams.set("clave", palabraClaveActiva);
+  url.hash = "";
+  return url.toString();
+}
+
+function prepararAvisoNavegador() {
+
+  const aviso = document.getElementById("avisoNavegador");
+
+  if (!aviso || !appInterna || !(esIphone || esAndroid)) return;
+
+  aviso.hidden = false;
+
+  const titulo = document.createElement("b");
+  titulo.textContent = `⚠️ Estás dentro de ${appInterna}`;
+
+  const texto = document.createElement("p");
+
+  if (esAndroid) {
+
+    texto.textContent =
+      "Acá la carga del comprobante puede fallar. Abrí la página en Chrome y completá ahí, es un toque.";
+
+    const boton = document.createElement("a");
+    boton.textContent = "🌐 Abrir en Chrome";
+    boton.href = "#";
+
+    boton.addEventListener("click", (evento) => {
+      evento.preventDefault();
+      const destino = linkParaSeguir();
+      const sinEsquema = destino.replace(/^https?:\/\//, "");
+      // Si no tiene Chrome, abre el navegador que tenga
+      window.location.href =
+        `intent://${sinEsquema}#Intent;scheme=https;package=com.android.chrome;` +
+        `S.browser_fallback_url=${encodeURIComponent(destino)};end`;
+    });
+
+    aviso.append(titulo, texto, boton);
+
+  } else {
+
+    texto.textContent = "Acá la carga del comprobante puede fallar. Abrí la página en Safari:";
+
+    const pasos = document.createElement("ol");
+    pasos.className = "pasos-navegador";
+    pasos.innerHTML =
+      "<li><i>⋯</i> Tocá los 3 puntitos arriba a la derecha</li>" +
+      "<li><i>🧭</i> Elegí \"Abrir en el navegador\"</li>";
+
+    const copiar = document.createElement("button");
+    copiar.type = "button";
+    copiar.textContent = "📋 Copiar el link";
+
+    copiar.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(linkParaSeguir());
+        copiar.textContent = "✅ Link copiado: pegalo en Safari";
+      } catch {
+        copiar.textContent = "No se pudo copiar: usá los 3 puntitos de arriba";
+      }
+    });
+
+    aviso.append(titulo, texto, pasos, copiar);
+
+  }
+
+}
+
+prepararAvisoNavegador();
+
+// Al llegar desde "Abrir en Chrome": aplica la clave y abre el pack
+function seguirDondeEstaba() {
+
+  const parametros = new URLSearchParams(window.location.search);
+  const pack = parametros.get("pack");
+  const clave = parametros.get("clave");
+
+  if (!pack) return;
+
+  const campo = document.getElementById("codigoDescuento");
+
+  if (clave && campo) {
+    campo.value = clave;
+    document.getElementById("btnAplicarDescuento")?.click();
+  }
+
+  document.querySelector(`.pack-card[data-chances="${CSS.escape(pack)}"]`)?.click();
+
+}
+
+// Después de que se preparan los packs y la palabra clave
+document.addEventListener("DOMContentLoaded", () => setTimeout(seguirDondeEstaba, 300));
+
+
+// ======================================================
+// AYUDA POR WHATSAPP
+// ======================================================
+// Botón flotante "¿Problemas con tu compra?" y botón dentro de la
+// compra "¿No te deja subir el comprobante?". Abren WhatsApp de
+// soporte con lo que la persona ya completó, para que mande ahí
+// el comprobante.
+
+function abrirAyudaWhatsapp() {
+
+  const valor = (id) =>
+    document.getElementById(id)?.value.trim() || "";
+
+  const comprando =
+    document.getElementById("purchaseModal")?.classList.contains("show");
+
+  const pack =
+    comprando ? document.getElementById("selectedPack")?.textContent.trim() : "";
+
+  const texto = comprando
+    ? [
+        "Hola! No puedo subir el comprobante en la página.",
+        pack ? `Pack: ${pack}` : "",
+        valor("nombre") ? `Nombre: ${valor("nombre")} ${valor("apellido")}`.trim() : "",
+        valor("dniCompra") ? `DNI: ${valor("dniCompra")}` : "",
+        valor("telefono") ? `Teléfono: ${valor("telefono")}` : "",
+        "Te mando el comprobante por acá."
+      ].filter(Boolean).join("\n")
+    : "Hola! Necesito ayuda con mi compra del sorteo.";
+
+  window.open(
+    `https://wa.me/${WHATSAPP_COMPRAS}?text=${encodeURIComponent(texto)}`,
+    "_blank",
+    "noopener"
+  );
+
+}
+
+document.querySelectorAll("[data-ayuda-wp]").forEach((boton) => {
+  boton.addEventListener("click", abrirAyudaWhatsapp);
+});
+
+
+// ======================================================
+// TODO EL SISTEMA
+// ======================================================
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+
+    // ==================================================
+    // ELEMENTOS
+    // ==================================================
+
+    const modal =
+      document.getElementById(
+        "purchaseModal"
+      );
+
+    const successModal =
+      document.getElementById(
+        "successModal"
+      );
+
+    const successBtn =
+      document.getElementById(
+        "successBtn"
+      );
+
+    const closeBtn =
+      document.getElementById(
+        "closeModal"
+      );
+if (closeBtn && modal) {
+  closeBtn.addEventListener("click", () => {
+    modal.classList.remove("show");
+    document.body.classList.remove("modal-open");
+  });
+}
+
+// Cerrar el cartel de "Comprobante enviado"
+if (successBtn && successModal) {
+  successBtn.addEventListener("click", () => {
+    successModal.classList.remove("show");
+  });
+}
+    const selectedPack =
+      document.getElementById(
+        "selectedPack"
+      );
+
+    const cards =
+      document.querySelectorAll(
+        ".open-modal"
+      );
+
+    const purchaseForm =
+      document.getElementById(
+        "purchaseForm"
+      );
+
+    const comprobante =
+      document.getElementById(
+        "comprobante"
+      );
+
+    const uploadBtn =
+      document.querySelector(
+        ".upload-btn"
+      );
+
+
+    // ==================================================
+    // PACK SELECCIONADO
+    // ==================================================
+
+    let packSeleccionado = "";
+
+    let chancesSeleccionadas = 0;
+
+  let codigoPromoActivo = "";
+
+  // Precio de una oferta de la ruleta (0 = se usa el precio del pack)
+  let precioPromoActivo = 0;
+
+  // ==================================================
+// DESCUENTO POR PALABRA CLAVE - 50% OFF (sorteo MT-07, 13/11/2026)
+// ==================================================
+// Las dos dan el mismo descuento. Cada una se anuncia en un portal
+// distinto: la compra guarda cuál se usó (codigoPromo) y el admin
+// muestra cuántas entradas trajo cada una.
+// "ULTIMO" (70% OFF) se dio de baja el 24/10/2026.
+// "50" se cambió por "VERANO" el 09/11/2026.
+
+const PALABRAS_DESCUENTO = ["VERANO", "MENOS"];
+
+// La palabra que activó el descuento ("" = sin descuento)
+let palabraClaveActiva = "";
+
+let descuentoPalabraClaveActivo = false;
+
+// Página promo 3x1: mismos precios de siempre, pero cada pack
+// entrega el triple de chances (3, 9, 30, 90, 150, 300).
+// Si cambian estos precios, cambiarlos también en index.html real
+// (preciosNormales) y en functions/index.js (PACKS_COMUNES).
+const preciosNormales = {
+  3: 5000,
+  9: 10000,
+  30: 18000,
+  90: 38000,
+  150: 50000,
+  300: 75000
+};
+
+// Para la cinta del pack más elegido (fuera de este bloque)
+preciosNormalesPublicos = preciosNormales;
+
+// Esta página no combina con la palabra clave de 50% OFF:
+// el 3x1 ya es la promo, así que el precio "con descuento"
+// es el mismo que el normal (el input de palabra clave
+// queda oculto en 3x1.html).
+const preciosConDescuento = {
+  3: 5000,
+  9: 10000,
+  30: 18000,
+  90: 38000,
+  150: 50000,
+  300: 75000
+};
+
+// Precio del pack según si hay palabra clave activa
+function precioDelPack(chances) {
+  if (precioPromoActivo) {
+    return precioPromoActivo;
+  }
+  return (
+    descuentoPalabraClaveActivo
+      ? preciosConDescuento[chances]
+      : preciosNormales[chances]
+  ) || 0;
+}
+
+function actualizarPreciosDescuento() {
+
+  document
+    .querySelectorAll(".open-modal")
+    .forEach((card) => {
+
+      const chances =
+        Number(card.dataset.chances);
+
+      const precio =
+        descuentoPalabraClaveActivo
+          ? preciosConDescuento[chances]
+          : preciosNormales[chances];
+
+      if (!precio) return;
+
+      const precioElemento =
+        card.querySelector(".precio-actual");
+
+      const precioUnitario =
+        card.querySelector(".precio-unitario");
+
+      if (precioElemento) {
+        precioElemento.innerText =
+          `$${precio.toLocaleString("es-AR")}`;
+      }
+
+      if (precioUnitario) {
+        precioUnitario.innerText =
+          `$${Math.round(precio / chances).toLocaleString("es-AR")} por chance`;
+      }
+
+    });
+
+}
+
+// ==================================================
+// CUPÓN DE PALABRA CLAVE (animación)
+// ==================================================
+// Los 3 pasos del cupón se iluminan de a uno, y al acertar la
+// clave cae confeti. Sin movimiento si el celular lo pide.
+
+const sinMovimiento =
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+const pasosCupon = document.querySelectorAll(".cupon-pasos li");
+
+if (pasosCupon.length && !sinMovimiento) {
+  let pasoCupon = 0;
+  setInterval(() => {
+    pasosCupon.forEach((paso, i) => paso.classList.toggle("activo", i === pasoCupon));
+    pasoCupon = (pasoCupon + 1) % pasosCupon.length;
+  }, 1300);
+}
+
+function tirarConfeti() {
+  if (sinMovimiento) return;
+  const colores = ["#00a650", "#ff6a00", "#7c3aed", "#facc15", "#ef4444"];
+  for (let i = 0; i < 40; i++) {
+    const pieza = document.createElement("i");
+    pieza.className = "confeti-clave";
+    pieza.style.left = Math.random() * 100 + "vw";
+    pieza.style.background = colores[i % colores.length];
+    pieza.style.animationDelay = Math.random() * 0.4 + "s";
+    document.body.appendChild(pieza);
+    setTimeout(() => pieza.remove(), 2200);
+  }
+}
+
+const btnAplicarDescuento = document.getElementById("btnAplicarDescuento");
+
+// Enter en el campo también aplica la palabra clave
+document.getElementById("codigoDescuento")?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    btnAplicarDescuento?.click();
+  }
+});
+
+if (btnAplicarDescuento) {
+  btnAplicarDescuento.addEventListener("click", () => {
+    const input = document.getElementById("codigoDescuento");
+    const mensaje = document.getElementById("mensajeDescuento");
+    const codigo = (input?.value || "").trim().toUpperCase();
+
+    // Los códigos "MITAD" (50% OFF) y "ENTERO" (oferta secreta)
+    // se dieron de baja el 16/10/2026.
+
+    // Ruleta del Cielo (ruleta-cielo.js), vence el 08/11/2026 23:00
+    if (window.RuletaCielo && codigo === window.RuletaCielo.CODIGO) {
+      const abierta = window.RuletaCielo.abrir();
+      if (mensaje) {
+        mensaje.innerText = abierta
+          ? "✅ ¡CÓDIGO ACTIVADO! GIRÁ LA RULETA DEL CIELO."
+          : "⏰ LA RULETA DEL CIELO YA TERMINÓ.";
+        mensaje.style.color = abierta ? "#008a43" : "#dc2626";
+      }
+      return;
+    }
+
+    const promoConReloj = PROMOS_CON_RELOJ.find((promo) => promo.codigo === codigo);
+
+    if (promoConReloj) {
+      abrirPromo3xHoy(mensaje, promoConReloj);
+      return;
+    }
+
+    if (PALABRAS_DESCUENTO.includes(codigo)) {
+      palabraClaveActiva = codigo;
+      descuentoPalabraClaveActivo = true;
+      actualizarPreciosDescuento();
+
+      if (mensaje) {
+        mensaje.innerText = "✅ ¡PALABRA CLAVE ACTIVADA! TENÉS 50% OFF EN TODAS LAS CHANCES.";
+        mensaje.style.color = "#008a43";
+      }
+
+    } else {
+      palabraClaveActiva = "";
+      descuentoPalabraClaveActivo = false;
+      actualizarPreciosDescuento();
+
+      document.getElementById("ofertaEnteroOverlay")?.classList.remove("activo");
+
+      if (mensaje) {
+        mensaje.innerText = "❌ PALABRA CLAVE INCORRECTA.";
+        mensaje.style.color = "#dc2626";
+      }
+    }
+  });
+}
+
+window.abrirModalPromo = function(
+  chances,
+  precio,
+  codigoPromo = "",
+  etiqueta = "RULETA"
+) {
+
+  chancesSeleccionadas = chances;
+
+  // Las promos no se pueden reabrir desde otro navegador
+  delete document.body.dataset.packElegido;
+
+  codigoPromoActivo =
+    codigoPromo || "";
+
+  precioPromoActivo =
+    Number(precio) || 0;
+
+  packSeleccionado =
+    `${etiqueta} • ${chances} CHANCE${chances === 1 ? "" : "S"} • $${Number(precio).toLocaleString("es-AR")}`;
+
+  if (selectedPack) {
+    selectedPack.innerText =
+      packSeleccionado;
+  }
+
+  if (modal) {
+
+    modal.classList.add("show");
+
+    document.body.classList.add(
+      "modal-open"
+    );
+
+  }
+
+};
+
+
+// ==================================================
+// CÓDIGOS CON RELOJ: "3XHOY" Y "REVIERNES"
+// ==================================================
+// Al escribir el código sale un cartel con 3 packs y la cuenta
+// regresiva hasta "vence". Después de esa hora el código ya
+// no funciona.
+// Si se cambian estos packs o códigos, cambiarlos también en
+// functions/index.js (PROMOS_CON_RELOJ, para el sub admin).
+
+const PROMOS_CON_RELOJ = [
+  // 04/11/2026 23:10 hora de Argentina
+  { codigo: "3XHOY", vence: Date.parse("2026-11-04T23:10:00-03:00"), hora: "23:10" },
+  // 06/11/2026 22:07 hora de Argentina (17 min desde que se publicó)
+  { codigo: "REVIERNES", vence: Date.parse("2026-11-06T22:07:00-03:00"), hora: "22:07" }
+];
+
+const PACKS_3XHOY = [
+  { chances: 1, precio: 1500 },
+  { chances: 20, precio: 9999 },
+  { chances: 100, precio: 19999 }
+];
+
+let reloj3xHoy = null;
+
+function abrirPromo3xHoy(mensaje, promo) {
+
+  const { codigo, vence, hora } = promo;
+
+  if (Date.now() >= vence) {
+    if (mensaje) {
+      mensaje.innerText = "⏰ ESA PROMO YA TERMINÓ.";
+      mensaje.style.color = "#dc2626";
+    }
+    return;
+  }
+
+  if (mensaje) {
+    mensaje.innerText = "✅ ¡CÓDIGO ACTIVADO! ELEGÍ TU PROMO ANTES DE QUE TERMINE EL TIEMPO.";
+    mensaje.style.color = "#008a43";
+  }
+
+  document.getElementById("promo3xHoy")?.remove();
+  clearInterval(reloj3xHoy);
+
+  const fondo = document.createElement("div");
+  fondo.id = "promo3xHoy";
+  fondo.className = "cierre-overlay promo-3xhoy";
+  fondo.setAttribute("role", "dialog");
+  fondo.setAttribute("aria-modal", "true");
+
+  const tarjeta = document.createElement("div");
+  tarjeta.className = "cierre-card";
+
+  const cerrarBoton = document.createElement("button");
+  cerrarBoton.type = "button";
+  cerrarBoton.className = "cierre-cerrar";
+  cerrarBoton.setAttribute("aria-label", "Cerrar");
+  cerrarBoton.textContent = "✕";
+
+  const etiqueta = document.createElement("span");
+  etiqueta.className = "cierre-etiqueta";
+  etiqueta.textContent = `CÓDIGO ${codigo}`;
+
+  const titulo = document.createElement("h2");
+  titulo.className = "cierre-titulo";
+  titulo.textContent = "🔥 Promo exclusiva";
+
+  const bajada = document.createElement("p");
+  bajada.className = "cierre-subtitulo";
+  bajada.textContent = `Promo hasta las ${hora} hs. Elegí la tuya:`;
+
+  const contador = document.createElement("div");
+  contador.className = "cierre-contador";
+  contador.innerHTML =
+    '<div class="cierre-caja" data-caja-horas><span data-horas>0</span><small>HS</small></div>' +
+    '<div class="cierre-caja"><span data-min>0</span><small>MIN</small></div>' +
+    '<div class="cierre-caja"><span data-seg>00</span><small>SEG</small></div>';
+
+  const lista = document.createElement("div");
+  lista.className = "promo-3xhoy-lista";
+
+  PACKS_3XHOY.forEach(({ chances, precio }) => {
+
+    const boton = document.createElement("button");
+    boton.type = "button";
+    boton.className = "promo-3xhoy-pack";
+
+    const cantidad = document.createElement("b");
+    cantidad.textContent = `${chances} chance${chances === 1 ? "" : "s"}`;
+
+    const valor = document.createElement("strong");
+    valor.textContent = "$" + precio.toLocaleString("es-AR");
+
+    const unitario = document.createElement("small");
+    unitario.textContent = "$" + Math.round(precio / chances).toLocaleString("es-AR") + " por chance";
+
+    boton.append(cantidad, unitario, valor);
+
+    boton.addEventListener("click", () => {
+      cerrar();
+      window.abrirModalPromo(chances, precio, codigo, `PROMO ${codigo}`);
+    });
+
+    lista.appendChild(boton);
+
+  });
+
+  tarjeta.append(cerrarBoton, etiqueta, titulo, bajada, contador, lista);
+  fondo.appendChild(tarjeta);
+  document.body.appendChild(fondo);
+
+  function cerrar() {
+    clearInterval(reloj3xHoy);
+    fondo.remove();
+  }
+
+  function actualizar() {
+
+    const resta = Math.max(0, vence - Date.now());
+    const segundos = Math.ceil(resta / 1000);
+
+    const horas = Math.floor(segundos / 3600);
+    contador.querySelector("[data-caja-horas]").hidden = !horas;
+    contador.querySelector("[data-horas]").textContent = String(horas);
+    contador.querySelector("[data-min]").textContent =
+      horas ? String(Math.floor(segundos / 60) % 60).padStart(2, "0") : String(Math.floor(segundos / 60));
+    contador.querySelector("[data-seg]").textContent = String(segundos % 60).padStart(2, "0");
+
+    fondo.classList.toggle("urgente", segundos <= 30);
+
+    if (!resta) {
+      clearInterval(reloj3xHoy);
+      bajada.textContent = `⏰ La promo terminó a las ${hora} hs`;
+      lista.querySelectorAll("button").forEach((boton) => { boton.disabled = true; });
+      if (mensaje) {
+        mensaje.innerText = "⏰ ESA PROMO YA TERMINÓ.";
+        mensaje.style.color = "#dc2626";
+      }
+    }
+
+  }
+
+  actualizar();
+  reloj3xHoy = setInterval(actualizar, 250);
+
+  cerrarBoton.addEventListener("click", cerrar);
+  fondo.addEventListener("click", (evento) => {
+    if (evento.target === fondo) cerrar();
+  });
+
+  requestAnimationFrame(() => fondo.classList.add("activo"));
+
+}
+
+
+const ofertaEnteroOverlay = document.getElementById("ofertaEnteroOverlay");
+
+document.getElementById("cerrarOfertaEntero")?.addEventListener("click", () => {
+  ofertaEnteroOverlay?.classList.remove("activo");
+});
+
+document.querySelectorAll("[data-entero-chances]").forEach((boton) => {
+  boton.addEventListener("click", () => {
+    const chances = Number(boton.dataset.enteroChances);
+    const precios = { 20: 10000, 50: 15000 };
+    const precio = precios[chances];
+
+    if (!precio) return;
+
+    ofertaEnteroOverlay?.classList.remove("activo");
+
+    window.abrirModalPromo(chances, precio, `ENTERO${chances}`);
+  });
+});
+
+ofertaEnteroOverlay?.addEventListener("click", (e) => {
+  if (e.target === ofertaEnteroOverlay) {
+    ofertaEnteroOverlay.classList.remove("activo");
+  }
+});
+
+
+    // ==================================================
+    // COMPROBANTE
+    // ==================================================
+
+    if (
+      comprobante &&
+      uploadBtn
+    ) {
+
+      comprobante.addEventListener(
+        "change",
+        () => {
+
+          // Solo capturas (imágenes): los PDF tardan y fallan al subir
+          if (
+            comprobante.files.length > 0 &&
+            !esCaptura(comprobante.files[0])
+          ) {
+
+            comprobante.value = "";
+
+            alert(
+              "Subí una captura de pantalla (foto) del comprobante, no un PDF.\n\n" +
+              "Sacale una captura al comprobante en tu app del banco y adjuntala."
+            );
+
+          }
+
+          if (
+            comprobante.files.length > 0
+          ) {
+
+            uploadBtn.innerHTML =
+              "✅ CAPTURA SELECCIONADA";
+
+          } else {
+
+            uploadBtn.innerHTML =
+              "📷 ADJUNTAR CAPTURA DEL COMPROBANTE";
+
+          }
+
+        }
+      );
+
+    }
+
+
+    // ==================================================
+    // ABRIR MODAL
+    // ==================================================
+
+    cards.forEach(
+      (card) => {
+
+        card.addEventListener(
+          "click",
+          () => {
+
+            const packName =
+              card.querySelector(
+                "h3"
+              )?.innerText || "";
+
+            const packPrice =
+              card.querySelector(
+                "strong"
+              )?.innerText || "";
+
+
+            const cantidad =
+              Number(
+                card.dataset.chances
+              );
+
+
+            if (
+              !cantidad ||
+              cantidad <= 0
+            ) {
+
+              alert(
+                "No se pudo determinar la cantidad de chances."
+              );
+
+              return;
+
+            }
+
+
+            chancesSeleccionadas =
+              cantidad;
+
+            // La palabra clave queda guardada en la compra (codigoPromo)
+            codigoPromoActivo = palabraClaveActiva;
+
+            // Para "Abrir en Chrome": reabre este mismo pack
+            document.body.dataset.packElegido = String(cantidad);
+
+            precioPromoActivo = 0;
+
+            packSeleccionado =
+              `${descuentoPalabraClaveActivo ? `CLAVE ${palabraClaveActiva} 50% OFF • ` : ""}${packName} • ${cantidad} CHANCE${cantidad === 1 ? "" : "S"} • ${packPrice}`;
+
+
+            if (selectedPack) {
+
+              selectedPack.innerText =
+                packSeleccionado;
+
+            }
+
+if (modal) {
+  modal.classList.add("show");
+  document.body.classList.add("modal-open");
+}
+
+            leerIpCliente();
+
+            eventoMeta("InitiateCheckout", {
+              value: precioDelPack(cantidad),
+              num_items: cantidad,
+              content_name: `${cantidad} chances`
+            });
+
+          }
+        );
+      }
+    );
+
+
+// ==================================================
+// CONTADOR — REVELACIÓN → SORTEO
+// ==================================================
+
+const countdownLabel =
+  document.getElementById("countdownLabel");
+
+const drawDate =
+  document.querySelector(".draw-date");
+
+// ================================================
+// ETAPA 1
+// Revelación de las motos
+// Viernes 18 de septiembre de 2026 — 21:00 hs
+// Argentina UTC-3
+// ================================================
+
+const revelationDate =
+  new Date("2026-09-18T21:00:00-03:00");
+
+// ================================================
+// ETAPA 2
+// Sorteo definitivo
+// Viernes 13 de noviembre de 2026 — 21:00 hs
+// Argentina UTC-3
+// ================================================
+
+const raffleDate =
+  new Date("2026-11-13T21:00:00-03:00");
+
+// Cierre de compras: la misma hora que el cartel emergente
+// (window.OJEDA_CIERRE en carteles.js), así los dos relojes coinciden.
+const closingDate =
+  window.OJEDA_CIERRE ||
+  new Date("2026-11-13T19:00:00-03:00");
+
+
+// ==================================================
+// ACTUALIZAR CONTADOR
+// ==================================================
+
+function updateCountdown() {
+
+  const now = new Date();
+
+  // ==================================================
+  // ETAPA 1 — FALTA PARA DAR A CONOCER LAS MOTOS
+  // ==================================================
+
+  if (now < revelationDate) {
+
+    if (countdownLabel) {
+      countdownLabel.innerText =
+        "🏍️ FALTA SOLO ESTO PARA DAR A CONOCER LAS MOTOS";
+    }
+
+    if (drawDate) {
+      drawDate.innerText =
+        "🔥 VIERNES 18 DE SEPTIEMBRE — 21:00 HS";
+    }
+
+    actualizarValores(
+      revelationDate - now
+    );
+
+    return;
+  }
+
+
+  // ==================================================
+  // ETAPA 2 — FALTA PARA EL CIERRE DE COMPRAS (19:00)
+  // ==================================================
+
+  if (now < closingDate) {
+
+    if (countdownLabel) {
+      countdownLabel.innerText =
+        "💣 EL 3X1 SE APAGA EN";
+    }
+
+    if (drawDate) {
+      drawDate.innerText =
+        "🔒 Cierre de compras: viernes 13/11 · 19:00 hs\n🏆 Sorteo en vivo: 21:00 hs";
+    }
+
+    actualizarValores(
+      closingDate - now
+    );
+
+    return;
+  }
+
+
+  // ==================================================
+  // ETAPA 3 — COMPRAS CERRADAS: FALTA PARA EL SORTEO
+  // ==================================================
+
+  if (now < raffleDate) {
+
+    if (countdownLabel) {
+      countdownLabel.innerText =
+        "🔴 EL SORTEO EN VIVO EMPIEZA EN";
+    }
+
+    if (drawDate) {
+      drawDate.innerText =
+        "🏆 Viernes 13 de noviembre · 21:00 hs";
+    }
+
+    actualizarValores(
+      raffleDate - now
+    );
+
+    return;
+  }
+
+
+  // ==================================================
+  // DESPUÉS DEL SORTEO
+  // ==================================================
+
+  if (countdownLabel) {
+    countdownLabel.innerText =
+      "🏁 SORTEO FINALIZADO";
+  }
+
+  if (drawDate) {
+    drawDate.innerText =
+      "¡Gracias por participar! 🔥 Atentos al próximo sorteo";
+  }
+
+  actualizarValores(0);
+}
+
+
+// ==================================================
+// MOSTRAR DÍAS / HORAS / MINUTOS / SEGUNDOS
+// ==================================================
+
+function actualizarValores(difference) {
+
+  const daysElement =
+    document.getElementById("days");
+
+  const hoursElement =
+    document.getElementById("hours");
+
+  const minutesElement =
+    document.getElementById("minutes");
+
+  const secondsElement =
+    document.getElementById("seconds");
+
+
+  difference =
+    Math.max(0, difference);
+
+
+  const days =
+    Math.floor(
+      difference /
+      (1000 * 60 * 60 * 24)
+    );
+
+
+  const hours =
+    Math.floor(
+      (difference %
+        (1000 * 60 * 60 * 24)) /
+      (1000 * 60 * 60)
+    );
+
+
+  const minutes =
+    Math.floor(
+      (difference %
+        (1000 * 60 * 60)) /
+      (1000 * 60)
+    );
+
+
+  const seconds =
+    Math.floor(
+      (difference %
+        (1000 * 60)) /
+      1000
+    );
+
+
+  if (daysElement) {
+    daysElement.innerText =
+      String(days).padStart(2, "0");
+  }
+
+
+  if (hoursElement) {
+    hoursElement.innerText =
+      String(hours).padStart(2, "0");
+  }
+
+
+  if (minutesElement) {
+    minutesElement.innerText =
+      String(minutes).padStart(2, "0");
+  }
+
+
+  if (secondsElement) {
+    secondsElement.innerText =
+      String(seconds).padStart(2, "0");
+  }
+}
+
+
+// ==================================================
+// INICIAR CONTADOR
+// ==================================================
+
+updateCountdown();
+
+setInterval(
+  updateCountdown,
+  1000
+);
+
+    // ==================================================
+    // COPIAR ALIAS
+    // ==================================================
+
+    const copyAlias =
+      document.getElementById(
+        "copyAlias"
+      );
+
+
+    if (copyAlias) {
+
+      copyAlias.addEventListener(
+        "click",
+        async () => {
+
+          try {
+
+            await navigator.clipboard.writeText(
+              "repuestos.ojeda"
+            );
+
+            copyAlias.innerText =
+              "✓ Copiado";
+
+
+            setTimeout(
+              () => {
+
+                copyAlias.innerText =
+                  "Copiar";
+
+              },
+              2000
+            );
+
+          } catch (error) {
+
+            console.error(
+              "Error copiando alias:",
+              error
+            );
+
+          }
+
+        }
+      );
+
+    }
+
+
+    // ==================================================
+    // COPIAR CVU
+    // ==================================================
+
+    const copyCvu =
+      document.getElementById(
+        "copyCvu"
+      );
+
+
+    if (copyCvu) {
+
+      copyCvu.addEventListener(
+        "click",
+        async () => {
+
+          try {
+
+            await navigator.clipboard.writeText(
+              "3840200500000030295274"
+            );
+
+            copyCvu.innerText =
+              "✓ Copiado";
+
+
+            setTimeout(
+              () => {
+
+                copyCvu.innerText =
+                  "Copiar";
+
+              },
+              2000
+            );
+
+          } catch (error) {
+
+            console.error(
+              "Error copiando CVU:",
+              error
+            );
+
+          }
+
+        }
+      );
+
+    }
+
+
+    // ==================================================
+    // ENVIAR COMPROBANTE
+    // ==================================================
+
+    if (purchaseForm) {
+
+      let enviando = false;
+
+
+      purchaseForm.addEventListener(
+        "submit",
+        async (e) => {
+
+          e.preventDefault();
+
+
+          if (enviando) {
+            return;
+          }
+
+
+          if (
+            !chancesSeleccionadas ||
+            !packSeleccionado
+          ) {
+
+            alert(
+              "Primero seleccioná un pack de chances."
+            );
+
+            return;
+
+          }
+
+
+          const archivo =
+            comprobante?.files?.[0];
+
+
+          if (!archivo) {
+
+            registrarErrorCompra({
+              etapa: "sin_archivo",
+              error: { code: "sin_archivo" }
+            });
+
+            alert(
+              "Debés adjuntar una captura del comprobante."
+            );
+
+            return;
+
+          }
+
+          if (!esCaptura(archivo)) {
+
+            alert(
+              "Subí una captura de pantalla (foto) del comprobante, no un PDF."
+            );
+
+            return;
+
+          }
+
+
+          enviando = true;
+
+
+          const submitBtn =
+            purchaseForm.querySelector(
+              'button[type="submit"]'
+            );
+
+
+          if (submitBtn) {
+
+            submitBtn.disabled = true;
+
+            submitBtn.innerHTML =
+              "⏳ SUBIENDO...";
+
+          }
+
+
+          purchaseForm.style.pointerEvents =
+            "none";
+
+          purchaseForm.style.opacity =
+            "0.6";
+
+
+          // En qué paso estaba si algo falla
+          let etapa = "subida";
+
+
+          try {
+
+
+            // ------------------------------------------
+            // DATOS
+            // ------------------------------------------
+
+            const nombre =
+              document.getElementById(
+                "nombre"
+              )?.value
+              .trim() || "";
+
+
+            const apellido =
+              document.getElementById(
+                "apellido"
+              )?.value
+              .trim() || "";
+
+
+            const dni =
+              document.getElementById(
+                "dniCompra"
+              )?.value
+              .trim() || "";
+
+
+            const telefono =
+              document.getElementById(
+                "telefono"
+              )?.value
+              .trim() || "";
+
+
+            const instagram =
+              document.getElementById(
+                "instagram"
+              )?.value
+              .trim() || "";
+
+
+            if (
+              !nombre ||
+              !apellido ||
+              !dni ||
+              !telefono
+            ) {
+
+              alert(
+                "Completá todos los datos obligatorios."
+              );
+
+              enviando = false;
+
+              if (submitBtn) {
+
+                submitBtn.disabled =
+                  false;
+
+                submitBtn.innerText =
+                  "ENVIAR COMPROBANTE";
+
+              }
+
+              purchaseForm.style.pointerEvents =
+                "auto";
+
+              purchaseForm.style.opacity =
+                "1";
+
+              return;
+
+            }
+
+
+            // ------------------------------------------
+            // SUBIR COMPROBANTE
+            // ------------------------------------------
+
+            if (submitBtn) {
+
+              submitBtn.innerHTML =
+                "⏳ PREPARANDO COMPROBANTE...";
+
+            }
+
+            const comprobanteSubido =
+              await subirComprobante(
+                archivo,
+                (progreso) => {
+
+                  if (submitBtn) {
+
+                    submitBtn.innerHTML =
+                      `⏳ SUBIENDO... ${progreso}%`;
+
+                  }
+
+                }
+              );
+
+
+            // ------------------------------------------
+            // GUARDAR PARTICIPANTE
+            // ------------------------------------------
+
+            etapa = "guardado";
+
+            if (submitBtn) {
+
+              submitBtn.innerHTML =
+                "⏳ GUARDANDO DATOS...";
+
+            }
+
+            // Identificadores de Meta (mismo ID para el Píxel y el servidor)
+            const meta = {
+              ...datosParaMeta(),
+              clientIp: await leerIpCliente()
+            };
+
+            const guardado =
+              await guardarParticipante({
+
+                ...meta,
+
+                nombre,
+
+                apellido,
+
+                dni,
+
+                telefono,
+
+                instagram,
+
+                pack:
+                  packSeleccionado,
+
+                chancesBase:
+                  chancesSeleccionadas,
+
+         chancesFinales:
+  chancesSeleccionadas,
+
+codigoPromo:
+  codigoPromoActivo,
+
+
+precioFinal:
+  precioPromoActivo ? precioPromoActivo :
+  codigoPromoActivo === "ENTERO20"
+    ? 10000
+    : codigoPromoActivo === "ENTERO50"
+      ? 15000
+      : codigoPromoActivo === "SUPER50"
+        ? 14999
+        : codigoPromoActivo === "SUPER100"
+          ? 19999
+          : descuentoPalabraClaveActivo
+            ? preciosConDescuento[chancesSeleccionadas] || 0
+            : preciosNormales[chancesSeleccionadas] || 0,
+
+        
+multiplicadorPromo:
+  1,
+
+                referido:
+                  localStorage.getItem(
+                    "referido"
+                  ) || "",
+
+                comprobanteURL:
+                  comprobanteSubido.url,
+
+                comprobantePath:
+                  comprobanteSubido.path
+
+              });
+
+
+            if (!guardado) {
+
+              throw new Error(
+                "NO_GUARDADO"
+              );
+
+            }
+
+
+            // Para el link personal de "Compartir"
+            guardarMiDni(dni);
+
+
+            // ------------------------------------------
+            // PÍXEL DE META: ENVIÓ EL COMPROBANTE
+            // ------------------------------------------
+            // No es "Purchase": esa la manda el servidor al aprobar
+
+            eventoMeta("AddPaymentInfo", {
+              value: precioDelPack(chancesSeleccionadas),
+              num_items: chancesSeleccionadas,
+              content_name: `${chancesSeleccionadas} chances`,
+              content_category: codigoPromoActivo || "sin clave"
+            });
+
+
+            // ------------------------------------------
+            // NOTIFICACIÓN LOCAL
+            // ------------------------------------------
+
+            mostrarNotificacionCompra(
+              nombre,
+              apellido,
+              packSeleccionado
+            );
+
+
+            // ------------------------------------------
+            // MOSTRAR ÉXITO
+            // ------------------------------------------
+
+            if (modal) {
+
+              modal.classList.remove(
+                "show"
+              );
+
+            }
+
+
+            document.body.classList.remove(
+              "modal-open"
+            );
+
+
+            if (successModal) {
+
+              successModal.classList.add(
+                "show"
+              );
+
+            }
+
+
+            purchaseForm.reset();
+
+
+            if (uploadBtn) {
+
+              uploadBtn.innerHTML =
+                "📷 ADJUNTAR COMPROBANTE";
+
+            }
+
+
+          } catch (error) {
+
+            console.error(
+              "ERROR AL ENVIAR:",
+              error
+            );
+
+            registrarErrorCompra({ etapa, error, archivo });
+
+
+            // Mensaje claro según qué falló
+
+            let mensaje =
+              "No se pudo enviar el comprobante. Probá de nuevo en un momento.";
+
+            if (error.message === "SIN_CONEXION") {
+
+              mensaje =
+                "⚠️ Se cortó la conexión mientras subía el comprobante.\n\n" +
+                "Revisá tu señal o wifi y tocá ENVIAR COMPROBANTE de nuevo.";
+
+            } else if (
+              error.code === "storage/unauthorized" ||
+              error.code === "storage/canceled"
+            ) {
+
+              mensaje =
+                "⚠️ No se pudo subir ese archivo.\n\n" +
+                "Probá con una captura de pantalla del comprobante (JPG o PNG).";
+
+            } else if (error.message === "NO_GUARDADO") {
+
+              mensaje =
+                "⚠️ El comprobante se subió pero no pudimos registrar tu compra.\n\n" +
+                "Revisá tu conexión y tocá ENVIAR COMPROBANTE de nuevo.";
+
+            }
+
+            // Cartel con la salida por WhatsApp; el código permite
+            // identificar el error si mandan captura
+            mostrarErrorEnvio(
+              mensaje.replace(/^⚠️\s*/u, ""),
+              error.code || error.message || "sin_codigo",
+              packSeleccionado
+            );
+
+
+          } finally {
+
+            enviando = false;
+
+
+            if (submitBtn) {
+
+              submitBtn.disabled =
+                false;
+
+              submitBtn.innerText =
+                "ENVIAR COMPROBANTE";
+
+            }
+
+
+            purchaseForm.style.pointerEvents =
+              "auto";
+
+            purchaseForm.style.opacity =
+              "1";
+
+          }
+
+        }
+      );
+
+    }
+
+
+    // ==================================================
+    // GALERÍA
+    // ==================================================
+
+    cargarGaleria();
+
+
+    // ==================================================
+    // RANKING
+    // ==================================================
+
+    cargarRanking();
+
+
+    // ==================================================
+    // PACK MÁS ELEGIDO: desactivado en la página 3x1.
+    // Las estadísticas son de los packs normales (otros
+    // valores de chances) y esta página ya tiene su propio
+    // diseño fijo en escalera por precio.
+    // ==================================================
+
+    // cargarPackMasElegido();
+
+
+    // ==================================================
+    // ÚLTIMAS COMPRAS
+    // ==================================================
+
+    iniciarUltimasCompras();
+
+
+    // ==================================================
+    // NOTIFICACIONES EN VIVO ("Fulano compró...")
+    // ==================================================
+    // Desactivadas el 24/10/2026 (página más limpia).
+    // Para volver a mostrarlas, descomentar la línea.
+
+    // iniciarNotificacionesEnVivo();
+
+  }
+);
+
+
+// ======================================================
+// NOTIFICACIÓN FLOTANTE
+// ======================================================
+
+let colaNotificaciones = [];
+
+let mostrandoNotificacion = false;
+
+
+function crearEstilosNotificacion() {
+
+  if (
+    document.getElementById(
+      "purchaseNotificationStyles"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  const style =
+    document.createElement(
+      "style"
+    );
+
+
+  style.id =
+    "purchaseNotificationStyles";
+
+
+  style.innerHTML = `
+
+    .purchase-notification {
+
+      position: fixed;
+
+      left: 20px;
+      bottom: 25px;
+
+      z-index: 999999;
+
+      display: flex;
+      align-items: center;
+
+      gap: 12px;
+
+      width: min(
+        360px,
+        calc(100vw - 40px)
+      );
+
+      padding: 13px 16px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #111111,
+          #1c1c1c
+        );
+
+      border:
+        1px solid
+        rgba(
+          255,
+          35,
+          35,
+          0.65
+        );
+
+      border-left:
+        4px solid
+        #ff2020;
+
+      border-radius:
+        14px;
+
+      box-shadow:
+        0 12px 35px
+        rgba(
+          0,
+          0,
+          0,
+          0.45
+        );
+
+      color: white;
+
+      opacity: 0;
+
+      transform:
+        translateY(25px)
+        scale(0.96);
+
+      pointer-events: none;
+
+      transition:
+        opacity 0.35s ease,
+        transform 0.35s ease;
+
+    }
+
+
+    .purchase-notification.show {
+
+      opacity: 1;
+
+      transform:
+        translateY(0)
+        scale(1);
+
+    }
+
+
+    .purchase-notification-icon {
+
+      width: 42px;
+      height: 42px;
+
+      flex-shrink: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background:
+        linear-gradient(
+          135deg,
+          #ff2020,
+          #a50000
+        );
+
+      border-radius: 50%;
+
+      font-size: 20px;
+
+    }
+
+
+    .purchase-notification-content {
+
+      display: flex;
+
+      flex-direction: column;
+
+      min-width: 0;
+
+      line-height: 1.2;
+
+    }
+
+
+    .purchase-notification-content strong {
+
+      font-size: 14px;
+
+      font-weight: 800;
+
+      color: #ffffff;
+
+      white-space: nowrap;
+
+      overflow: hidden;
+
+      text-overflow: ellipsis;
+
+    }
+
+
+    .purchase-notification-content span {
+
+      margin-top: 4px;
+
+      font-size: 13px;
+
+      font-weight: 700;
+
+      color: #ff3b3b;
+
+    }
+
+
+    .purchase-notification-content small {
+
+      margin-top: 4px;
+
+      font-size: 10px;
+
+      color: #999;
+
+    }
+
+
+    @media (
+      max-width: 600px
+    ) {
+
+      .purchase-notification {
+
+        left: 12px;
+        bottom: 15px;
+
+        width:
+          calc(100vw - 24px);
+
+        padding:
+          11px 13px;
+
+      }
+
+      .purchase-notification-icon {
+
+        width: 38px;
+        height: 38px;
+
+        font-size: 18px;
+
+      }
+
+    }
+
+  `;
+
+
+  document.head.appendChild(
+    style
+  );
+
+}
+
+
+function mostrarNotificacionCompra(
+  nombre,
+  apellido,
+  pack
+) {
+
+  crearEstilosNotificacion();
+
+
+  colaNotificaciones.push({
+
+    nombre:
+      nombre || "",
+
+    apellido:
+      apellido || "",
+
+    pack:
+      pack || "chances"
+
+  });
+
+
+  procesarColaNotificaciones();
+
+}
+
+
+function procesarColaNotificaciones() {
+
+  if (
+    mostrandoNotificacion
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    colaNotificaciones.length === 0
+  ) {
+
+    return;
+
+  }
+
+
+  // Nunca dos carteles juntos: si hay uno abierto
+  // (cierre, súper promo, formulario...), esperar.
+
+  if (window.Carteles?.hayAbierto()) {
+
+    setTimeout(
+      procesarColaNotificaciones,
+      2000
+    );
+
+    return;
+
+  }
+
+
+  mostrandoNotificacion =
+    true;
+
+
+  const compra =
+    colaNotificaciones.shift();
+
+
+  let notification =
+    document.getElementById(
+      "purchaseNotification"
+    );
+
+
+  if (!notification) {
+
+    notification =
+      document.createElement(
+        "div"
+      );
+
+    notification.id =
+      "purchaseNotification";
+
+    notification.className =
+      "purchase-notification";
+
+
+    notification.innerHTML = `
+
+      <div class="
+        purchase-notification-icon
+      ">
+        🎟️
+      </div>
+
+      <div class="
+        purchase-notification-content
+      ">
+
+        <strong
+          id="purchaseNotificationName"
+        ></strong>
+
+        <span
+          id="purchaseNotificationPack"
+        ></span>
+
+        <small>
+          Compra reciente
+        </small>
+
+      </div>
+
+    `;
+
+
+    document.body.appendChild(
+      notification
+    );
+
+  }
+
+
+  const nameElement =
+    document.getElementById(
+      "purchaseNotificationName"
+    );
+
+
+  const packElement =
+    document.getElementById(
+      "purchaseNotificationPack"
+    );
+
+
+  // Igual que el ranking: "Kevin Porchile" -> "Kevin P."
+  const nombreCompleto =
+    nombreRanking(
+      `${compra.nombre || ""} ${compra.apellido || ""}`
+    );
+
+
+  if (nameElement) {
+
+    nameElement.textContent =
+      `🎉 ${nombreCompleto}`;
+
+  }
+
+
+  if (packElement) {
+
+    packElement.textContent =
+      `Compró ${compra.pack}`;
+
+  }
+
+
+  // Mostrar
+
+  notification.classList.add(
+    "show"
+  );
+
+
+  // Mantener 5 segundos
+
+  setTimeout(
+    () => {
+
+      notification.classList.remove(
+        "show"
+      );
+
+
+      setTimeout(
+        () => {
+
+          mostrandoNotificacion =
+            false;
+
+          procesarColaNotificaciones();
+
+        },
+        400
+      );
+
+
+    },
+    5000
+  );
+
+}
+
+
+// ======================================================
+// NOTIFICACIONES EN VIVO DESDE FIREBASE
+// ======================================================
+
+let primerCargaNotificaciones =
+  true;
+
+
+function iniciarNotificacionesEnVivo() {
+
+  crearEstilosNotificacion();
+
+
+  try {
+
+// "compras_recientes" solo tiene nombre abreviado y pack.
+// Los datos completos están en "participantes", que solo lee el admin.
+const consulta = query(
+  collection(db, "compras_recientes"),
+  orderBy("fecha", "desc"),
+  limit(1)
+);
+
+    onSnapshot(
+      consulta,
+      (snapshot) => {
+
+        // No mostrar las compras
+        // que ya existían al abrir
+
+        if (
+          primerCargaNotificaciones
+        ) {
+
+          primerCargaNotificaciones =
+            false;
+
+          return;
+
+        }
+
+
+        snapshot.docChanges()
+          .forEach(
+            (change) => {
+
+              if (
+                change.type !== "added"
+              ) {
+
+                return;
+
+              }
+
+
+              const datos =
+                change.doc.data();
+
+
+              mostrarNotificacionCompra(
+
+                datos.nombre,
+
+                datos.apellido,
+
+                datos.pack
+
+              );
+
+            }
+          );
+
+      },
+      (error) => {
+
+        console.error(
+          "Error en notificaciones en vivo:",
+          error
+        );
+
+      }
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "No se pudo iniciar notificaciones:",
+      error
+    );
+
+  }
+
+}
+
+
+// ======================================================
+// GALERÍA DESDE FIREBASE STORAGE
+// ======================================================
+
+let imagenActual = 0;
+
+
+async function cargarGaleria() {
+
+  const gallery =
+    document.getElementById(
+      "galleryGrid"
+    );
+
+
+  if (!gallery) {
+    return;
+  }
+
+
+  try {
+
+    gallery.innerHTML = "";
+
+
+    // Fotos publicadas con la página (OJEDA_FOTOS en carteles.js):
+    // miniatura en assets/premios/<nombre>, grande en assets/premios/grandes/<nombre>.
+    // Si la lista está vacía, se usan las de Firebase Storage (carpeta "Premio").
+    const fotosLocales =
+      window.OJEDA_FOTOS || [];
+
+    let fotos;
+
+    if (fotosLocales.length) {
+
+      fotos = fotosLocales.map((nombre) => ({
+        name: nombre,
+        url: `assets/premios/grandes/${encodeURIComponent(nombre)}`
+      }));
+
+    } else {
+
+      const archivos =
+        await listAll(
+          ref(storage, "Premio")
+        );
+
+      fotos = archivos.items;
+
+    }
+
+
+    // Sin fotos: no mostrar la sección vacía ni el "Ver fotos"
+    if (!fotos.length) {
+      document.getElementById("premios")?.setAttribute("hidden", "");
+      document.querySelector(".etiqueta-fotos")?.setAttribute("hidden", "");
+      return;
+    }
+
+
+    // La primera foto también va en la tarjeta del premio
+    // (la grande si está publicada con la página; si no, la miniatura)
+    const fotoPrincipal =
+      document.getElementById("premioFoto");
+
+    if (fotoPrincipal && fotos.length) {
+      fotoPrincipal.src =
+        fotos[0].url ||
+        `assets/premios/${encodeURIComponent(fotos[0].name)}`;
+    }
+
+
+    const urls = [];
+
+
+    for (
+      const item
+      of fotos
+    ) {
+
+      const url =
+        item.url ||
+        await getDownloadURL(
+          item
+        );
+
+
+      urls.push(url);
+
+
+      const img =
+        document.createElement(
+          "img"
+        );
+
+
+      // Miniatura liviana (assets/premios/<mismo nombre>) para la grilla;
+      // la foto grande de Storage se descarga solo al abrirla.
+      // Si una foto nueva no tiene miniatura, se usa la grande.
+      img.dataset.full =
+        url;
+
+      img.onerror = () => {
+        img.onerror = null;
+        img.src = url;
+      };
+
+      img.src =
+        `assets/premios/${encodeURIComponent(item.name)}`;
+
+      // Se descarga recién cuando la persona baja hasta Premios
+      img.loading =
+        "lazy";
+
+      img.decoding =
+        "async";
+
+      img.width = 400;
+      img.height = 400;
+
+      img.className =
+        "gallery-img";
+
+      img.alt =
+        "Premio";
+
+
+      gallery.appendChild(
+        img
+      );
+
+    }
+
+
+  
+
+
+    iniciarModalGaleria();
+
+
+  } catch (error) {
+
+    console.error(
+      "Error cargando galería:",
+      error
+    );
+
+  }
+
+}
+
+
+// ======================================================
+// MODAL GALERÍA
+// ======================================================
+
+function iniciarModalGaleria() {
+
+  const contador =
+    document.getElementById(
+      "galleryCounter"
+    );
+
+
+  const imagenes =
+    document.querySelectorAll(
+      ".gallery-img"
+    );
+
+
+  const modal =
+    document.getElementById(
+      "imageModal"
+    );
+
+
+  const modalImg =
+    document.getElementById(
+      "modalImage"
+    );
+
+
+  const cerrar =
+    document.getElementById(
+      "closeImageModal"
+    );
+
+
+  const anterior =
+    document.getElementById(
+      "prevImage"
+    );
+
+
+  const siguiente =
+    document.getElementById(
+      "nextImage"
+    );
+
+
+  if (
+    !modal ||
+    !modalImg
+  ) {
+
+    return;
+
+  }
+
+
+  // Muestra al instante la miniatura (ya descargada) y la cambia
+  // por la foto grande apenas termina de bajar. También precarga
+  // la anterior y la siguiente para que las flechas sean instantáneas.
+  const precargadas = new Set();
+
+  function precargar(imgEl) {
+    const full = imgEl && imgEl.dataset.full;
+    if (!full || precargadas.has(full)) return;
+    precargadas.add(full);
+    const grande = new Image();
+    grande.src = full;
+  }
+
+  function mostrarFoto(imgEl) {
+
+    const full = imgEl.dataset.full;
+
+    modalImg.src = imgEl.currentSrc || imgEl.src;
+
+    if (full) {
+      const grande = new Image();
+      grande.onload = () => {
+        if (imagenes[imagenActual] === imgEl) {
+          modalImg.src = full;
+        }
+      };
+      grande.src = full;
+      precargadas.add(full);
+    }
+
+    const total = imagenes.length;
+    precargar(imagenes[(imagenActual + 1) % total]);
+    precargar(imagenes[(imagenActual - 1 + total) % total]);
+
+  }
+
+
+  imagenes.forEach(
+    (img, index) => {
+
+      img.onclick =
+        () => {
+
+          imagenActual =
+            index;
+
+
+          mostrarFoto(img);
+
+
+          if (contador) {
+
+            contador.textContent =
+              `${imagenActual + 1} / ${imagenes.length}`;
+
+          }
+
+
+          modal.classList.add(
+            "show"
+          );
+
+        };
+
+    }
+  );
+
+
+  if (cerrar) {
+
+    cerrar.onclick =
+      () => {
+
+        modal.classList.remove(
+          "show"
+        );
+
+      };
+
+  }
+
+
+  if (anterior) {
+
+    anterior.onclick =
+      () => {
+
+        if (
+          imagenes.length === 0
+        ) {
+
+          return;
+
+        }
+
+
+        imagenActual--;
+
+
+        if (
+          imagenActual < 0
+        ) {
+
+          imagenActual =
+            imagenes.length - 1;
+
+        }
+
+
+        mostrarFoto(imagenes[imagenActual]);
+
+
+        if (contador) {
+
+          contador.textContent =
+            `${imagenActual + 1} / ${imagenes.length}`;
+
+        }
+
+      };
+
+  }
+
+
+  if (siguiente) {
+
+    siguiente.onclick =
+      () => {
+
+        if (
+          imagenes.length === 0
+        ) {
+
+          return;
+
+        }
+
+
+        imagenActual++;
+
+
+        if (
+          imagenActual >=
+          imagenes.length
+        ) {
+
+          imagenActual = 0;
+
+        }
+
+
+        mostrarFoto(imagenes[imagenActual]);
+
+
+        if (contador) {
+
+          contador.textContent =
+            `${imagenActual + 1} / ${imagenes.length}`;
+
+        }
+
+      };
+
+  }
+
+
+  modal.onclick =
+    (e) => {
+
+      if (
+        e.target === modal
+      ) {
+
+        modal.classList.remove(
+          "show"
+        );
+
+      }
+
+    };
+
+}
+
+
+// ======================================================
+// RANKING EN VIVO
+// ======================================================
+
+function nombreRanking(
+  nombreCompleto
+) {
+
+  // MUESTRA PRIMER NOMBRE + INICIAL DEL APELLIDO
+  // "Leopoldo david Montiel" -> "Leopoldo M."
+
+  const partes =
+    String(nombreCompleto || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+  if (partes.length === 0) {
+    return "Participante";
+  }
+
+  const primerNombre =
+    partes[0].charAt(0).toUpperCase() +
+    partes[0].slice(1).toLowerCase();
+
+  if (partes.length === 1) {
+    return primerNombre;
+  }
+
+  const inicialApellido =
+    partes[partes.length - 1]
+      .charAt(0)
+      .toUpperCase();
+
+  return `${primerNombre} ${inicialApellido}.`;
+
+}
+
+
+// ======================================================
+// CARGAR RANKING
+// ======================================================
+// ======================================================
+// ÚLTIMAS COMPRAS (recuadro fijo en la página)
+// ======================================================
+// Muestra las 3 compras más recientes de "compras_recientes"
+// (nombre abreviado y pack) y se actualiza sola. Del pack se
+// muestra solo la cantidad de chances: así no se ven las
+// palabras clave de cada portal.
+
+const CANTIDAD_ULTIMAS_COMPRAS = 3;
+
+let ultimasCompras = [];
+
+function haceCuanto(fecha) {
+
+  if (!fecha) {
+    return "recién";
+  }
+
+  const minutos =
+    Math.floor((Date.now() - fecha.getTime()) / 60000);
+
+  if (minutos < 1) return "recién";
+  if (minutos < 60) return `hace ${minutos} min`;
+
+  const horas = Math.floor(minutos / 60);
+  if (horas < 24) return `hace ${horas} h`;
+
+  const dias = Math.floor(horas / 24);
+  return dias === 1 ? "hace 1 día" : `hace ${dias} días`;
+
+}
+
+function mostrarUltimasCompras() {
+
+  const seccion =
+    document.getElementById("ultimasCompras");
+
+  const lista =
+    document.getElementById("ultimasComprasLista");
+
+  if (!seccion || !lista) {
+    return;
+  }
+
+  seccion.hidden = ultimasCompras.length === 0;
+
+  lista.innerHTML = "";
+
+  ultimasCompras.forEach((compra) => {
+
+    const chances =
+      Number(String(compra.pack || "").match(/(\d+)\s*CHANCE/i)?.[1]) || 0;
+
+    const item = document.createElement("li");
+
+    const nombre = document.createElement("strong");
+    nombre.textContent = compra.nombre || "Alguien";
+
+    const detalle = document.createElement("span");
+    detalle.textContent =
+      chances ? `${chances} chance${chances === 1 ? "" : "s"}` : "chances";
+
+    const cuando = document.createElement("small");
+    cuando.textContent = haceCuanto(compra.fecha);
+
+    item.append(nombre, detalle, cuando);
+    lista.appendChild(item);
+
+  });
+
+}
+
+function iniciarUltimasCompras() {
+
+  if (!document.getElementById("ultimasCompras")) {
+    return;
+  }
+
+  try {
+
+    onSnapshot(
+      query(
+        collection(db, "compras_recientes"),
+        // Solo las de este sorteo (OJEDA_INICIO en carteles.js)
+        where("fecha", ">=", window.OJEDA_INICIO || new Date(0)),
+        orderBy("fecha", "desc"),
+        limit(CANTIDAD_ULTIMAS_COMPRAS)
+      ),
+      (snapshot) => {
+        ultimasCompras =
+          snapshot.docs.map((documento) => {
+            const datos = documento.data();
+            return {
+              nombre: datos.nombre,
+              pack: datos.pack,
+              fecha: datos.fecha?.toDate?.() || null
+            };
+          });
+        mostrarUltimasCompras();
+      },
+      (error) => {
+        console.warn("No se pudieron leer las últimas compras:", error);
+      }
+    );
+
+    // "hace X min" se actualiza solo
+    setInterval(mostrarUltimasCompras, 60000);
+
+  } catch (error) {
+
+    console.warn("No se pudieron leer las últimas compras:", error);
+
+  }
+
+}
+
+
+// ======================================================
+// PACK MÁS ELEGIDO
+// ======================================================
+// El admin publica en "publico/packs" qué pack se compra más
+// (masElegido = cantidad de chances) y con qué porcentaje.
+// Si todavía no hay datos, queda destacado el de 30.
+
+async function cargarPackMasElegido() {
+
+  try {
+
+    const documento =
+      await getDoc(doc(db, "publico", "packs"));
+
+    const { masElegido, porcentaje } =
+      documento.exists() ? documento.data() : {};
+
+    if (masElegido) {
+      destacarPack(Number(masElegido), Number(porcentaje) || 0);
+    }
+
+  } catch (error) {
+
+    console.warn("No se pudo leer el pack más elegido:", error);
+
+  }
+
+}
+
+
+function destacarPack(chances, porcentaje) {
+
+  const grilla =
+    document.querySelector(".packs-grid");
+
+  const elegido =
+    grilla?.querySelector(`.pack-card[data-chances="${chances}"]`);
+
+  if (!grilla || !elegido) {
+    return;
+  }
+
+  // Sacar el destacado actual
+  grilla.querySelectorAll(".pack-card").forEach((tarjeta) => {
+    tarjeta.classList.remove("pack-recomendado", "pack-ancho");
+  });
+
+  grilla.querySelectorAll(".pack-cinta").forEach((cinta) => cinta.remove());
+
+  // Cinta con el porcentaje real y lo que se ahorra
+  const anterior =
+    Number(elegido.querySelector(".precio-anterior")?.textContent.replace(/[^0-9]/g, "")) || 0;
+
+  const ahorro =
+    anterior - (preciosNormalesPublicos[chances] || 0);
+
+  const cinta = document.createElement("span");
+  cinta.className = "pack-cinta";
+  cinta.textContent =
+    `⭐ La más elegida · ${porcentaje}% de las compras` +
+    (ahorro > 0 ? ` · Ahorrás $${ahorro.toLocaleString("es-AR")}` : "");
+
+  elegido.prepend(cinta);
+  elegido.classList.add("pack-recomendado");
+  grilla.prepend(elegido);
+
+  // Las demás, de menor a mayor y de a 2 por fila;
+  // si queda una sola al final, ocupa todo el ancho
+  const resto =
+    [...grilla.querySelectorAll(".pack-card:not(.pack-recomendado)")]
+      .sort((x, y) => Number(x.dataset.chances) - Number(y.dataset.chances));
+
+  resto.forEach((tarjeta) => grilla.appendChild(tarjeta));
+
+  if (resto.length % 2 === 1) {
+    resto[resto.length - 1].classList.add("pack-ancho");
+  }
+
+}
+
+
+async function cargarRanking() {
+
+  const container =
+    document.getElementById(
+      "rankingContainer"
+    );
+
+  if (!container) {
+    return;
+  }
+
+  try {
+
+    // "publico/ranking" tiene solo el top 5 con nombre abreviado.
+    // Lo actualiza el admin; la colección "ranking" es privada.
+
+    const snapshot =
+      await getDoc(
+        doc(
+          db,
+          "publico",
+          "ranking"
+        )
+      );
+
+    const top =
+      snapshot.exists() &&
+      Array.isArray(snapshot.data().top)
+        ? snapshot.data().top.map(
+            (item) => ({
+              nombre:
+                item.nombre ||
+                "Participante",
+              chances:
+                Number(
+                  item.chances
+                ) || 0
+            })
+          )
+        : [];
+
+    // ==================================================
+    // MOSTRAR RANKING
+    // ==================================================
+
+    container.innerHTML = "";
+
+    // Sin participantes (sorteo nuevo o ranking reiniciado):
+    // no mostrar la sección vacía
+    const seccionRanking =
+      document.getElementById("ranking");
+
+    if (seccionRanking) {
+      seccionRanking.hidden = top.length === 0;
+    }
+
+    top.forEach(
+      (item, index) => {
+
+        let posicion;
+
+        if (index === 0) {
+          posicion = "🥇";
+        } else if (index === 1) {
+          posicion = "🥈";
+        } else if (index === 2) {
+          posicion = "🥉";
+        } else {
+          posicion = index + 1;
+        }
+
+        const card =
+          document.createElement(
+            "div"
+          );
+
+        card.className =
+          "ranking-card";
+
+        card.innerHTML = `
+          <div class="ranking-position">
+            ${posicion}
+          </div>
+
+          <div class="ranking-info">
+            <div class="ranking-name"></div>
+
+            <div class="ranking-chances">
+              ${item.chances} CHANCES
+            </div>
+          </div>
+        `;
+
+        // textContent: el nombre se muestra como texto, nunca como HTML
+        card.querySelector(
+          ".ranking-name"
+        ).textContent =
+          nombreRanking(item.nombre);
+
+        container.appendChild(
+          card
+        );
+
+      }
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Error cargando ranking:",
+      error
+    );
+
+  }
+
+}
+
+// ======================================================
+// CONSULTAR NÚMEROS POR DNI
+// ======================================================
+
+const btnConsultar =
+  document.getElementById("btnConsultar");
+
+const resultadoNumeros =
+  document.getElementById("resultadoNumeros");
+
+if (btnConsultar && resultadoNumeros) {
+
+  btnConsultar.addEventListener(
+    "click",
+    async () => {
+
+      const dniInput =
+        document.getElementById("dni");
+
+      const dniBuscado =
+        (dniInput?.value || "")
+          .toString()
+          .trim()
+          .replace(/\D/g, "");
+
+      guardarMiDni(dniBuscado);
+
+      resultadoNumeros.innerHTML = `
+        <p>
+          ⏳ Buscando tus números...
+        </p>
+      `;
+
+      if (!dniBuscado) {
+
+        resultadoNumeros.innerHTML = `
+          <p>
+            ⚠️ Ingresá tu DNI.
+          </p>
+        `;
+
+        return;
+      }
+
+      try {
+
+        // "consultas/{dni}" solo tiene nombre abreviado
+        // y las compras aprobadas con sus números.
+        // Lo arma el admin al aprobar cada pago.
+
+        const consultaDoc =
+          await getDoc(
+            doc(
+              db,
+              "consultas",
+              dniBuscado
+            )
+          );
+
+        const consultaDatos =
+          consultaDoc.exists()
+            ? consultaDoc.data()
+            : null;
+
+        const encontrados =
+          Array.isArray(consultaDatos?.compras)
+            ? consultaDatos.compras.map(
+                (compra) => ({
+                  nombre: consultaDatos.nombre,
+                  apellido: "",
+                  estado: "Pagado",
+                  pack: compra.pack,
+                  chancesFinales: compra.chances,
+                  numeros: compra.numeros
+                })
+              )
+            : [];
+
+
+        if (!encontrados.length) {
+
+          resultadoNumeros.innerHTML = `
+            <div class="consulta-resultado">
+              <h3>❌ NO ENCONTRAMOS NÚMEROS PARA TU DNI</h3>
+
+              <p>
+                Revisá que el DNI ingresado
+                sea correcto.
+              </p>
+
+              <p>
+                Si enviaste el comprobante recién,
+                esperá unos segundos y probá de nuevo.
+              </p>
+            </div>
+          `;
+
+          return;
+        }
+
+
+        let html = "";
+
+        let totalNumeros = 0;
+
+
+        encontrados.forEach(
+          (datos) => {
+
+            const numeros =
+              Array.isArray(
+                datos.numeros
+              )
+                ? datos.numeros
+                : [];
+
+
+            totalNumeros +=
+              numeros.length;
+
+
+            html += `
+
+              <div class="consulta-compra">
+
+                <h3>
+                  ${datos.nombre || ""}
+                  ${datos.apellido || ""}
+                </h3>
+
+                <p>
+                  <strong>Estado:</strong>
+                  ${datos.estado || "-"}
+                </p>
+
+                <p>
+                  <strong>Pack:</strong>
+                  ${datos.pack || "-"}
+                </p>
+
+                <p>
+                  <strong>Chances:</strong>
+                  ${
+                    datos.chancesFinales ||
+                    0
+                  }
+                </p>
+
+                <div class="consulta-numeros">
+
+                  <strong>
+                    🎟️ TUS NÚMEROS
+                  </strong>
+
+                  ${
+                    numeros.length
+
+                      ? numeros
+                         .map(
+  (numero) =>
+    `<span>${numero}</span>`
+)
+.join(", ")
+
+                      : `
+                        <p>
+                          Todavía no fueron
+                          asignados.
+                        </p>
+                      `
+                  }
+
+                </div>
+
+              </div>
+
+            `;
+
+          }
+        );
+
+
+        resultadoNumeros.innerHTML = `
+
+          <div class="consulta-resumen">
+
+            <strong>
+              🎟️ ${totalNumeros}
+              NÚMERO${totalNumeros === 1 ? "" : "S"}
+              ASIGNADO${totalNumeros === 1 ? "" : "S"}
+            </strong>
+
+          </div>
+
+          ${html}
+
+        `;
+
+// Botón de la ruleta debajo de los números (ruleta.js)
+window.Ruleta?.mostrar(dniBuscado, resultadoNumeros);
+
+// La súper promo al consultar el DNI (50 chances $14.999 /
+// 100 chances $19.999) se dio de baja el 16/10/2026.
+
+
+      } catch (error) {
+
+        console.error(
+          "ERROR CONSULTANDO NÚMEROS:",
+          error
+        );
+
+        resultadoNumeros.innerHTML = `
+
+          <div class="consulta-resultado">
+
+            <h3>
+              ❌ ERROR
+            </h3>
+
+            <p>
+              No se pudieron consultar
+              tus números.
+            </p>
+
+          </div>
+
+        `;
+
+      }
+
+    }
+  );
+
+}
+
+// ======================================================
+// SUPER PROMO PARA PARTICIPANTES
+// ======================================================
+
+const superPromoOverlay =
+  document.getElementById("superPromoOverlay");
+
+const superPromoContador =
+  document.getElementById("superPromoContador");
+
+const cerrarSuperPromo =
+  document.getElementById("cerrarSuperPromo");
+
+let superPromoTimer = null;
+let superPromoInterval = null;
+
+
+// ------------------------------------------------------
+// MOSTRAR SUPER PROMO
+// ------------------------------------------------------
+
+function mostrarSuperPromo() {
+
+  if (!superPromoOverlay || !superPromoContador) {
+    return;
+  }
+
+  // Limpiar cualquier contador anterior
+  if (superPromoTimer) {
+    clearTimeout(superPromoTimer);
+  }
+
+  if (superPromoInterval) {
+    clearInterval(superPromoInterval);
+  }
+
+  // Después del cierre no se ofrece nada
+  if (window.participacionesCerradas?.()) {
+    return;
+  }
+
+  // Esperar 1 segundo y que no haya otro cartel abierto
+  const cuandoLibre =
+    window.Carteles
+      ? (abrir) => window.Carteles.cuandoLibre(abrir)
+      : (abrir) => abrir();
+
+  superPromoTimer = setTimeout(() => cuandoLibre(() => {
+
+    let segundosRestantes = 120;
+
+    superPromoOverlay.classList.add("activo");
+
+    function actualizarContador() {
+
+      const minutos =
+        Math.floor(segundosRestantes / 60);
+
+      const segundos =
+        segundosRestantes % 60;
+
+      superPromoContador.innerText =
+        String(minutos).padStart(2, "0") +
+        ":" +
+        String(segundos).padStart(2, "0");
+
+      if (segundosRestantes <= 0) {
+
+        clearInterval(superPromoInterval);
+
+        superPromoOverlay.classList.remove("activo");
+
+        return;
+      }
+
+      segundosRestantes--;
+    }
+
+    actualizarContador();
+
+    superPromoInterval = setInterval(
+      actualizarContador,
+      1000
+    );
+
+  }), 1000);
+}
+
+
+// ------------------------------------------------------
+// CERRAR POPUP
+// ------------------------------------------------------
+
+if (cerrarSuperPromo) {
+
+  cerrarSuperPromo.addEventListener(
+    "click",
+    () => {
+
+      superPromoOverlay.classList.remove(
+        "activo"
+      );
+
+      if (superPromoInterval) {
+        clearInterval(superPromoInterval);
+      }
+
+    }
+  );
+
+}
+
+
+// ------------------------------------------------------
+// CERRAR AL TOCAR AFUERA
+// ------------------------------------------------------
+
+if (superPromoOverlay) {
+
+  superPromoOverlay.addEventListener(
+    "click",
+    (e) => {
+
+      if (e.target === superPromoOverlay) {
+
+        superPromoOverlay.classList.remove(
+          "activo"
+        );
+
+        if (superPromoInterval) {
+          clearInterval(superPromoInterval);
+        }
+
+      }
+
+    }
+  );
+
+}
+
+
+// ------------------------------------------------------
+// BOTONES 50 / 100 CHANCES
+// ------------------------------------------------------
+
+document
+  .querySelectorAll("[data-promo-chances]")
+  .forEach((boton) => {
+
+    boton.addEventListener(
+      "click",
+      () => {
+
+        const chances =
+          Number(boton.dataset.promoChances);
+
+       const precio =
+  chances === 50
+    ? 14999
+    : 19999;
+
+        const codigoPromo =
+          chances === 50
+            ? "SUPER50"
+            : "SUPER100";
+
+        // Cerrar popup
+        superPromoOverlay?.classList.remove(
+          "activo"
+        );
+
+        if (superPromoInterval) {
+          clearInterval(superPromoInterval);
+        }
+
+        // Abrir directamente la promo
+        if (
+          typeof window.abrirModalPromo ===
+          "function"
+        ) {
+
+          window.abrirModalPromo(
+            chances,
+            precio,
+            codigoPromo
+          );
+
+        }
+
+      }
+    );
+
+  });

@@ -1649,6 +1649,78 @@ function mostrarResumen(elemento, filas) {
 
 
 // =====================================================
+// PÁGINA 3X1 (ojedasorteos.com.ar/3x1, anuncio de retargeting)
+// =====================================================
+// La compra guarda la página desde donde se hizo (paginaUrl).
+// Las de /3x1 se marcan en rojo, tienen su pestaña y su resumen.
+
+function esDe3x1(datos) {
+  return /\/3x1(\.html)?\/?$/i.test(String(datos.paginaUrl || "").trim());
+}
+
+function mostrarRecaudado3x1(participantes) {
+
+  const elemento = document.getElementById("stat3x1");
+
+  if (!elemento) return;
+
+  let compras = 0;
+  let monto = 0;
+  let chances = 0;
+  let pendientes = 0;
+  let montoPendiente = 0;
+  const packs = {};
+
+  participantes.forEach(({ datos }) => {
+
+    if (!esDe3x1(datos)) return;
+
+    const precio = precioDeCompra(datos);
+
+    if (datos.estado !== "Pagado") {
+      pendientes++;
+      montoPendiente += precio;
+      return;
+    }
+
+    const cantidad = Number(datos.chancesFinales) || 0;
+
+    compras++;
+    monto += precio;
+    chances += cantidad;
+    sumarCompra(packs, `${cantidad} chance${cantidad === 1 ? "" : "s"}`, precio);
+
+  });
+
+  if (!compras && !pendientes) {
+    elemento.textContent = "Todavía no hay compras desde la página 3x1";
+    return;
+  }
+
+  const filas = [{
+    nombre: `🔥 Recaudado 3x1 · ${chances.toLocaleString("es-AR")} chances`,
+    compras,
+    monto
+  }];
+
+  Object.entries(packs)
+    .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+    .forEach(([nombre, grupo]) => filas.push({ nombre, ...grupo, sangria: true }));
+
+  if (pendientes) {
+    filas.push({
+      nombre: "⏳ Esperando aprobación (no suma)",
+      compras: pendientes,
+      monto: montoPendiente
+    });
+  }
+
+  mostrarResumen(elemento, filas);
+
+}
+
+
+// =====================================================
 // FACTURACIÓN POR PROMO CON RELOJ (3XHOY, REVIERNES...)
 // =====================================================
 // Solo las promos extra con cuenta regresiva (script.js,
@@ -1671,10 +1743,18 @@ function mostrarPromosConReloj(participantes) {
     if (!codigo || !pack.toUpperCase().startsWith(`PROMO ${codigo} `)) return;
 
     if (!promos.has(codigo)) {
-      promos.set(codigo, { compras: 0, monto: 0, pendientes: 0, packs: {} });
+      promos.set(codigo, { compras: 0, monto: 0, pendientes: 0, desde: 0, hasta: 0 });
     }
 
     const promo = promos.get(codigo);
+
+    // Fechas de la primera y la última compra de la promo
+    const momento = momentoDe(datos);
+
+    if (momento) {
+      promo.desde = promo.desde ? Math.min(promo.desde, momento) : momento;
+      promo.hasta = Math.max(promo.hasta, momento);
+    }
 
     if (datos.estado !== "Pagado") {
       promo.pendientes++;
@@ -1682,11 +1762,9 @@ function mostrarPromosConReloj(participantes) {
     }
 
     const monto = precioDeCompra(datos);
-    const chances = Number(datos.chancesFinales) || 0;
 
     promo.compras++;
     promo.monto += monto;
-    sumarCompra(promo.packs, `${chances} chance${chances === 1 ? "" : "s"}`, monto);
 
   });
 
@@ -1697,17 +1775,28 @@ function mostrarPromosConReloj(participantes) {
 
   const filas = [];
 
-  promos.forEach((promo, codigo) => {
+  const dia = (momento) =>
+    new Date(momento).toLocaleDateString("es-AR", {
+      timeZone: "America/Argentina/Buenos_Aires",
+      day: "2-digit",
+      month: "2-digit"
+    });
+
+  // La más nueva arriba
+  [...promos.entries()]
+    .sort((a, b) => b[1].hasta - a[1].hasta)
+    .forEach(([codigo, promo]) => {
+
+    const fechas =
+      !promo.hasta ? ""
+        : dia(promo.desde) === dia(promo.hasta) ? ` · 📅 ${dia(promo.hasta)}`
+          : ` · 📅 ${dia(promo.desde)} al ${dia(promo.hasta)}`;
 
     filas.push({
-      nombre: `🔑 ${codigo}` + (promo.pendientes ? ` · ⏳ ${promo.pendientes} por aprobar` : ""),
+      nombre: `🔑 ${codigo}${fechas}` + (promo.pendientes ? ` · ⏳ ${promo.pendientes} por aprobar` : ""),
       compras: promo.compras,
       monto: promo.monto
     });
-
-    Object.entries(promo.packs)
-      .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
-      .forEach(([nombre, grupo]) => filas.push({ nombre, ...grupo, sangria: true }));
 
   });
 
@@ -2025,6 +2114,8 @@ async function cargarParticipantes(
 
     let cantidadAnuncio = 0;
 
+    let cantidad3x1 = 0;
+
     let cantidadOrganico = 0;
 
 
@@ -2248,9 +2339,17 @@ async function cargarParticipantes(
         const sinRevisar =
           esSinRevisar(datos);
 
+        const de3x1 =
+          esDe3x1(datos);
+
         card.className =
           `card ${sinRevisar ? "card-pendiente card-sin-revisar" : datos.estado === "Pagado" ? "card-pagado" : "card-pendiente"}` +
-          (deAnuncio ? " card-anuncio" : " card-organico");
+          (deAnuncio ? " card-anuncio" : " card-organico") +
+          (de3x1 ? " card-3x1" : "");
+
+        if (de3x1) {
+          cantidad3x1++;
+        }
 
         if (deAnuncio) {
           cantidadAnuncio++;
@@ -2300,6 +2399,8 @@ async function cargarParticipantes(
             <p class="card-pack">${esc(datos.pack) || "-"}</p>
 
             ${avisosHTML(avisos)}
+
+            ${de3x1 ? `<span class="card-clave card-sello-3x1">🔥 Página 3x1</span>` : ""}
 
             ${
               datos.codigoPromo
@@ -2814,6 +2915,20 @@ await actualizarRanking(
 
 
     mostrarPromosConReloj(participantes);
+
+    mostrarRecaudado3x1(participantes);
+
+    const titulo3x1 = document.getElementById("titulo3x1");
+
+    if (titulo3x1) {
+      titulo3x1.textContent = `🔥 3x1 (${cantidad3x1})`;
+    }
+
+    const vacio3x1 = document.getElementById("vacio3x1");
+
+    if (vacio3x1) {
+      vacio3x1.hidden = cantidad3x1 > 0;
+    }
 
 
     if (tituloAnuncio) {

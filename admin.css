@@ -314,6 +314,21 @@ button:disabled { opacity: .6; cursor: wait; }
 
 .card-pagado { border-left-color: var(--verde); }
 
+/* Compras de la página 3x1 (anuncio de retargeting): tarjeta roja */
+.card.card-3x1 {
+  background: #fde8e8;
+  border-color: #f5a3a3;
+  border-left: 6px solid #dc2626;
+}
+
+.card-sello-3x1 {
+  margin-left: 4px;
+  color: #fff;
+  background: #dc2626;
+}
+
+.panel-3x1 { border-top: 4px solid #dc2626; }
+
 .card-comprobante {
   display: grid;
   place-items: center;
@@ -601,12 +616,14 @@ button:disabled { opacity: .6; cursor: wait; }
 
 /* Pestañas Anuncio y Orgánico: solo las compras de ese origen, de las dos listas */
 .solo-anuncio .card:not(.card-anuncio),
-.solo-organico .card:not(.card-organico) { display: none; }
+.solo-organico .card:not(.card-organico),
+.solo-3x1 .card:not(.card-3x1) { display: none; }
 
 .red-vacio { display: none; color: var(--suave); }
 
 .solo-anuncio .vacio-anuncio,
-.solo-organico .vacio-organico { display: block; }
+.solo-organico .vacio-organico,
+.solo-3x1 .vacio-3x1 { display: block; }
 
 .card-organico-sello {
   margin-left: 4px;

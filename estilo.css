@@ -200,6 +200,61 @@ h1, h2, h3 {
   background: #111;
 }
 
+/* ===== "3X1 · TRIPLICÁ TUS CHANCES" gigante sobre el carrusel (solo 3x1.html) ===== */
+
+.mega-3x1 {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2vw;
+  text-align: center;
+  padding: 0 4%;
+  background:
+    radial-gradient(ellipse at center, rgba(0, 0, 0, .25), rgba(0, 0, 0, .72) 72%),
+    linear-gradient(180deg, rgba(0, 0, 0, .55), rgba(0, 0, 0, .35) 35%, rgba(0, 0, 0, .55));
+  pointer-events: none;
+}
+
+.mega-3x1-numero {
+  font-family: "Poppins", "Inter", sans-serif;
+  font-weight: 800;
+  font-size: clamp(64px, 22vw, 150px);
+  line-height: .9;
+  color: var(--verde);
+  -webkit-text-stroke: 3px #fff;
+  text-shadow:
+    0 0 18px rgba(0, 166, 80, .9),
+    0 0 46px rgba(0, 166, 80, .7),
+    0 6px 0 rgba(0, 0, 0, .35);
+  transform: rotate(-6deg);
+  animation: mega3x1Pulso 1.6s ease-in-out infinite;
+}
+
+.mega-3x1-texto {
+  font-family: "Poppins", "Inter", sans-serif;
+  font-weight: 800;
+  font-size: clamp(26px, 8vw, 54px);
+  line-height: 1.05;
+  letter-spacing: .5px;
+  color: var(--naranja);
+  text-shadow:
+    0 0 12px rgba(255, 106, 0, .95),
+    0 0 30px rgba(255, 106, 0, .8),
+    0 0 60px rgba(255, 140, 0, .55),
+    0 3px 0 rgba(0, 0, 0, .4);
+  text-transform: uppercase;
+}
+
+@keyframes mega3x1Pulso {
+  0%, 100% { transform: rotate(-6deg) scale(1); }
+  50% { transform: rotate(-6deg) scale(1.06); }
+}
+
+
 .banner-pista {
   display: flex;
   will-change: transform;
@@ -480,10 +535,29 @@ main section h2 {
 }
 
 .cantidad-chances {
-  display: block;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
   font-family: 'Poppins', sans-serif;
   font-size: 16px;
   font-weight: 700;
+}
+
+.cantidad-chances .chances-antes {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--suave);
+  text-decoration: line-through;
+  text-decoration-color: var(--naranja);
+  text-decoration-thickness: 2px;
+}
+
+.cantidad-chances .chances-ahora {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--naranja);
+  text-shadow: 0 0 10px rgba(255, 106, 0, .55);
 }
 
 .precio-anterior {
@@ -2460,4 +2534,193 @@ body.participaciones-cerradas .ayuda-float { display: none; }
   background: #fff;
   border: 1px solid #fdba74;
   border-radius: 8px;
+}
+
+/* ===== Página 3x1: fondo con más color, no blanco plano ===== */
+
+body.pagina-3x1 {
+  --fondo: linear-gradient(180deg, #fff6ea 0%, #fef9f2 25%, #eefaf3 70%, #fff6ea 100%);
+  --tarjeta: #fffdf9;
+}
+
+/* ===== Contador "bomba": el tiempo se agota ===== */
+
+.cuenta-bomba {
+  background: linear-gradient(160deg, #3b0a0a, #7f1d1d 55%, #3b0a0a);
+  border: 2px solid #ff3b3b;
+  box-shadow: 0 0 0 3px rgba(255, 59, 59, .25), 0 10px 30px rgba(220, 38, 38, .4);
+  animation: bombaPulso 1s ease-in-out infinite;
+}
+
+.cuenta-bomba .countdown-label {
+  color: #ffd9d9;
+  text-shadow: 0 0 10px rgba(255, 59, 59, .9);
+  animation: bombaTexto 1s ease-in-out infinite;
+}
+
+.cuenta-bomba .time-box {
+  background: linear-gradient(180deg, #ef4444, #991b1b);
+  box-shadow: 0 0 16px rgba(255, 59, 59, .6), inset 0 0 0 1px rgba(255, 255, 255, .18);
+}
+
+.cuenta-bomba .time-box span {
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, .65);
+}
+
+.cuenta-bomba .time-box small { color: #ffd9d9; opacity: .9; }
+
+.cuenta-bomba .draw-date { color: #ffd9d9; }
+
+@keyframes bombaPulso {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(255, 59, 59, .25), 0 10px 30px rgba(220, 38, 38, .4);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(255, 59, 59, .5), 0 14px 44px rgba(220, 38, 38, .65);
+  }
+}
+
+@keyframes bombaTexto {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .65; }
+}
+
+/* ===== Escalera de packs (solo 3x1.html): cada pack más caro,
+   más grande y más resaltado que el anterior ===== */
+
+.packs-escalera {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.packs-escalera .pack-card { grid-column: unset; }
+
+.tier-1 {
+  padding: 12px 10px;
+  background: linear-gradient(135deg, #fffaf4, #f5fbf8);
+  border: 2px solid #ffe9d2;
+}
+.tier-1 h3 { font-size: 10px; }
+.tier-1 .precio-actual { font-size: 20px; }
+.tier-1 .chances-ahora { font-size: 17px; }
+.tier-1 .precio-unitario { font-size: 11px; }
+
+.tier-2 {
+  padding: 14px 12px;
+  background: linear-gradient(135deg, #fff3e3, #edf9f1);
+  border: 2px solid #ffd7ad;
+  box-shadow: 0 3px 10px rgba(255, 106, 0, .08);
+}
+.tier-2 .precio-actual { font-size: 23px; }
+.tier-2 .chances-ahora { font-size: 19px; }
+
+.tier-3 {
+  padding: 17px 14px;
+  background: linear-gradient(135deg, #ffe6c7, #dcf5e7);
+  border: 2px solid var(--naranja);
+  box-shadow: 0 4px 14px rgba(255, 106, 0, .18);
+}
+.tier-3 h3 { font-size: 12px; color: var(--naranja); }
+.tier-3 .precio-actual { font-size: 26px; }
+.tier-3 .chances-ahora { font-size: 22px; }
+.tier-3 .precio-unitario { font-size: 12.5px; }
+
+.tier-4 {
+  padding: 20px 16px;
+  background: linear-gradient(135deg, #ffd29c, #b9edcf);
+  border: 2px solid var(--naranja);
+  box-shadow: 0 6px 20px rgba(255, 106, 0, .28), 0 0 0 3px rgba(0, 166, 80, .14);
+  animation: tierGlowSoft 2.6s ease-in-out infinite;
+}
+.tier-4 h3 { font-size: 13px; color: #7a3b00; }
+.tier-4 .precio-actual { font-size: 30px; }
+.tier-4 .chances-ahora { font-size: 25px; color: #c23e00; }
+.tier-4 .precio-unitario { font-size: 13px; }
+
+.tier-5 {
+  padding: 24px 18px;
+  background: linear-gradient(135deg, #ff9d3d, #6bd99e);
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 3px var(--naranja), 0 8px 26px rgba(255, 106, 0, .35), 0 0 24px rgba(0, 166, 80, .28);
+  animation: tierGlow 2.2s ease-in-out infinite;
+}
+.tier-5 h3 { font-size: 14px; color: #fff; text-shadow: 0 2px 4px rgba(0, 0, 0, .3); }
+.tier-5 .precio-actual { font-size: 34px; color: #fff; text-shadow: 0 2px 6px rgba(0, 0, 0, .35); }
+.tier-5 .chances-antes { color: rgba(255, 255, 255, .8); text-decoration-color: #fff; }
+.tier-5 .chances-ahora { font-size: 28px; color: #fff; text-shadow: 0 0 12px rgba(255, 255, 255, .85), 0 2px 5px rgba(0, 0, 0, .3); }
+.tier-5 .precio-unitario { font-size: 14px; color: #fff; font-weight: 800; }
+
+@keyframes tierGlowSoft {
+  0%, 100% { box-shadow: 0 6px 20px rgba(255, 106, 0, .28), 0 0 0 3px rgba(0, 166, 80, .14); }
+  50% { box-shadow: 0 6px 24px rgba(255, 106, 0, .42), 0 0 0 4px rgba(0, 166, 80, .24); }
+}
+
+.tier-6 {
+  padding: 32px 20px 28px;
+  background: linear-gradient(135deg, var(--naranja) 0%, #ff9d3d 45%, var(--verde) 100%);
+  border: 3px solid #fff;
+  box-shadow:
+    0 0 0 4px var(--naranja),
+    0 16px 40px rgba(255, 106, 0, .5),
+    0 0 55px rgba(0, 166, 80, .35);
+  animation: tierGlowMax 1.7s ease-in-out infinite;
+}
+.tier-6 h3 {
+  font-size: 15px;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, .35);
+}
+.tier-6 .precio-actual {
+  font-size: 44px;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, .4);
+}
+.tier-6 .chances-antes {
+  color: rgba(255, 255, 255, .8);
+  text-decoration-color: #fff;
+}
+.tier-6 .chances-ahora {
+  font-size: 36px;
+  color: #fff;
+  text-shadow: 0 0 16px rgba(255, 255, 255, .95), 0 2px 6px rgba(0, 0, 0, .35);
+}
+.tier-6 .precio-unitario {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+}
+.tier-6 .pack-cinta {
+  background: #111827;
+  color: #ffd166;
+  font-size: 11.5px;
+  top: -13px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .3);
+}
+
+@keyframes tierGlow {
+  0%, 100% {
+    box-shadow: 0 8px 26px rgba(255, 106, 0, .3), 0 0 18px rgba(0, 166, 80, .18);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(255, 106, 0, .5), 0 0 32px rgba(0, 166, 80, .32);
+  }
+}
+
+@keyframes tierGlowMax {
+  0%, 100% {
+    box-shadow:
+      0 0 0 4px var(--naranja),
+      0 16px 40px rgba(255, 106, 0, .5),
+      0 0 45px rgba(0, 166, 80, .3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px var(--naranja),
+      0 20px 56px rgba(255, 106, 0, .7),
+      0 0 70px rgba(0, 166, 80, .55);
+    transform: scale(1.025);
+  }
 }

@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>3x1 exclusivo para compradores | Ojeda Preparación</title>
+
+  <meta
+    name="description"
+    content="Exclusivo para quienes ya compraron: triplicá tus chances para el Sorteo Yamaha MT-07 al mismo precio de siempre."
+  >
+
+  <meta name="theme-color" content="#0f172a">
+
+  <!-- Verificación del dominio en Meta (Configuración del negocio → Dominios) -->
+  <meta name="facebook-domain-verification" content="mjt79dwzop8vfuvf506m3mhwqnxwma" />
+
+  <!-- Vista previa al compartir el link (WhatsApp, Instagram, Facebook) -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://ojedasorteos.com.ar/3x1">
+  <meta property="og:title" content="3x1 exclusivo: triplicá tus chances">
+  <meta property="og:description" content="Solo para quienes ya compraron. El mismo precio, el triple de chances. Sorteo viernes 13/11, 21 hs, en vivo.">
+  <meta property="og:image" content="https://ojedasorteos.com.ar/assets/banner-mt07-1.jpg">
+  <meta property="og:image:width" content="1080">
+  <meta property="og:image:height" content="1350">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="estilo.css?v=24">
+
+  <!-- META PIXEL -->
+  <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;
+    n.push=n;
+    n.loaded=!0;
+    n.version='2.0';
+    n.queue=[];
+    t=b.createElement(e);
+    t.async=!0;
+    t.src=v;
+    s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}
+    (window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+
+    fbq('init', '1685745569217221');
+    fbq('track', 'PageView');
+  </script>
+
+</head>
+
+<body class="pagina-3x1">
+
+<!-- ==================================================
+     AVISO DE COMPRA RECIENTE (lo maneja script.js)
+================================================== -->
+
+<div id="purchaseNotification" class="purchase-notification">
+
+  <div class="purchase-notification-icon">🎟️</div>
+
+  <div class="purchase-notification-content">
+    <strong id="purchaseNotificationName">Nueva compra</strong>
+    <span id="purchaseNotificationPack">Compró chances</span>
+    <small>Hace unos segundos</small>
+  </div>
+
+</div>
+
+
+<!-- ==================================================
+     CABECERA
+================================================== -->
+
+<header class="cabecera">
+  <img src="assets/logo.png" alt="Ojeda Preparación" width="1021" height="178">
+</header>
+
+<!-- El texto lo actualiza el script del final según OJEDA_CIERRE -->
+<div class="aviso" id="avisoSuperior">
+  🎉 3x1 exclusivo para quienes ya compraron
+</div>
+
+
+<main class="contenedor">
+
+<!-- ==================================================
+     PREMIO (tarjeta principal)
+     Fecha y textos: editar acá. Fotos: OJEDA_FOTOS en carteles.js
+================================================== -->
+
+<article class="producto">
+
+  <!-- Banners hechos con ChatGPT (4:5). Para el próximo sorteo, reemplazar
+       assets/banner-mt07-N.jpg (1080 px) y -640.jpg. Pasan solos cada 3 s. -->
+  <div class="banner-carrusel" aria-roledescription="carrusel" aria-label="Sorteo Yamaha MT-07">
+
+    <div class="mega-3x1" aria-hidden="true">
+      <span class="mega-3x1-numero">3X1</span>
+      <span class="mega-3x1-texto">TRIPLICÁ<br>TUS CHANCES</span>
+    </div>
+
+    <div class="banner-pista">
+
+      <div class="banner" aria-roledescription="diapositiva" aria-label="1 de 4">
+        <img src="assets/banner-mt07-1-640.jpg"
+             srcset="assets/banner-mt07-1-640.jpg 640w, assets/banner-mt07-1.jpg 1080w"
+             sizes="(max-width: 600px) 100vw, 560px"
+             width="1080" height="1350"
+             fetchpriority="high"
+             alt="Sorteo Yamaha MT-07 más 3 premios de $500.000. Viernes 13/11, 21 hs, en vivo. Sorteo a nivel país.">
+      </div>
+
+      <div class="banner" aria-roledescription="diapositiva" aria-label="2 de 4">
+        <img src="assets/banner-mt07-2-640.jpg"
+             srcset="assets/banner-mt07-2-640.jpg 640w, assets/banner-mt07-2.jpg 1080w"
+             sizes="(max-width: 600px) 100vw, 560px"
+             width="1080" height="1350"
+             loading="lazy"
+             alt="Una MT-07 y $1.500.000 en efectivo: la moto y 3 premios de $500.000. Transferencia de la moto incluida.">
+      </div>
+
+      <div class="banner" aria-roledescription="diapositiva" aria-label="3 de 4">
+        <img src="assets/banner-mt07-3-640.jpg"
+             srcset="assets/banner-mt07-3-640.jpg 640w, assets/banner-mt07-3.jpg 1080w"
+             sizes="(max-width: 600px) 100vw, 560px"
+             width="1080" height="1350"
+             loading="lazy"
+             alt="Participá desde $5.000. Comprá todas las veces que quieras. ¿Tenés palabra clave? 50% OFF.">
+      </div>
+
+      <div class="banner" aria-roledescription="diapositiva" aria-label="4 de 4">
+        <img src="assets/banner-mt07-4-640.jpg"
+             srcset="assets/banner-mt07-4-640.jpg 640w, assets/banner-mt07-4.jpg 1080w"
+             sizes="(max-width: 600px) 100vw, 560px"
+             width="1080" height="1350"
+             loading="lazy"
+             alt="Más de 70 ganadores reales. Todos los sorteos en vivo. Viernes 13/11, 21 hs.">
+      </div>
+
+    </div>
+
+    <div class="banner-puntos" role="tablist" aria-label="Elegir banner">
+      <button type="button" aria-label="Banner 1"></button>
+      <button type="button" aria-label="Banner 2"></button>
+      <button type="button" aria-label="Banner 3"></button>
+      <button type="button" aria-label="Banner 4"></button>
+    </div>
+
+  </div>
+
+  <div class="producto-cuerpo">
+
+    <h1>🎟️ Triplicá tus chances</h1>
+
+    <p class="producto-sub">Exclusivo para quienes ya compraron: el mismo precio de siempre, el triple de números para el Sorteo Yamaha MT-07 + 3 premios de $500.000</p>
+
+    <div class="precio-linea">
+      <b>Mismo precio de siempre</b>
+    </div>
+
+    <span class="descuento">🔥 Llevate el triple de chances</span>
+
+    <ul class="datos">
+      <li>
+        <span aria-hidden="true">📅</span>
+        <div>
+          Viernes 13 de noviembre, 21:00 hs
+          <small>En vivo por <a href="https://www.youtube.com/@ojedapreparacion" target="_blank" rel="noopener">YouTube @ojedapreparacion</a></small>
+        </div>
+      </li>
+      <li>
+        <span aria-hidden="true">💵</span>
+        <div>
+          + 3 premios de $500.000 en efectivo
+          <small>Se sortean la misma noche, en el mismo vivo</small>
+        </div>
+      </li>
+      <li>
+        <span aria-hidden="true">📄</span>
+        <div>
+          Transferencia de la moto incluida
+          <small>La retirás en Tandil o coordinamos la entrega</small>
+        </div>
+      </li>
+      <li>
+        <span aria-hidden="true">🏆</span>
+        <div>
+          <span class="ganadores-total">+70</span> ganadores reales
+          <small>Con foto de cada entrega</small>
+        </div>
+      </li>
+    </ul>
+
+    <a href="#chances" class="boton participar-btn">🎟️ Elegir mis chances</a>
+
+    <a href="#numeros" class="boton-sec consultar-btn">Ya compré: ver mis números</a>
+
+    <a href="#premios" class="ver-fotos">📷 Ver las fotos reales de la moto</a>
+
+  </div>
+
+</article>
+
+
+<!-- ==================================================
+     CUENTA REGRESIVA (la maneja script.js)
+================================================== -->
+
+<div class="cuenta cuenta-bomba">
+
+  <p class="countdown-label" id="countdownLabel">💣 EL 3X1 SE APAGA EN</p>
+
+  <div class="countdown" id="countdown">
+    <div class="time-box"><span id="days">00</span><small>DÍAS</small></div>
+    <div class="time-box"><span id="hours">00</span><small>HORAS</small></div>
+    <div class="time-box"><span id="minutes">00</span><small>MIN</small></div>
+    <div class="time-box"><span id="seconds">00</span><small>SEG</small></div>
+  </div>
+
+
+</div>
+
+
+<!-- ==================================================
+     ÚLTIMAS COMPRAS (las carga script.js; se oculta si no hay)
+================================================== -->
+
+<div class="ultimas-compras" id="ultimasCompras" hidden>
+  <p class="ultimas-titulo"><span class="punto-vivo"></span> Últimas compras</p>
+  <ul id="ultimasComprasLista"></ul>
+</div>
+
+
+<!-- ==================================================
+     CÓMO PARTICIPAR
+================================================== -->
+
+<section>
+
+  <h2>¿Cómo participo?</h2>
+
+  <p class="bajada">Tarda menos de 2 minutos.</p>
+
+  <ol class="pasos">
+    <li><b>1</b>Elegí tus chances</li>
+    <li><b>2</b>Transferí y subí el comprobante</li>
+    <li><b>3</b>Recibí tus números</li>
+  </ol>
+
+</section>
+
+
+<!-- ==================================================
+     PACKS
+     Precios: preciosNormales en script.js (y admin.js)
+================================================== -->
+
+<section class="chances" id="chances">
+
+  <h2>Elegí tus chances</h2>
+
+  <p class="bajada">Cuantas más chances, más números para ganar.</p>
+
+  <div class="packs-grid packs-escalera">
+
+    <div class="pack-card open-modal tier-1" data-chances="3" role="button" tabindex="0">
+      <h3>UNA PARA PROBAR</h3>
+      <div class="precio-pack">
+        <strong class="precio-actual">$5.000</strong>
+      </div>
+      <span class="cantidad-chances">
+        <s class="chances-antes">1 chance</s>
+        <strong class="chances-ahora">3 chances</strong>
+      </span>
+      <span class="precio-unitario">$1.667 por chance</span>
+    </div>
+
+    <div class="pack-card open-modal tier-2" data-chances="9" role="button" tabindex="0">
+      <h3>PROMO INICIAL</h3>
+      <div class="precio-pack">
+        <strong class="precio-actual">$10.000</strong>
+      </div>
+      <span class="cantidad-chances">
+        <s class="chances-antes">3 chances</s>
+        <strong class="chances-ahora">9 chances</strong>
+      </span>
+      <span class="precio-unitario">$1.111 por chance</span>
+    </div>
+
+    <div class="pack-card open-modal tier-3" data-chances="30" role="button" tabindex="0">
+      <h3>POPULAR</h3>
+      <div class="precio-pack">
+        <strong class="precio-actual">$18.000</strong>
+      </div>
+      <span class="cantidad-chances">
+        <s class="chances-antes">10 chances</s>
+        <strong class="chances-ahora">30 chances</strong>
+      </span>
+      <span class="precio-unitario">$600 por chance</span>
+    </div>
+
+    <div class="pack-card open-modal tier-4" data-chances="90" role="button" tabindex="0">
+      <h3>🚀 PACK PRO</h3>
+      <div class="precio-pack">
+        <strong class="precio-actual">$38.000</strong>
+      </div>
+      <span class="cantidad-chances">
+        <s class="chances-antes">30 chances</s>
+        <strong class="chances-ahora">90 chances</strong>
+      </span>
+      <span class="precio-unitario">$422 por chance</span>
+    </div>
+
+    <div class="pack-card open-modal tier-5" data-chances="150" role="button" tabindex="0">
+      <h3>🔥 PACK GRANDE</h3>
+      <div class="precio-pack">
+        <strong class="precio-actual">$50.000</strong>
+      </div>
+      <span class="cantidad-chances">
+        <s class="chances-antes">50 chances</s>
+        <strong class="chances-ahora">150 chances</strong>
+      </span>
+      <span class="precio-unitario">$333 por chance</span>
+    </div>
+
+    <div class="pack-card open-modal tier-6" data-chances="300" role="button" tabindex="0">
+      <span class="pack-cinta">👑 MÁXIMA VENTAJA · EL PACK QUE MÁS CONVIENE</span>
+      <h3>👑 PACK MÁXIMO</h3>
+      <div class="precio-pack">
+        <strong class="precio-actual">$75.000</strong>
+      </div>
+      <span class="cantidad-chances">
+        <s class="chances-antes">100 chances</s>
+        <strong class="chances-ahora">300 chances</strong>
+      </span>
+      <span class="precio-unitario">$250 por chance</span>
+    </div>
+
+  </div>
+
+  <!-- Palabra clave: no aplica en la promo 3x1, queda oculta -->
+  <div class="palabra-clave" hidden>
+
+    <div class="palabra-clave-form">
+      <input
+        type="text"
+        id="codigoDescuento"
+        placeholder="🔑 ¿Tenés palabra clave?"
+        autocomplete="off"
+        autocapitalize="characters"
+        enterkeyhint="go"
+        aria-label="Palabra clave"
+      >
+      <button type="button" id="btnAplicarDescuento">Aplicar</button>
+    </div>
+
+    <div id="mensajeDescuento"></div>
+
+    <p class="palabra-clave-ayuda">
+      ¿No tenés? Pedila en el
+      <a href="https://whatsapp.com/channel/0029Vb5dDFT0bIdhfmabL11s" target="_blank" rel="noopener">canal de WhatsApp</a>.
+    </p>
+
+  </div>
+
+  <p class="seguro">
+    <span>🔄 Comprá las veces que quieras</span>
+    <span>🇦🇷 Todo el país</span>
+  </p>
+
+</section>
+
+
+<!-- ==================================================
+     GANADORES (datos en ganadores.js)
+================================================== -->
+
+<section class="ganadores" id="ganadores">
+
+  <h2>Ganadores reales</h2>
+
+  <div class="contador-ganadores">
+    <b class="ganadores-total" id="ganadoresTotal">+70</b>
+    <span>personas ya ganaron motos, iPhones, PlayStation y efectivo en nuestros sorteos.</span>
+  </div>
+
+  <div class="ganadores-lista" id="ganadoresLista"></div>
+
+  <button type="button" class="boton-sec ganadores-ver-mas" id="ganadoresVerMas">
+    Ver todos los ganadores
+  </button>
+
+
+</section>
+
+
+<!-- ==================================================
+     RANKING (se oculta solo si está vacío)
+================================================== -->
+
+<section class="ranking-live" id="ranking" hidden>
+
+  <h2>🏆 Los que más chances tienen</h2>
+
+  <p class="bajada">Se actualiza con los pagos confirmados.</p>
+
+  <div id="rankingContainer"></div>
+
+</section>
+
+
+<!-- ==================================================
+     VER NÚMEROS
+================================================== -->
+
+<section class="consulta-container" id="numeros">
+
+  <h2>Ver mis números</h2>
+
+  <p class="bajada">Ingresá tu DNI para ver los números de tus compras aprobadas.</p>
+
+  <div class="consulta-form">
+    <input
+      type="text"
+      id="dni"
+      placeholder="Tu DNI"
+      inputmode="numeric"
+      autocomplete="off"
+    >
+    <button id="btnConsultar" type="button">Consultar</button>
+  </div>
+
+  <div id="resultadoNumeros"></div>
+
+</section>
+
+
+<!-- ==================================================
+     FOTOS DEL PREMIO (las carga script.js)
+================================================== -->
+
+<section class="gallery" id="premios">
+
+  <h2>Fotos del premio</h2>
+
+  <p class="bajada">Tocá una foto para verla en grande.</p>
+
+  <div class="gallery-grid" id="galleryGrid"></div>
+
+</section>
+
+
+<!-- ==================================================
+     PREGUNTAS FRECUENTES
+================================================== -->
+
+<section class="faq" id="preguntas">
+
+  <h2>Preguntas frecuentes</h2>
+
+  <details>
+    <summary>Ya compré, ¿cómo sé si estoy participando? No veo mis números</summary>
+    <p>
+      <strong>Si pudiste subir el comprobante, ya estás participando.</strong>
+      Tus números aparecen en <a href="#numeros">Ver mis números</a> en unos segundos.<br><br>
+      <strong>Si no pudiste subir el comprobante,</strong> mandanos un mensaje por
+      <a href="https://wa.me/5492494527588" target="_blank" rel="noopener">WhatsApp (2494527588)</a>
+      con el comprobante, tu DNI y tu teléfono, y te lo cargamos a mano.
+    </p>
+  </details>
+
+  <details>
+    <summary>Soy menor de edad, ¿puedo participar?</summary>
+    <p>
+      Sí, podés participar. Si ganás un vehículo, se pone a nombre de un
+      mayor de edad (tu mamá, papá o tutor).
+    </p>
+  </details>
+
+  <details>
+    <summary>¿Puedo comprar chances más de una vez?</summary>
+    <p>Sí, las veces que quieras. Todos tus números se acumulan con tu DNI.</p>
+  </details>
+
+  <details>
+    <summary>¿Dónde veo el sorteo?</summary>
+    <p>
+      En vivo por YouTube en
+      <a href="https://www.youtube.com/@ojedapreparacion" target="_blank" rel="noopener">@ojedapreparacion</a>,
+      el día y la hora que figuran arriba.
+    </p>
+  </details>
+
+  <details>
+    <summary>Si gano, ¿cómo recibo el premio?</summary>
+    <p>
+      <strong>Efectivo:</strong> te lo transferimos a los pocos minutos de salir ganador.<br>
+      <strong>Productos:</strong> por Correo Argentino a tu casa o por Vía Cargo a sucursal, como prefieras.<br>
+      <strong>Motos:</strong> primero se pone a tu nombre y después coordinamos la entrega:
+      la retirás en Tandil, te la llevamos o te la enviamos a la sucursal de transporte más cercana.
+    </p>
+  </details>
+
+  <details>
+    <summary>¿Puedo cambiar el premio por plata?</summary>
+    <p>
+      No. Los premios no se pueden cambiar (por ejemplo, una moto por su valor
+      en efectivo), salvo que el sorteo lo diga.
+    </p>
+  </details>
+
+  <a class="faq-terminos" href="terminos.html">📄 Ver términos y condiciones completos</a>
+
+</section>
+
+</main>
+
+
+<!-- ==================================================
+     PIE DE PÁGINA
+================================================== -->
+
+<footer class="pie">
+
+  <p class="pie-titulo">📲 Seguinos para ver el sorteo <strong>en vivo</strong></p>
+
+  <div class="pie-redes">
+
+    <a class="pie-btn pie-youtube" href="https://www.youtube.com/@ojedapreparacion" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="2" y="5" width="20" height="14" rx="4" fill="white"/>
+        <path d="M10 9l5 3-5 3z" fill="#ff0000"/>
+      </svg>
+      <span><small>En vivo por</small><b>YouTube</b></span>
+    </a>
+
+    <a class="pie-btn pie-whatsapp" href="https://whatsapp.com/channel/0029Vb5dDFT0bIdhfmabL11s" target="_blank" rel="noopener">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path fill="#fff" d="M16 3.2C8.93 3.2 3.2 8.93 3.2 16c0 2.26.59 4.48 1.72 6.43L3.2 28.8l6.55-1.71A12.73 12.73 0 0 0 16 28.8c7.07 0 12.8-5.73 12.8-12.8S23.07 3.2 16 3.2Zm0 23.2c-2.01 0-3.98-.54-5.69-1.57l-.41-.25-3.89 1.02 1.04-3.78-.27-.41A10.61 10.61 0 1 1 16 26.4Z"/>
+        <path fill="#fff" d="M21.17 18.25c-.28-.14-1.64-.81-1.9-.9-.25-.09-.44-.14-.63.14-.18.28-.72.9-.88 1.08-.16.19-.33.21-.61.07-.28-.14-1.18-.43-2.24-1.38-.83-.74-1.39-1.65-1.55-1.93-.16-.28-.02-.43.12-.57.13-.13.28-.33.42-.49.14-.16.19-.28.28-.47.09-.19.05-.35-.02-.49-.07-.14-.63-1.52-.86-2.08-.23-.55-.46-.48-.63-.49h-.54c-.19 0-.49.07-.75.35-.26.28-.98.96-.98 2.34s1 2.69 1.14 2.88c.14.19 1.97 3.01 4.77 4.21.67.29 1.19.47 1.6.6.67.21 1.28.18 1.76.11.54-.08 1.67-.68 1.9-1.34.23-.66.23-1.22.16-1.34-.07-.12-.26-.19-.54-.33Z"/>
+      </svg>
+      <span><small>Canal de</small><b>WhatsApp</b></span>
+    </a>
+
+  </div>
+
+  <p class="pie-links">
+    <a href="terminos.html">Términos y condiciones</a>
+    ·
+    <a href="#preguntas">Preguntas frecuentes</a>
+  </p>
+
+  <p class="pie-legal">© 2026 Ojeda Preparación · Tandil, Buenos Aires</p>
+
+</footer>
+
+
+<!-- ==================================================
+     BOTÓN FLOTANTE: AYUDA POR WHATSAPP (script.js, AYUDA)
+================================================== -->
+
+<button type="button" class="ayuda-float" data-ayuda-wp>
+  <span aria-hidden="true">🆘</span> ¿Problemas con tu compra?
+</button>
+
+
+<!-- ==================================================
+     BOTÓN FLOTANTE: CANAL DE WHATSAPP
+================================================== -->
+
+<a class="wp-float" href="https://whatsapp.com/channel/0029Vb5dDFT0bIdhfmabL11s" target="_blank" rel="noopener" aria-label="Canal de WhatsApp">
+  <svg viewBox="0 0 32 32" aria-hidden="true">
+    <path fill="#fff" d="M16 3.2C8.93 3.2 3.2 8.93 3.2 16c0 2.26.59 4.48 1.72 6.43L3.2 28.8l6.55-1.71A12.73 12.73 0 0 0 16 28.8c7.07 0 12.8-5.73 12.8-12.8S23.07 3.2 16 3.2Zm0 23.2c-2.01 0-3.98-.54-5.69-1.57l-.41-.25-3.89 1.02 1.04-3.78-.27-.41A10.61 10.61 0 1 1 16 26.4Z"/>
+    <path fill="#fff" d="M21.17 18.25c-.28-.14-1.64-.81-1.9-.9-.25-.09-.44-.14-.63.14-.18.28-.72.9-.88 1.08-.16.19-.33.21-.61.07-.28-.14-1.18-.43-2.24-1.38-.83-.74-1.39-1.65-1.55-1.93-.16-.28-.02-.43.12-.57.13-.13.28-.33.42-.49.14-.16.19-.28.28-.47.09-.19.05-.35-.02-.49-.07-.14-.63-1.52-.86-2.08-.23-.55-.46-.48-.63-.49h-.54c-.19 0-.49.07-.75.35-.26.28-.98.96-.98 2.34s1 2.69 1.14 2.88c.14.19 1.97 3.01 4.77 4.21.67.29 1.19.47 1.6.6.67.21 1.28.18 1.76.11.54-.08 1.67-.68 1.9-1.34.23-.66.23-1.22.16-1.34-.07-.12-.26-.19-.54-.33Z"/>
+  </svg>
+</a>
+
+
+<!-- ==================================================
+     MODAL DE COMPRA (lo maneja script.js)
+================================================== -->
+
+<div class="modal" id="purchaseModal">
+
+  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="tituloCompra">
+
+    <button class="close-modal" id="closeModal" type="button" aria-label="Cerrar">×</button>
+
+    <h2 id="tituloCompra">Datos para transferir</h2>
+
+    <div class="selected-pack" id="selectedPack">Seleccioná un pack</div>
+
+    <!-- Lo necesita script.js (no es un código visible) -->
+    <div id="promoInfoModal" style="display:none;"></div>
+
+    <ol class="compra-pasos">
+      <li><b>1</b>Transferí el monto del pack</li>
+      <li><b>2</b>Completá tus datos y adjuntá el comprobante</li>
+    </ol>
+
+    <div class="bank-info">
+
+      <div class="bank-fila">
+        <p><small>ALIAS</small>repuestos.ojeda</p>
+        <button type="button" class="copy-btn" id="copyAlias">Copiar</button>
+      </div>
+
+      <div class="bank-fila">
+        <p><small>CVU</small>3840200500000030295274</p>
+        <button type="button" class="copy-btn" id="copyCvu">Copiar</button>
+      </div>
+
+    </div>
+
+    <form class="purchase-form" id="purchaseForm">
+
+      <div class="form-doble">
+        <input type="text" id="nombre" placeholder="Nombre" autocomplete="given-name" required>
+        <input type="text" id="apellido" placeholder="Apellido" autocomplete="family-name" required>
+      </div>
+
+      <input type="text" id="dniCompra" placeholder="DNI" inputmode="numeric" required>
+
+      <input type="tel" id="telefono" placeholder="Teléfono" autocomplete="tel" required>
+
+      <input type="text" id="instagram" placeholder="@Instagram (opcional)">
+
+      <!-- Solo dentro de Instagram o Facebook (script.js, ABRIR EN EL NAVEGADOR) -->
+      <div class="aviso-navegador" id="avisoNavegador" hidden></div>
+
+      <label class="upload-btn" for="comprobante">📷 ADJUNTAR CAPTURA DEL COMPROBANTE</label>
+
+      <p class="upload-ayuda">Subí una <b>captura de pantalla</b> del comprobante, con el monto y la fecha a la vista. <b>No se aceptan PDF.</b></p>
+
+      <input type="file" id="comprobante" accept="image/*" hidden>
+
+      <button type="button" class="ayuda-comprobante" data-ayuda-wp>
+        🆘 ¿No te deja subir el comprobante? <b>Mandalo por WhatsApp</b>
+      </button>
+
+      <button type="submit">ENVIAR COMPROBANTE</button>
+
+      <p class="acepta-terminos">
+        Al enviar aceptás los
+        <a href="terminos.html" target="_blank">términos y condiciones</a>.
+      </p>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- ==================================================
+     MODAL COMPROBANTE ENVIADO
+================================================== -->
+
+<div class="success-modal" id="successModal">
+
+  <div class="success-box">
+
+    <div class="success-icono">✅</div>
+
+    <h2>¡Comprobante enviado!</h2>
+
+    <p>
+      Ya estás participando. Tus números aparecen en
+      <strong>Ver mis números</strong> en unos segundos.
+    </p>
+
+    <div class="success-canal">
+      <b>📢 Seguí el canal de WhatsApp</b>
+      <span>Hacemos <strong>sorteos gratis</strong> y avisamos el vivo, los ganadores y los sorteos express.</span>
+      <a href="https://whatsapp.com/channel/0029Vb5dDFT0bIdhfmabL11s" target="_blank" rel="noopener">Seguir el canal</a>
+    </div>
+
+    <button id="successBtn" type="button">Aceptar</button>
+
+  </div>
+
+</div>
+
+
+<!-- ==================================================
+     MODAL GALERÍA
+================================================== -->
+
+<div class="image-modal" id="imageModal">
+
+  <button class="close-image" id="closeImageModal" type="button" aria-label="Cerrar">×</button>
+
+  <button class="gallery-arrow left" id="prevImage" type="button" aria-label="Anterior">‹</button>
+
+  <img id="modalImage" src="" alt="Foto del premio">
+
+  <button class="gallery-arrow right" id="nextImage" type="button" aria-label="Siguiente">›</button>
+
+  <div class="gallery-counter" id="galleryCounter">1 / 1</div>
+
+</div>
+
+
+<!-- ==================================================
+     JAVASCRIPT
+================================================== -->
+
+<!-- Fecha de cierre, fotos y "un cartel por vez" (va antes que el resto) -->
+<script src="./carteles.js?v=8"></script>
+
+<script type="module" src="./script-3x1.js?v=3"></script>
+
+<!-- Carteles al entrar (cartel-cierre.js y cartel-proximo.js): desactivados
+     el 24/10/2026 para que la página sea más limpia. Para volver a
+     usarlos, agregar sus <script> acá. -->
+
+<!-- Barra de compra fija en celular + bloqueo de compras al cierre -->
+<script src="./barra-compra.js?v=3" defer></script>
+
+<!-- Carrusel de banners -->
+<script src="./banner-carrusel.js?v=2" defer></script>
+
+<!-- Ruleta de premios en "Ver mis números" -->
+<script src="./ruleta.js?v=2" defer></script>
+<script src="./ruleta-cielo.js?v=3" defer></script>
+
+<!-- Ganadores anteriores -->
+<script src="./ganadores.js?v=19" defer></script>
+
+<!-- Aviso de arriba: tiempo que falta para el cierre -->
+<script>
+  (function () {
+    const aviso = document.getElementById("avisoSuperior");
+    if (!aviso || !window.OJEDA_CIERRE) return;
+
+    function actualizarAviso() {
+      const ms = window.OJEDA_CIERRE - new Date();
+      if (ms <= 0) {
+        aviso.textContent = "🏁 Sorteo finalizado · ¡Atentos al próximo!";
+        return;
+      }
+      const dias = Math.floor(ms / 864e5);
+      const horas = Math.floor(ms / 36e5) % 24;
+      const minutos = Math.floor(ms / 6e4) % 60;
+      const falta = dias > 0 ? `${dias}d ${horas}h` : `${horas}h ${minutos}m`;
+      aviso.textContent = `🎉 3x1 exclusivo para compradores · cierra en ${falta}`;
+    }
+
+    actualizarAviso();
+    setInterval(actualizarAviso, 30000);
+  })();
+
+  // Las tarjetas de packs también se eligen con Enter (teclado)
+  document.querySelectorAll(".pack-card[tabindex]").forEach((tarjeta) => {
+    tarjeta.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        tarjeta.click();
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

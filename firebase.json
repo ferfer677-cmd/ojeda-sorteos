@@ -25,6 +25,10 @@
     ],
     "rewrites": [
       {
+        "source": "/3x1",
+        "destination": "/3x1.html"
+      },
+      {
         "source": "/api/mi-ip",
         "function": {
           "functionId": "miIp",

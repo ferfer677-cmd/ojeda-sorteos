@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="admin.css?v=24">
+<link rel="stylesheet" href="admin.css?v=25">
 </head>
 
 <body>
@@ -91,9 +91,15 @@
         </section>
 
         <!-- ===== PROMOS EXTRA CON RELOJ ===== -->
+        <section class="panel panel-claves panel-3x1">
+          <h2>🔥 Página 3x1</h2>
+          <p class="panel-bajada">Lo recaudado con ojedasorteos.com.ar/3x1 (anuncio de retargeting). Solo compras aprobadas.</p>
+          <div id="stat3x1">-</div>
+        </section>
+
         <section class="panel panel-claves panel-promos">
           <h2>🔑 Promos extra</h2>
-          <p class="panel-bajada">Compras aprobadas con códigos con reloj (3XHOY, REVIERNES...). Sin MITAD ni 50.</p>
+          <p class="panel-bajada">Compras aprobadas con códigos con reloj (PAPALEON, REVIERNES, 3XHOY...), por fecha. Sin VERANO ni MENOS.</p>
           <div id="statPromos">-</div>
         </section>
 
@@ -271,11 +277,13 @@
       <button type="button" role="tab" id="tituloPagados" data-lista="pagados">Aprobados (0)</button>
       <button type="button" role="tab" id="tituloAnuncio" data-lista="anuncio">📣 Anuncio (0)</button>
       <button type="button" role="tab" id="tituloOrganico" data-lista="organico">🌱 Orgánico (0)</button>
+      <button type="button" role="tab" id="titulo3x1" data-lista="3x1">🔥 3x1 (0)</button>
       <button type="button" role="tab" id="tituloRepetidas" data-lista="repetidas">🔁 Repetidas (0)</button>
     </div>
 
     <p class="red-vacio vacio-anuncio" id="anuncioVacio">Todavía no hay compras desde anuncios.</p>
     <p class="red-vacio vacio-organico" id="organicoVacio">Todavía no hay compras orgánicas.</p>
+    <p class="red-vacio vacio-3x1" id="vacio3x1">Todavía no hay compras desde la página 3x1.</p>
 
     <div id="pendientes" class="lista"></div>
 
@@ -297,7 +305,7 @@
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
-<script type="module" src="admin.js?v=43"></script>
+<script type="module" src="admin.js?v=44"></script>
 
 <!-- Visor de comprobantes: se agranda en la misma página -->
 <div class="visor" id="visor" hidden>
@@ -387,6 +395,7 @@
       const panel = document.getElementById("panelAdmin");
       panel.classList.toggle("solo-anuncio", lista === "anuncio");
       panel.classList.toggle("solo-organico", lista === "organico");
+      panel.classList.toggle("solo-3x1", lista === "3x1");
       document.getElementById("pendientes").hidden = lista === "pagados" || lista === "repetidas";
       document.getElementById("pagados").hidden = lista === "pendientes" || lista === "repetidas";
       document.getElementById("repetidas").hidden = lista !== "repetidas";
