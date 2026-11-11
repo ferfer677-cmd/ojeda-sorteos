@@ -1352,7 +1352,7 @@ setInterval(
           try {
 
             await navigator.clipboard.writeText(
-              "repuestos.ojeda"
+              "sorteomt07.arq"
             );
 
             copyAlias.innerText =
@@ -1403,7 +1403,7 @@ setInterval(
           try {
 
             await navigator.clipboard.writeText(
-              "3840200500000030295274"
+              "0000069709404345268911"
             );
 
             copyCvu.innerText =
