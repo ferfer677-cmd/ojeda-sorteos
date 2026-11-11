@@ -57,7 +57,13 @@ h2 { font-size: 15px; margin: 0 0 12px; }
 .nueva { animation: brillo 2.5s ease-out; }
 @keyframes brillo { from { background: var(--rojo-suave); } to { background: var(--tarjeta); } }
 .barras { display: flex; align-items: flex-end; gap: 3px; height: 140px; }
-.barras div { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; min-width: 0; }
+.barras div { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; min-width: 0; cursor: pointer; border-radius: 4px; }
+.barras div:hover { background: var(--barra-vacia); }
+.barras div.elegida { background: var(--rojo-suave); }
+.barras div.elegida i { background: var(--texto); }
+.detalle-barra { min-height: 44px; margin: -4px 0 8px; font-size: 14px; }
+.detalle-barra b { font-size: 18px; font-variant-numeric: tabular-nums; }
+.detalle-barra span { color: var(--suave); }
 .barras i { display: block; background: var(--barra); border-radius: 3px 3px 0 0; min-height: 2px; }
 .barras i.cero { background: var(--barra-vacia); }
 .barras i.hoy { background: var(--texto); }
@@ -122,6 +128,7 @@ h2 { font-size: 15px; margin: 0 0 12px; }
 
   <section class="tarjeta">
     <h2>Hoy, hora por hora</h2>
+    <div class="detalle-barra" id="detalleHora"></div>
     <div class="barras" id="barrasHora"></div>
     <div class="ejes" id="ejeHora"></div>
   </section>
@@ -144,6 +151,7 @@ h2 { font-size: 15px; margin: 0 0 12px; }
 
   <section class="tarjeta">
     <h2>Últimos 14 días</h2>
+    <div class="detalle-barra" id="detalleDia"></div>
     <div class="barras" id="barrasDia"></div>
     <div class="ejes" id="ejeDia"></div>
   </section>
@@ -230,6 +238,13 @@ function diaCorto(dia) {
   return `${Number(d)}/${Number(mes)}`;
 }
 
+function diaLargo(dia) {
+  const texto = new Date(`${dia}T12:00:00Z`).toLocaleDateString("es-AR", {
+    timeZone: "UTC", weekday: "long", day: "numeric", month: "long"
+  });
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
 function horaAr(ms) {
   return new Date(ms).toLocaleTimeString("es-AR", {
     timeZone: "America/Argentina/Buenos_Aires", hour: "2-digit", minute: "2-digit"
@@ -244,16 +259,65 @@ const escapar = (texto) => String(texto)
 // DIBUJAR
 // ======================================================
 
-function barras(contenedor, eje, lista, etiqueta, resaltarUltima) {
+// ======================================================
+// BARRAS QUE SE PUEDEN TOCAR
+// ======================================================
+// Al tocar una barra se muestra arriba el detalle. La elegida se recuerda
+// entre actualizaciones; si no se eligió ninguna, muestra la última (ahora).
+
+const graficos = {};
+
+function mostrarDetalle(id) {
+
+  const g = graficos[id];
+  if (!g || !g.lista.length) return;
+
+  const i = g.elegida !== null && g.elegida < g.lista.length ? g.elegida : g.lista.length - 1;
+  const x = g.lista[i];
+
+  g.contenedor.querySelectorAll("div").forEach((barra, n) =>
+    barra.classList.toggle("elegida", n === i && g.elegida !== null)
+  );
+
+  g.detalle.innerHTML = `
+    <span>${escapar(g.titulo(x, i))}</span><br>
+    <b>${pesos(x.monto)}</b>
+    <span> · ${numero(x.ventas)} venta${x.ventas === 1 ? "" : "s"}${
+      x.ventas ? ` · ticket ${pesos(x.monto / x.ventas)}` : ""}</span>`;
+
+}
+
+function barras(contenedor, eje, lista, etiqueta, resaltarUltima, detalle, titulo) {
+
+  const id = contenedor.id;
+  const anterior = graficos[id];
+
+  graficos[id] = {
+    contenedor, detalle, lista, titulo,
+    elegida: anterior ? anterior.elegida : null
+  };
+
+  if (!anterior) {
+    contenedor.addEventListener("click", (evento) => {
+      const barra = evento.target.closest("[data-i]");
+      if (!barra) return;
+      const n = Number(barra.dataset.i);
+      const g = graficos[id];
+      // Tocar la misma otra vez la deselecciona
+      g.elegida = g.elegida === n ? null : n;
+      mostrarDetalle(id);
+    });
+  }
 
   const maximo = Math.max(1, ...lista.map((x) => x.monto));
 
   contenedor.innerHTML = lista.map((x, i) => {
     const alto = x.monto ? Math.max(2, (x.monto / maximo) * 100) : 2;
     const clase = !x.monto ? "cero" : resaltarUltima && i === lista.length - 1 ? "hoy" : "";
-    const titulo = `${etiqueta(x, i)}: ${pesos(x.monto)} · ${numero(x.ventas)} ventas`;
-    return `<div title="${escapar(titulo)}"><i class="${clase}" style="height:${alto}%"></i></div>`;
+    return `<div data-i="${i}"><i class="${clase}" style="height:${alto}%"></i></div>`;
   }).join("");
+
+  mostrarDetalle(id);
 
   // Etiquetas salteadas para que entren en el celu
   const salto = lista.length > 16 ? 3 : 2;
@@ -315,7 +379,10 @@ function pintar(d) {
     timeZone: "America/Argentina/Buenos_Aires", hour: "numeric", hour12: false
   })) % 24;
   barras($("barrasHora"), $("ejeHora"), d.hoy.porHora.slice(0, horaActual + 1),
-    (x, i) => `${i}h`, true);
+    (x, i) => `${i}h`, true, $("detalleHora"),
+    (x, i) => i === horaActual
+      ? `De ${i}:00 a ahora`
+      : `De ${i}:00 a ${i + 1}:00`);
 
   tabla($("packsHoy"), d.hoy.packs, "Todavía no hay ventas hoy");
   tabla($("origenHoy"), d.hoy.origen, "Todavía no hay ventas hoy");
@@ -324,7 +391,8 @@ function pintar(d) {
   tabla($("campanasHoy"), d.hoy.campanas, "");
 
   // Días
-  barras($("barrasDia"), $("ejeDia"), d.dias, (x) => diaCorto(x.dia), true);
+  barras($("barrasDia"), $("ejeDia"), d.dias, (x) => diaCorto(x.dia), true, $("detalleDia"),
+    (x, i) => i === d.dias.length - 1 ? `Hoy (${diaLargo(x.dia)})` : diaLargo(x.dia));
 
   // Total
   $("totalMonto").textContent = pesos(d.total.monto);
