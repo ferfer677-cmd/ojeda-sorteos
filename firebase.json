@@ -41,7 +41,7 @@
         ]
       },
       {
-        "source": "/3x1",
+        "source": "/3{x,X}1",
         "headers": [
           {
             "key": "Cache-Control",
@@ -53,6 +53,10 @@
     "rewrites": [
       {
         "source": "/3x1",
+        "destination": "/3x1.html"
+      },
+      {
+        "source": "/3X1",
         "destination": "/3x1.html"
       },
       {
