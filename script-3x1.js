@@ -1357,7 +1357,7 @@ setInterval(
           try {
 
             await navigator.clipboard.writeText(
-              "38701629.prex"
+              "repuestos.ojeda"
             );
 
             copyAlias.innerText =
@@ -1408,7 +1408,7 @@ setInterval(
           try {
 
             await navigator.clipboard.writeText(
-              "0000013000032187362316"
+              "3840200500000030295274"
             );
 
             copyCvu.innerText =
