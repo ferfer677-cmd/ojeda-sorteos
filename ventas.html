@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Ventas en vivo · Ojeda Sorteos</title>
+<style>
+:root {
+  --fondo: #f4f4f5;
+  --tarjeta: #ffffff;
+  --texto: #18181b;
+  --suave: #71717a;
+  --linea: #e4e4e7;
+  --rojo: #dc2626;
+  --rojo-suave: #fee2e2;
+  --verde: #16a34a;
+  --barra: #dc2626;
+  --barra-vacia: #f4f4f5;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #09090b;
+    --tarjeta: #18181b;
+    --texto: #fafafa;
+    --suave: #a1a1aa;
+    --linea: #27272a;
+    --rojo-suave: #3f1212;
+    --barra-vacia: #27272a;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+main { max-width: 960px; margin: 0 auto; padding: 16px; }
+header {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+}
+h1 { font-size: 20px; margin: 0; }
+h2 { font-size: 15px; margin: 0 0 12px; }
+.estado { font-size: 13px; color: var(--suave); display: flex; align-items: center; gap: 6px; }
+.punto { width: 8px; height: 8px; border-radius: 50%; background: var(--verde); }
+.punto.mal { background: var(--rojo); }
+.grilla { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 12px; }
+.tarjeta { background: var(--tarjeta); border: 1px solid var(--linea); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+.grilla .tarjeta { margin-bottom: 0; }
+.dato small { display: block; color: var(--suave); font-size: 13px; }
+.dato strong { display: block; font-size: 28px; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.dato span { font-size: 13px; color: var(--suave); }
+.principal { border-top: 4px solid var(--rojo); }
+.principal strong { font-size: 34px; }
+.nueva { animation: brillo 2.5s ease-out; }
+@keyframes brillo { from { background: var(--rojo-suave); } to { background: var(--tarjeta); } }
+.barras { display: flex; align-items: flex-end; gap: 3px; height: 140px; }
+.barras div { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%; min-width: 0; }
+.barras i { display: block; background: var(--barra); border-radius: 3px 3px 0 0; min-height: 2px; }
+.barras i.cero { background: var(--barra-vacia); }
+.barras i.hoy { background: var(--texto); }
+.ejes { display: flex; gap: 3px; margin-top: 4px; }
+.ejes span { flex: 1; text-align: center; font-size: 10px; color: var(--suave); min-width: 0; overflow: hidden; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tabla td { padding: 7px 0; border-top: 1px solid var(--linea); }
+.tabla tr:first-child td { border-top: 0; }
+.tabla td:not(:first-child) { text-align: right; white-space: nowrap; padding-left: 10px; font-variant-numeric: tabular-nums; }
+.tabla .cant { color: var(--suave); }
+.vacio { color: var(--suave); font-size: 14px; }
+.dos { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.dos .tarjeta { margin-bottom: 0; }
+.bloque { margin-bottom: 12px; }
+.pie { font-size: 12px; color: var(--suave); text-align: center; margin: 20px 0; }
+#entrar { max-width: 360px; margin: 80px auto; text-align: center; }
+#entrar input { width: 100%; padding: 12px; font-size: 16px; border: 1px solid var(--linea); border-radius: 10px; margin: 12px 0; background: var(--tarjeta); color: var(--texto); }
+#entrar button { width: 100%; padding: 12px; font-size: 16px; border: 0; border-radius: 10px; background: var(--rojo); color: #fff; font-weight: 600; cursor: pointer; }
+#error { color: var(--rojo); font-size: 14px; min-height: 20px; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ======================================================
+     ENTRAR CON LA CLAVE
+     ====================================================== -->
+<form id="entrar" hidden>
+  <h1>📊 Ventas en vivo</h1>
+  <input id="clave" type="password" placeholder="Clave" autocomplete="current-password">
+  <button type="submit">Entrar</button>
+  <p id="error"></p>
+</form>
+
+<!-- ======================================================
+     TABLERO
+     ====================================================== -->
+<main id="tablero" hidden>
+
+  <header>
+    <h1>📊 Ventas en vivo</h1>
+    <div class="estado"><span class="punto" id="punto"></span><span id="actualizado">Cargando…</span></div>
+  </header>
+
+  <section class="grilla">
+    <div class="tarjeta dato principal" id="tarjetaHoy">
+      <small id="tituloHoy">Recaudado hoy</small>
+      <strong id="hoyMonto">-</strong>
+      <span id="hoyComparar"></span>
+    </div>
+    <div class="tarjeta dato">
+      <small>Ventas hoy</small>
+      <strong id="hoyVentas">-</strong>
+      <span id="hoyTicket"></span>
+    </div>
+    <div class="tarjeta dato">
+      <small>Última venta</small>
+      <strong id="ultima">-</strong>
+      <span id="porAprobar"></span>
+    </div>
+  </section>
+
+  <section class="tarjeta">
+    <h2>Hoy, hora por hora</h2>
+    <div class="barras" id="barrasHora"></div>
+    <div class="ejes" id="ejeHora"></div>
+  </section>
+
+  <section class="dos bloque">
+    <div class="tarjeta">
+      <h2>Packs de hoy</h2>
+      <div id="packsHoy"></div>
+    </div>
+    <div class="tarjeta">
+      <h2>De dónde vienen hoy</h2>
+      <div id="origenHoy"></div>
+    </div>
+  </section>
+
+  <section class="tarjeta" id="bloqueCampanas" hidden>
+    <h2>Campañas de hoy (anuncios con etiqueta)</h2>
+    <div id="campanasHoy"></div>
+  </section>
+
+  <section class="tarjeta">
+    <h2>Últimos 14 días</h2>
+    <div class="barras" id="barrasDia"></div>
+    <div class="ejes" id="ejeDia"></div>
+  </section>
+
+  <section class="grilla">
+    <div class="tarjeta dato">
+      <small>Recaudado total del sorteo</small>
+      <strong id="totalMonto">-</strong>
+    </div>
+    <div class="tarjeta dato">
+      <small>Ventas totales</small>
+      <strong id="totalVentas">-</strong>
+    </div>
+    <div class="tarjeta dato">
+      <small>Chances vendidas</small>
+      <strong id="totalChances">-</strong>
+    </div>
+  </section>
+
+  <section class="dos bloque">
+    <div class="tarjeta">
+      <h2>Packs del sorteo</h2>
+      <div id="packsTotal"></div>
+    </div>
+    <div class="tarjeta">
+      <h2>De dónde vienen (todo el sorteo)</h2>
+      <div id="origenTotal"></div>
+    </div>
+  </section>
+
+  <p class="pie">Solo compras aprobadas. Se actualiza solo cada 30 segundos.</p>
+
+</main>
+
+<script type="module">
+
+// ======================================================
+// CLAVE
+// ======================================================
+// Va en el link después de # (#k=...), así no queda en ningún registro
+// del servidor. Si no viene, se pide y se recuerda en este navegador.
+
+const GUARDADA = "ventasClave";
+const CADA_MS = 30 * 1000;
+
+function leerGuardada() {
+  try { return localStorage.getItem(GUARDADA) || ""; } catch { return ""; }
+}
+
+function guardar(clave) {
+  try { localStorage.setItem(GUARDADA, clave); } catch {}
+}
+
+function borrarGuardada() {
+  try { localStorage.removeItem(GUARDADA); } catch {}
+}
+
+let clave = new URLSearchParams(location.hash.slice(1)).get("k") || leerGuardada();
+let temporizador = null;
+let ventasAntes = null;
+let ultimaVenta = 0;
+let actualizado = 0;
+
+
+// ======================================================
+// FORMATOS
+// ======================================================
+
+const pesos = (n) => "$" + Math.round(n).toLocaleString("es-AR");
+const numero = (n) => Math.round(n).toLocaleString("es-AR");
+
+function haceCuanto(ms) {
+  const seg = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  if (seg < 60) return "recién";
+  const min = Math.round(seg / 60);
+  if (min < 60) return `hace ${min} min`;
+  const horas = Math.floor(min / 60);
+  if (horas < 24) return `hace ${horas} h ${min % 60} min`;
+  return `hace ${Math.floor(horas / 24)} días`;
+}
+
+function diaCorto(dia) {
+  const [, mes, d] = dia.split("-");
+  return `${Number(d)}/${Number(mes)}`;
+}
+
+function horaAr(ms) {
+  return new Date(ms).toLocaleTimeString("es-AR", {
+    timeZone: "America/Argentina/Buenos_Aires", hour: "2-digit", minute: "2-digit"
+  });
+}
+
+const escapar = (texto) => String(texto)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+
+// ======================================================
+// DIBUJAR
+// ======================================================
+
+function barras(contenedor, eje, lista, etiqueta, resaltarUltima) {
+
+  const maximo = Math.max(1, ...lista.map((x) => x.monto));
+
+  contenedor.innerHTML = lista.map((x, i) => {
+    const alto = x.monto ? Math.max(2, (x.monto / maximo) * 100) : 2;
+    const clase = !x.monto ? "cero" : resaltarUltima && i === lista.length - 1 ? "hoy" : "";
+    const titulo = `${etiqueta(x, i)}: ${pesos(x.monto)} · ${numero(x.ventas)} ventas`;
+    return `<div title="${escapar(titulo)}"><i class="${clase}" style="height:${alto}%"></i></div>`;
+  }).join("");
+
+  // Etiquetas salteadas para que entren en el celu
+  const salto = lista.length > 16 ? 3 : 2;
+  eje.innerHTML = lista.map((x, i) =>
+    `<span>${i % salto === 0 || i === lista.length - 1 ? etiqueta(x, i) : ""}</span>`
+  ).join("");
+
+}
+
+function tabla(contenedor, lista, vacio) {
+
+  if (!lista.length) {
+    contenedor.innerHTML = `<p class="vacio">${vacio}</p>`;
+    return;
+  }
+
+  contenedor.innerHTML = `<table class="tabla">${lista.map((x) => `
+    <tr>
+      <td>${escapar(x.nombre)}</td>
+      <td class="cant">${numero(x.ventas)}</td>
+      <td><b>${pesos(x.monto)}</b></td>
+    </tr>`).join("")}</table>`;
+
+}
+
+function pintar(d) {
+
+  const $ = (id) => document.getElementById(id);
+
+  // Hoy
+  $("hoyMonto").textContent = pesos(d.hoy.monto);
+  $("hoyVentas").textContent = numero(d.hoy.ventas);
+  $("hoyTicket").textContent = d.hoy.ventas
+    ? `Ticket promedio ${pesos(d.hoy.monto / d.hoy.ventas)}` : "";
+
+  // Total de ayer, para comparar
+  const ayer = d.dias[d.dias.length - 2];
+  $("hoyComparar").textContent = ayer ? `Ayer: ${pesos(ayer.monto)}` : "";
+
+  $("porAprobar").textContent = d.hoy.porAprobar.ventas
+    ? `${numero(d.hoy.porAprobar.ventas)} esperando aprobación (${pesos(d.hoy.porAprobar.monto)})`
+    : "Nada esperando aprobación";
+
+  ultimaVenta = d.ultimaVenta;
+  actualizado = d.actualizado;
+  pintarTiempos();
+
+  // Avisa con un destello si entraron ventas nuevas
+  if (ventasAntes !== null && d.hoy.ventas > ventasAntes) {
+    const tarjeta = $("tarjetaHoy");
+    tarjeta.classList.remove("nueva");
+    void tarjeta.offsetWidth;
+    tarjeta.classList.add("nueva");
+  }
+  ventasAntes = d.hoy.ventas;
+
+  // Hora por hora, hasta la hora actual
+  const horaActual = Number(new Date().toLocaleString("en-US", {
+    timeZone: "America/Argentina/Buenos_Aires", hour: "numeric", hour12: false
+  })) % 24;
+  barras($("barrasHora"), $("ejeHora"), d.hoy.porHora.slice(0, horaActual + 1),
+    (x, i) => `${i}h`, true);
+
+  tabla($("packsHoy"), d.hoy.packs, "Todavía no hay ventas hoy");
+  tabla($("origenHoy"), d.hoy.origen, "Todavía no hay ventas hoy");
+
+  $("bloqueCampanas").hidden = !d.hoy.campanas.length;
+  tabla($("campanasHoy"), d.hoy.campanas, "");
+
+  // Días
+  barras($("barrasDia"), $("ejeDia"), d.dias, (x) => diaCorto(x.dia), true);
+
+  // Total
+  $("totalMonto").textContent = pesos(d.total.monto);
+  $("totalVentas").textContent = numero(d.total.ventas);
+  $("totalChances").textContent = numero(d.total.chances);
+  tabla($("packsTotal"), d.total.packs, "Sin ventas");
+  tabla($("origenTotal"), d.total.origen, "Sin ventas");
+
+}
+
+function pintarTiempos() {
+  if (ultimaVenta) {
+    document.getElementById("ultima").textContent = haceCuanto(ultimaVenta);
+    document.getElementById("ultima").title = horaAr(ultimaVenta);
+  }
+  if (actualizado) {
+    document.getElementById("actualizado").textContent =
+      `En vivo · ${horaAr(actualizado)}`;
+  }
+}
+
+
+// ======================================================
+// TRAER LOS DATOS
+// ======================================================
+
+async function traer() {
+
+  try {
+
+    const respuesta = await fetch("/api/ventas", {
+      headers: { "x-clave": clave },
+      cache: "no-store"
+    });
+
+    if (respuesta.status === 403 || respuesta.status === 429) {
+      salir(respuesta.status === 429
+        ? "Demasiados intentos. Probá en 15 minutos."
+        : "Clave incorrecta");
+      return;
+    }
+
+    if (!respuesta.ok) throw new Error(respuesta.status);
+
+    const datos = await respuesta.json();
+
+    guardar(clave);
+    mostrar("tablero");
+    document.getElementById("punto").classList.remove("mal");
+    pintar(datos);
+
+  } catch {
+
+    document.getElementById("punto").classList.add("mal");
+    document.getElementById("actualizado").textContent = "Sin conexión, reintentando…";
+
+  }
+
+}
+
+function mostrar(cual) {
+  document.getElementById("tablero").hidden = cual !== "tablero";
+  document.getElementById("entrar").hidden = cual !== "entrar";
+}
+
+function salir(mensaje) {
+  clearInterval(temporizador);
+  temporizador = null;
+  borrarGuardada();
+  clave = "";
+  document.getElementById("error").textContent = mensaje;
+  mostrar("entrar");
+}
+
+function empezar() {
+  traer();
+  clearInterval(temporizador);
+  temporizador = setInterval(traer, CADA_MS);
+}
+
+document.getElementById("entrar").addEventListener("submit", (evento) => {
+  evento.preventDefault();
+  clave = document.getElementById("clave").value.trim();
+  if (!clave) return;
+  document.getElementById("error").textContent = "";
+  empezar();
+});
+
+// Al volver a la pestaña, actualiza enseguida
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && clave && temporizador) traer();
+});
+
+setInterval(pintarTiempos, 15 * 1000);
+
+// Saca la clave de la barra de direcciones (queda guardada en este navegador)
+if (location.hash) history.replaceState(null, "", location.pathname);
+
+if (clave) {
+  empezar();
+} else {
+  mostrar("entrar");
+}
+
+</script>
+</body>
+</html>

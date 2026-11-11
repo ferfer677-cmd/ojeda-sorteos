@@ -1187,3 +1187,269 @@ exports.compraAprobadaAMeta = onDocumentUpdated(
 
   }
 );
+
+
+// ======================================================
+// VENTAS EN VIVO (/api/ventas)
+// ======================================================
+// Para ventas.html: solo números juntos (recaudado, cantidad, packs,
+// de dónde vienen). Nunca DNI, nombres, teléfonos ni comprobantes.
+// Se entra con la clave CLAVE_VENTAS (secreto de Firebase, nunca en el código):
+//   firebase functions:secrets:set CLAVE_VENTAS
+// Para cortar el link a todos: cambiar la clave y volver a publicar la función.
+//
+// Lecturas: las compras de hoy en cada consulta (se guardan 20 s para
+// todos los que miran) y el resto una vez cada 30 minutos.
+
+const CLAVE_VENTAS = defineSecret("CLAVE_VENTAS");
+
+const HORA_AR = -3 * 60 * 60 * 1000;   // Argentina no cambia de hora
+const UN_DIA_MS = 24 * 60 * 60 * 1000;
+const DIAS_EN_GRAFICO = 14;
+
+const CAMPOS_VENTAS = [
+  "estado", "fecha", "pack", "precioFinal", "codigoPromo", "chancesBase",
+  "chancesFinales", "utmSource", "utmCampaign", "paginaUrl", "fbc", "userAgent"
+];
+
+const FUENTES_META_VENTAS = ["meta", "facebook", "fb", "instagram", "ig", "msg", "an"];
+
+// Igual que admin.js: "50" quedó para compras viejas (hoy es VERANO)
+const CLAVE_ORIGEN = {
+  "VERANO": "🌱 Palabra VERANO (orgánico)",
+  "50": "🌱 Palabra VERANO (orgánico)",
+  "MENOS": "📣 Palabra MENOS (anuncio)"
+};
+
+const cacheVentas = { historico: null, diaHistorico: "", calculadoHistorico: 0, respuesta: null, calculada: 0 };
+const intentosVentas = new Map();
+
+// "2026-11-11" en hora argentina
+const diaAr = (ms) => new Date(ms + HORA_AR).toISOString().slice(0, 10);
+const horaAr = (ms) => new Date(ms + HORA_AR).getUTCHours();
+const inicioDelDiaAr = (dia) => Date.parse(`${dia}T00:00:00Z`) - HORA_AR;
+
+function montoParaVentas(datos) {
+  const promo = String(datos.codigoPromo || "").trim().toUpperCase();
+  if (promo === "RULETAGRATIS") return 0;
+  const monto = montoDeCompra(datos);
+  if (monto) return monto;
+  if (promo === "SUPER50") return 11999;
+  if (promo === "SUPER100") return 14999;
+  return 0;
+}
+
+function origenParaVentas(datos) {
+
+  if (/\/3x1(\.html)?\/?$/i.test(String(datos.paginaUrl || "").trim())) {
+    return "🔥 Página 3x1";
+  }
+
+  if (FUENTES_META_VENTAS.includes(String(datos.utmSource || "").trim().toLowerCase())) {
+    return "📣 Anuncio con etiqueta";
+  }
+
+  const clave = CLAVE_ORIGEN[String(datos.codigoPromo || "").trim().toUpperCase()];
+  if (clave) return clave;
+
+  const navegador = String(datos.userAgent || "");
+  if (datos.fbc || /Instagram|FBAN|FBAV|FB_IAB/.test(navegador)) {
+    return "📱 Facebook / Instagram sin etiqueta";
+  }
+
+  return "🌐 Otro";
+
+}
+
+// Cada compra queda reducida a lo que hace falta para sumar
+function resumirCompra(doc) {
+
+  const datos = doc.data();
+  const fecha = datos.fecha && typeof datos.fecha.toMillis === "function"
+    ? datos.fecha.toMillis()
+    : 0;
+
+  if (!fecha) return null;
+
+  const promo = String(datos.codigoPromo || "").trim().toUpperCase();
+  const chances = chancesDeCompra(datos) || Number(datos.chancesFinales) || 0;
+
+  return {
+    ms: fecha,
+    dia: diaAr(fecha),
+    hora: horaAr(fecha),
+    pagada: datos.estado === "Pagado",
+    monto: montoParaVentas(datos),
+    chances,
+    pack: promo === "RULETAGRATIS"
+      ? "🎡 Chance gratis de la ruleta"
+      : chances ? `${chances} chance${chances === 1 ? "" : "s"}` : "Sin pack",
+    origen: origenParaVentas(datos),
+    campana: String(datos.utmCampaign || "").trim().slice(0, 80)
+  };
+
+}
+
+async function comprasDesde(desdeMs, hastaMs) {
+
+  let consulta = getFirestore().collection("participantes")
+    .where("fecha", ">=", Timestamp.fromMillis(desdeMs));
+
+  if (hastaMs) consulta = consulta.where("fecha", "<", Timestamp.fromMillis(hastaMs));
+
+  const snap = await consulta.select(...CAMPOS_VENTAS).get();
+
+  return snap.docs.map(resumirCompra).filter(Boolean);
+
+}
+
+function agruparVentas(lista, campo) {
+
+  const grupos = new Map();
+
+  lista.forEach((compra) => {
+    const nombre = compra[campo] || "Sin dato";
+    const grupo = grupos.get(nombre) || { nombre, ventas: 0, monto: 0 };
+    grupo.ventas++;
+    grupo.monto += compra.monto;
+    grupos.set(nombre, grupo);
+  });
+
+  return [...grupos.values()].sort((a, b) => b.monto - a.monto || b.ventas - a.ventas);
+
+}
+
+function sumarVentas(lista) {
+  return lista.reduce(
+    (total, compra) => ({
+      ventas: total.ventas + 1,
+      monto: total.monto + compra.monto,
+      chances: total.chances + compra.chances
+    }),
+    { ventas: 0, monto: 0, chances: 0 }
+  );
+}
+
+async function calcularVentas() {
+
+  const ahora = Date.now();
+  const hoy = diaAr(ahora);
+  const inicioHoy = inicioDelDiaAr(hoy);
+
+  // Lo anterior a hoy: una vez cada 30 minutos (y siempre al cambiar el día)
+  if (
+    !cacheVentas.historico ||
+    cacheVentas.diaHistorico !== hoy ||
+    ahora - cacheVentas.calculadoHistorico > 30 * 60 * 1000
+  ) {
+    cacheVentas.historico = await comprasDesde(0, inicioHoy);
+    cacheVentas.diaHistorico = hoy;
+    cacheVentas.calculadoHistorico = ahora;
+  }
+
+  const deHoy = await comprasDesde(inicioHoy);
+  const todas = cacheVentas.historico.concat(deHoy);
+
+  const pagadas = todas.filter((c) => c.pagada);
+  const pagadasHoy = deHoy.filter((c) => c.pagada);
+  const esperandoHoy = deHoy.filter((c) => !c.pagada);
+
+  const porHora = Array.from({ length: 24 }, () => ({ ventas: 0, monto: 0 }));
+  pagadasHoy.forEach((c) => {
+    porHora[c.hora].ventas++;
+    porHora[c.hora].monto += c.monto;
+  });
+
+  const porDia = new Map();
+  pagadas.forEach((c) => {
+    const dia = porDia.get(c.dia) || { ventas: 0, monto: 0 };
+    dia.ventas++;
+    dia.monto += c.monto;
+    porDia.set(c.dia, dia);
+  });
+
+  const dias = [];
+  for (let i = DIAS_EN_GRAFICO - 1; i >= 0; i--) {
+    const dia = diaAr(ahora - i * UN_DIA_MS);
+    dias.push({ dia, ...(porDia.get(dia) || { ventas: 0, monto: 0 }) });
+  }
+
+  const ultima = pagadas.reduce((max, c) => Math.max(max, c.ms), 0);
+
+  return {
+    actualizado: ahora,
+    hoy: {
+      dia: hoy,
+      ...sumarVentas(pagadasHoy),
+      porAprobar: sumarVentas(esperandoHoy),
+      porHora,
+      packs: agruparVentas(pagadasHoy, "pack"),
+      origen: agruparVentas(pagadasHoy, "origen"),
+      campanas: agruparVentas(pagadasHoy.filter((c) => c.campana), "campana")
+    },
+    ultimaVenta: ultima,
+    dias,
+    total: {
+      ...sumarVentas(pagadas),
+      packs: agruparVentas(pagadas, "pack"),
+      origen: agruparVentas(pagadas, "origen")
+    }
+  };
+
+}
+
+function claveVentasCorrecta(clave) {
+  const guardada = CLAVE_VENTAS.value() || "";
+  const esperada = crypto.createHash("sha256").update(guardada).digest();
+  const recibida = crypto.createHash("sha256").update(String(clave || "")).digest();
+  return Boolean(guardada) && crypto.timingSafeEqual(esperada, recibida);
+}
+
+exports.ventasEnVivo = onRequest(
+  {
+    region: "southamerica-east1",
+    invoker: "public",
+    maxInstances: 2,
+    secrets: [CLAVE_VENTAS]
+  },
+  async (pedido, respuesta) => {
+
+    respuesta.set("Cache-Control", "private, no-store");
+
+    // Límite de intentos con clave equivocada por conexión
+    const ip =
+      pedido.get("fastly-client-ip") ||
+      String(pedido.get("x-forwarded-for") || "").split(",")[0].trim();
+
+    const ahora = Date.now();
+    const intentos = (intentosVentas.get(ip) || []).filter((t) => ahora - t < 15 * 60 * 1000);
+
+    if (intentos.length >= 10) {
+      respuesta.status(429).json({ error: "ESPERA" });
+      return;
+    }
+
+    if (!claveVentasCorrecta(pedido.get("x-clave"))) {
+      intentos.push(ahora);
+      intentosVentas.set(ip, intentos);
+      respuesta.status(403).json({ error: "CLAVE" });
+      return;
+    }
+
+    try {
+
+      // Un solo cálculo cada 20 s para todos los que tienen la página abierta
+      if (!cacheVentas.respuesta || ahora - cacheVentas.calculada > 20 * 1000) {
+        cacheVentas.respuesta = await calcularVentas();
+        cacheVentas.calculada = ahora;
+      }
+
+      respuesta.json(cacheVentas.respuesta);
+
+    } catch (error) {
+      logger.error("ventasEnVivo", error);
+      respuesta.status(500).json({ error: "ERROR" });
+    }
+
+  }
+);

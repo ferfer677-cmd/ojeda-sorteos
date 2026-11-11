@@ -70,6 +70,13 @@
         }
       },
       {
+        "source": "/api/ventas",
+        "function": {
+          "functionId": "ventasEnVivo",
+          "region": "southamerica-east1"
+        }
+      },
+      {
         "source": "/api/ruleta",
         "function": {
           "functionId": "ruleta",
