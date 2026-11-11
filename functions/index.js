@@ -390,6 +390,20 @@ const PACKS_3X1 = [
   { paga: 10, recibe: 30, precio: 18000 }
 ];
 
+// Página /3x1 (script-3x1.js, preciosNormales; nombres de 3x1.html).
+// Se guardan con paginaUrl de /3x1 para que el admin y el tablero
+// de ventas las cuenten como compras de esa página.
+const URL_PAGINA_3X1 = "https://ojedasorteos.com.ar/3x1";
+
+const PACKS_PAGINA_3X1 = [
+  { chances: 3, nombre: "UNA PARA PROBAR", precio: 5000 },
+  { chances: 9, nombre: "PROMO INICIAL", precio: 10000 },
+  { chances: 30, nombre: "POPULAR", precio: 18000 },
+  { chances: 90, nombre: "🚀 PACK PRO", precio: 38000 },
+  { chances: 150, nombre: "🔥 PACK GRANDE", precio: 50000 },
+  { chances: 300, nombre: "👑 PACK MÁXIMO", precio: 75000 }
+];
+
 // Cada pack: id, grupo, texto para elegir y lo que se guarda en la compra.
 // El texto de "pack" lleva "N CHANCES" y "$precio" (el admin los lee de ahí).
 function catalogoDePacks() {
@@ -404,6 +418,18 @@ function catalogoDePacks() {
       precio,
       codigoPromo: "",
       pack: `${nombre} • ${chances} CHANCE${chances === 1 ? "" : "S"} • ${pesos(precio)}`
+    });
+  });
+
+  PACKS_PAGINA_3X1.forEach(({ chances, nombre, precio }) => {
+    packs.push({
+      id: `pagina3x1_${chances}`,
+      grupo: "🔥 Página 3x1",
+      chances,
+      precio,
+      codigoPromo: "",
+      paginaUrl: URL_PAGINA_3X1,
+      pack: `${nombre} • ${chances} CHANCES • ${pesos(precio)}`
     });
   });
 
@@ -635,7 +661,9 @@ async function cargarCompra(db, cuerpo) {
     estado: "Esperando",
     cargadoPor: "subadmin",
     diaCompra: dia,
-    fecha
+    fecha,
+    // Solo los packs de la página 3x1 la traen
+    ...(pack.paginaUrl ? { paginaUrl: pack.paginaUrl } : {})
   });
 
   listaNombres.hasta = 0;
