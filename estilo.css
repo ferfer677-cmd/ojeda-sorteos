@@ -1862,22 +1862,82 @@ body.con-barra-compra .purchase-notification { bottom: 86px; }
 
 .ruleta-contenido p { margin: 0 0 14px; font-size: 14px; line-height: 1.5; color: var(--suave); }
 
-/* La flecha marca el premio, arriba y al centro */
-.ruleta-marco {
-  position: relative;
-  width: min(290px, 100%);
-  margin: 18px auto;
+/* Cartel de la ruleta: fondo de noche de casino */
+.ruleta-caja.ruleta-show {
+  max-width: 400px;
+  overflow-x: hidden;
+  color: #fff;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 213, 74, .28), transparent 55%),
+    linear-gradient(170deg, #2a0f5c 0%, #160733 60%, #0d0420 100%);
+  border: 2px solid rgba(255, 213, 74, .55);
+  box-shadow: 0 0 0 4px rgba(255, 213, 74, .12), 0 24px 60px rgba(0, 0, 0, .55);
+  animation: ruleta-entrar .45s cubic-bezier(.2, 1.4, .4, 1);
 }
 
-.ruleta-marco::before {
-  content: "";
+@keyframes ruleta-entrar {
+  from { opacity: 0; transform: scale(.8) translateY(20px); }
+}
+
+.ruleta-show .ruleta-cerrar { color: #fff; background: rgba(255, 255, 255, .14); }
+
+.ruleta-show .ruleta-contenido h3 { color: #fff; font-family: 'Poppins', sans-serif; line-height: 1.25; }
+
+.ruleta-show .ruleta-contenido p { color: rgba(255, 255, 255, .8); }
+
+.ruleta-show .ruleta-aviso { color: rgba(255, 255, 255, .65); }
+
+.ruleta-contenido p.ruleta-chapita {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  color: #2a0f5c;
+  background: linear-gradient(135deg, #FFE27A, #FFB800);
+  border-radius: 999px;
+}
+
+/* Marco con lamparitas y flecha dorada arriba */
+.ruleta-marco {
+  position: relative;
+  width: min(300px, 100%);
+  margin: 22px auto 16px;
+}
+
+.ruleta-aro {
+  position: relative;
+  aspect-ratio: 1;
+  padding: 20px;
+  background: radial-gradient(circle, #FFD54A 0%, #E0A100 70%, #A86E00 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 34px rgba(255, 196, 0, .45), inset 0 0 0 3px rgba(255, 255, 255, .35);
+}
+
+.ruleta-luz {
   position: absolute;
-  top: -8px;
+  top: 50%;
   left: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  background: #fff8d6;
+  border-radius: 50%;
+  box-shadow: 0 0 8px 2px #FFE27A;
   z-index: 1;
-  border: 12px solid transparent;
-  border-top: 22px solid var(--oscuro);
-  border-bottom: 0;
+}
+
+.ruleta-flecha {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  z-index: 3;
+  width: 34px;
+  height: 42px;
+  background: linear-gradient(180deg, #fff 0%, #FFD54A 40%, #E0A100 100%);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  filter: drop-shadow(0 4px 4px rgba(0, 0, 0, .4));
   transform: translateX(-50%);
 }
 
@@ -1885,23 +1945,112 @@ body.con-barra-compra .purchase-notification { bottom: 86px; }
   position: relative;
   width: 100%;
   aspect-ratio: 1;
-  border: 5px solid var(--oscuro);
+  border: 0;
   border-radius: 50%;
-  transition: transform 4.5s cubic-bezier(.12, .7, .15, 1);
+  box-shadow: inset 0 0 0 4px rgba(255, 255, 255, .25), inset 0 0 30px rgba(0, 0, 0, .35);
+  transition: transform 5s cubic-bezier(.1, .75, .12, 1);
+}
+
+.ruleta-separador {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 3px;
+  height: 50%;
+  margin-left: -1.5px;
+  background: linear-gradient(180deg, #FFE27A, #C98A00);
+  transform-origin: 50% 100%;
 }
 
 .ruleta-rueda span {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 96px;
+  width: 92px;
   margin-top: -14px;
+  font-family: 'Poppins', sans-serif;
   font-size: 11px;
   font-weight: 800;
   line-height: 1.2;
   text-align: center;
   color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .55);
   transform-origin: 0 14px;
+}
+
+.ruleta-centro {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  font-size: 28px;
+  background: radial-gradient(circle at 35% 30%, #fff 0%, #FFE27A 35%, #D49400 100%);
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .45);
+  transform: translate(-50%, -50%);
+}
+
+/* Las lamparitas titilan, más rápido mientras gira */
+.ruleta-luz { animation: ruleta-titilar 1.2s steps(1) infinite; }
+.ruleta-luz.par { animation-delay: .6s; }
+.girando .ruleta-luz { animation-duration: .3s; }
+.girando .ruleta-luz.par { animation-delay: .15s; }
+
+@keyframes ruleta-titilar {
+  50% { background: #ff9d3b; box-shadow: 0 0 4px 1px #ff9d3b; }
+}
+
+.ruleta-boton.ruleta-girar {
+  font-size: 17px;
+  color: #2a0f5c;
+  background: linear-gradient(135deg, #FFE27A, #FFB800);
+  box-shadow: 0 8px 22px rgba(255, 184, 0, .4);
+  animation: ruleta-latido 1.4s ease-in-out infinite;
+}
+
+.ruleta-boton.ruleta-girar:disabled { animation: none; }
+
+.ruleta-boton.ruleta-otra { background: linear-gradient(135deg, #7C3AED, #E8327F); }
+
+.ruleta-trofeo {
+  font-size: 64px;
+  line-height: 1;
+  margin: 6px 0 10px;
+  animation: ruleta-salto .6s ease-out 2;
+}
+
+@keyframes ruleta-salto {
+  50% { transform: scale(1.25) rotate(-8deg); }
+}
+
+.ruleta-show .ruleta-contenido h3.ruleta-premio {
+  font-size: 24px;
+  color: #FFE27A;
+}
+
+/* Papelitos al ganar */
+.ruleta-papelito {
+  position: absolute;
+  top: -12px;
+  z-index: 5;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  pointer-events: none;
+  animation: ruleta-caer 2.2s ease-in forwards;
+}
+
+@keyframes ruleta-caer {
+  to { transform: translateY(520px) rotate(var(--giro)); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ruleta-caja.ruleta-show, .ruleta-luz, .ruleta-girar, .ruleta-trofeo { animation: none; }
 }
 
 .ruleta-boton {
@@ -1926,6 +2075,121 @@ body.con-barra-compra .purchase-notification { bottom: 86px; }
 @media (prefers-reduced-motion: reduce) {
   .ruleta-llamada { animation: none; }
   .ruleta-rueda { transition-duration: .2s; }
+}
+
+
+/* ======================================================
+   DADOS (dados.js, palabra clave DADO)
+   ====================================================== */
+
+.dados-mesa {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin: 20px 0 16px;
+}
+
+/* Dado dibujado: grilla de 3x3 puntos */
+.dados-dado {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 4px;
+  width: 84px;
+  height: 84px;
+  padding: 11px;
+  background: linear-gradient(145deg, #fff, #e9e4f5);
+  border: 2px solid #d6cfe8;
+  border-radius: 18px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .18), inset 0 -4px 0 rgba(124, 58, 237, .12);
+}
+
+.dados-dado i {
+  display: block;
+  border-radius: 50%;
+}
+
+.dados-dado i.on { background: #1f1147; }
+
+.dados-mesa.tirando .dados-dado { animation: dados-sacudir .3s linear infinite; }
+
+.dados-mesa.tirando .dados-dado:last-child { animation-direction: reverse; }
+
+.dados-mesa.dobles .dados-dado {
+  border-color: #7C3AED;
+  animation: dados-salto .5s ease-out 2;
+}
+
+.dados-mesa.dobles .dados-dado i.on { background: #7C3AED; }
+
+@keyframes dados-sacudir {
+  25% { transform: rotate(-18deg) translateY(-8px); }
+  75% { transform: rotate(18deg) translateY(5px); }
+}
+
+@keyframes dados-salto {
+  50% { transform: scale(1.15); }
+}
+
+.dados-dni {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 14px;
+  font-size: 16px;
+  text-align: center;
+  border: 2px solid #d6cfe8;
+  border-radius: 12px;
+}
+
+.ruleta-contenido p.dados-error { margin: 6px 0 0; min-height: 1em; color: #dc2626; }
+
+.dados-tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.dados-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 12px;
+  font: inherit;
+  color: #fff;
+  text-align: center;
+  background: linear-gradient(160deg, #7C3AED, #1877F2);
+  border: 0;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(124, 58, 237, .3);
+  cursor: pointer;
+  transition: transform .15s;
+}
+
+.dados-tarjeta + .dados-tarjeta { background: linear-gradient(160deg, var(--naranja), #C2185B); }
+
+.dados-tarjeta strong { font-family: 'Poppins', sans-serif; font-size: 16px; }
+
+.dados-tarjeta span { font-size: 13px; line-height: 1.4; }
+
+.dados-tarjeta:disabled { opacity: .45; cursor: wait; }
+
+.dados-tarjeta.elegida { opacity: 1; transform: scale(1.04); }
+
+.dados-opcion small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: .9;
+}
+
+.ruleta-contenido p.dados-destacado { font-weight: 700; color: var(--oscuro); }
+
+.ruleta-contenido p.dados-aviso { margin: 12px 0 0; font-size: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dados-mesa .dados-dado { animation: none !important; }
 }
 
 

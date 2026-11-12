@@ -712,6 +712,16 @@ if (btnAplicarDescuento) {
     // Los códigos "MITAD" (50% OFF) y "ENTERO" (oferta secreta)
     // se dieron de baja el 16/10/2026.
 
+    // Dados (dados.js): palabra clave "DADO"
+    if (window.Dados && window.Dados.CODIGOS.includes(codigo)) {
+      window.Dados.abrir();
+      if (mensaje) {
+        mensaje.innerText = "🎲 ¡CÓDIGO ACTIVADO! TIRÁ LOS DADOS.";
+        mensaje.style.color = "#008a43";
+      }
+      return;
+    }
+
     // Ruleta del Cielo (ruleta-cielo.js), vence el 08/11/2026 23:00
     if (window.RuletaCielo && codigo === window.RuletaCielo.CODIGO) {
       const abierta = window.RuletaCielo.abrir();

@@ -186,6 +186,139 @@ function premiosPendientes(giros, compras) {
 
 }
 
+// ======================================================
+// DADOS (palabra clave "DADO")
+// ======================================================
+// dados.js: con la palabra "DADO" se abren los dados, se pone el DNI,
+// se tiran y salen 2 tarjetas. Se elige UNA sola, una vez por DNI:
+// - "doble": repetir cualquier compra pagada, mismo precio, doble de chances.
+// - "combo": todas las chances que ya tiene, de nuevo, por la mitad
+//   de lo que gastó en total (gastó $100.000 con 2000 chances: 2000
+//   chances más por $50.000).
+// Todo se guarda en "dados/{dni}" y aprobarAlRecibir solo aprueba sola
+// una compra DADOS / DADOSCOMBO que coincida con lo elegido.
+
+const CODIGO_DADOS = "DADOS";
+const CODIGO_DADOS_COMBO = "DADOSCOMBO";
+const CODIGOS_DADOS = [CODIGO_DADOS, CODIGO_DADOS_COMBO];
+// Más que esto no se aprueba sola: queda para aprobar a mano
+const CHANCES_MAXIMAS_DADOS = 3000;
+
+// Compras pagadas que cuentan para los dados
+function comprasParaDados(compras) {
+  return compras
+    .filter((c) => c.estado === "Pagado")
+    .filter((c) => c.codigoPromo !== "RULETAGRATIS" && !CODIGOS_DADOS.includes(c.codigoPromo))
+    .map((c) => ({ chances: Number(c.chancesFinales) || chancesDeCompra(c), precio: montoDeCompra(c) }))
+    .filter((c) => c.chances > 0 && c.precio > 0);
+}
+
+function premiosDeDados(compras) {
+
+  const pagas = comprasParaDados(compras);
+
+  if (!pagas.length) return null;
+
+  const opciones = new Map();
+
+  pagas.forEach(({ chances, precio }) => {
+    if (chances * 2 > CHANCES_MAXIMAS_DADOS) return;
+    opciones.set(`${chances}_${precio}`, { antes: chances, chances: chances * 2, precio });
+  });
+
+  const chances = pagas.reduce((total, c) => total + c.chances, 0);
+  const gastado = pagas.reduce((total, c) => total + c.precio, 0);
+
+  return {
+    doble: [...opciones.values()].sort((a, b) => b.precio - a.precio).slice(0, 8),
+    combo: {
+      compras: pagas.length,
+      gastado,
+      chancesTiene: chances,
+      porChance: Math.round(gastado / chances),
+      chances,
+      precio: Math.round(gastado / 2)
+    }
+  };
+
+}
+
+// accion: "estado" | "tirar" | "elegir" (cual: "doble" | "combo")
+async function dados(db, dni, compras, accion, cual) {
+
+  const referencia = db.collection("dados").doc(dni);
+
+  if (compras.some((c) => CODIGOS_DADOS.includes(c.codigoPromo))) {
+    return { estado: "usado" };
+  }
+
+  if (accion === "estado") {
+    const guardado = await referencia.get();
+    if (guardado.exists) return { estado: "tirado", ...guardado.data(), fecha: undefined };
+    return { estado: premiosDeDados(compras) ? "disponible" : "nada" };
+  }
+
+  // En una transacción: tocar dos veces da lo mismo, y se elige una sola vez
+  return db.runTransaction(async (tx) => {
+
+    const guardado = await tx.get(referencia);
+    let datos = guardado.exists ? guardado.data() : null;
+
+    let cambio = !datos;
+
+    if (!datos) {
+      const premios = premiosDeDados(compras);
+      if (!premios) return { estado: "nada" };
+      datos = { ...premios, elegido: "" };
+    }
+
+    const puedeElegir =
+      accion === "elegir" && !datos.elegido &&
+      (cual === "combo" || (cual === "doble" && datos.doble?.length));
+
+    if (puedeElegir) {
+      datos = { ...datos, elegido: cual };
+      cambio = true;
+    }
+
+    if (cambio) {
+      tx.set(referencia, { ...datos, fecha: guardado.exists ? guardado.get("fecha") : FieldValue.serverTimestamp() });
+    }
+
+    return { estado: "tirado", ...datos, fecha: undefined };
+
+  });
+
+}
+
+// La compra de los dados coincide con lo elegido y es la única
+async function dadosValidos(db, datos, id) {
+
+  const dni = String(datos.dniNormalizado || "");
+  if (!dni) return false;
+
+  const [guardado, compras] = await Promise.all([
+    db.collection("dados").doc(dni).get(),
+    db.collection("participantes").where("dniNormalizado", "==", dni).get()
+  ]);
+
+  if (!guardado.exists) return false;
+
+  const { chances, precio } = packDeLaCompra(datos);
+  if (Number(datos.chancesFinales) !== chances) return false;
+
+  const elegido = guardado.get("elegido");
+  const coincide =
+    datos.codigoPromo === CODIGO_DADOS
+      ? elegido === "doble" && (guardado.get("doble") || []).some((o) => o.chances === chances && o.precio === precio)
+      : elegido === "combo" && guardado.get("combo")?.chances === chances && guardado.get("combo")?.precio === precio;
+
+  const otra = compras.docs.some((d) => d.id !== id && CODIGOS_DADOS.includes(d.get("codigoPromo")));
+
+  return coincide && !otra;
+
+}
+
 exports.ruleta = onRequest(
   {
     region: "southamerica-east1",
@@ -204,13 +337,13 @@ exports.ruleta = onRequest(
     const dni = String(pedido.body?.dni || "").replace(/[^0-9]/g, "").slice(0, 20);
     const accion = pedido.body?.accion;
 
-    if (!dni || !["estado", "girar"].includes(accion)) {
+    if (!dni || !["estado", "girar", "dados_estado", "dados_tirar", "dados_elegir"].includes(accion)) {
       respuesta.status(400).json({ error: "DATOS" });
       return;
     }
 
     if (Date.now() >= CIERRE_COMPRAS) {
-      respuesta.json({ disponibles: 0, pendientes: [] });
+      respuesta.json({ disponibles: 0, pendientes: [], estado: "nada" });
       return;
     }
 
@@ -221,6 +354,11 @@ exports.ruleta = onRequest(
     try {
 
       const compras = await comprasDelDni(db, dni);
+
+      if (accion.startsWith("dados_")) {
+        respuesta.json(await dados(db, dni, compras, accion.slice(6), pedido.body?.cual));
+        return;
+      }
 
       if (accion === "estado") {
 
@@ -953,16 +1091,20 @@ function packDeLaCompra(datos) {
   return { chances, precio };
 }
 
-function motivoParaNoAprobarSola(datos) {
+function motivoParaNoAprobarSola(datos, dadosOk = false) {
 
   if (datos.estado !== "Esperando") return "estado";
   if (datos.cargadoPor === "subadmin") return "subadmin";
 
   const cantidad = Number(datos.chancesFinales);
   const { chances, precio } = packDeLaCompra(datos);
+  const maximo = dadosOk ? CHANCES_MAXIMAS_DADOS : CHANCES_MAXIMAS_AUTO;
 
-  if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > CHANCES_MAXIMAS_AUTO) return "cantidad";
+  if (!Number.isInteger(cantidad) || cantidad < 1 || cantidad > maximo) return "cantidad";
   if (chances !== cantidad) return "pack";
+
+  // Dados: vale solo si coincide con lo que salió (dadosValidos)
+  if (CODIGOS_DADOS.includes(datos.codigoPromo)) return dadosOk ? "" : "dados";
 
   // La chance gratis de la ruleta la crea el servidor: no tiene precio
   if (datos.codigoPromo === "RULETAGRATIS") return cantidad === 1 ? "" : "pack";
@@ -987,7 +1129,12 @@ exports.aprobarAlRecibir = onDocumentCreated(
 
     if (!datos) return;
 
-    const motivo = motivoParaNoAprobarSola(datos);
+    const dadosOk =
+      CODIGOS_DADOS.includes(datos.codigoPromo) && datos.estado === "Esperando"
+        ? await dadosValidos(getFirestore(), datos, evento.params.id)
+        : false;
+
+    const motivo = motivoParaNoAprobarSola(datos, dadosOk);
 
     if (motivo) {
       if (motivo !== "estado" && motivo !== "subadmin") {

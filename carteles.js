@@ -57,6 +57,7 @@ window.participacionesCerradas = function () {
 const SELECTORES_CARTELES = [
   "#errorEnvio.activo",
   "#ruletaOverlay.activo",
+  "#dadosOverlay.activo",
   ".cierre-overlay.activo",
   "#superPromoOverlay.activo",
   "#ofertaEnteroOverlay.activo",

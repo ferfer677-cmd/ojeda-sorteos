@@ -1,22 +1,30 @@
 // ======================================================
-// RULETA DE PREMIOS
+// RULETA DE LA SUERTE
 // ======================================================
-// Aparece en "Ver mis números". Cada compra aprobada da un giro.
-// El premio lo elige el servidor (girarRuleta en functions/index.js);
+// Cada compra aprobada da un giro. Cuando alguien consulta sus números
+// en "Ver mis números", a los 2 segundos sale sola un cartel con la
+// ruleta ("como ya compraste, desbloqueaste la Ruleta de la Suerte").
+// El premio lo elige el servidor (ruleta en functions/index.js);
 // acá solo se muestra la animación y se ofrece usar el premio.
 
 (function () {
 
   // Porciones de la rueda, en el orden en que se dibujan
   const PORCIONES = [
-    { id: "gratis", texto: "1 chance gratis", color: "#00A650" },
-    { id: "p35", texto: "35 chances $12.999", color: "#1877F2" },
-    { id: "tresxuno", texto: "3x1", color: "#FF6A00" },
-    { id: "p200", texto: "200 chances $29.999", color: "#7C3AED" },
-    { id: "p500", texto: "400 chances $39.999", color: "#C2185B" }
+    { id: "gratis", texto: "1 chance gratis", color: "#00A650", color2: "#00C96A" },
+    { id: "p35", texto: "35 chances $12.999", color: "#1565D8", color2: "#3B8BFF" },
+    { id: "tresxuno", texto: "3x1", color: "#F25C05", color2: "#FF8A2B" },
+    { id: "p200", texto: "200 chances $29.999", color: "#6D28D9", color2: "#9B5CFF" },
+    { id: "p500", texto: "400 chances $39.999", color: "#B0135E", color2: "#E8327F" }
   ];
 
   const GRADOS = 360 / PORCIONES.length;
+
+  // Lamparitas alrededor de la rueda
+  const LUCES = 18;
+
+  // Espera entre que aparecen los números y sale la ruleta
+  const ESPERA_CARTEL = 2000;
 
   // 3x1: paga el pack normal y recibe el triple
   // Si cambian, cambiarlos también en functions/index.js (PACKS_3X1)
@@ -40,6 +48,42 @@
     return respuesta.json();
   }
 
+  function crear(etiqueta, clase, texto) {
+    const elemento = document.createElement(etiqueta);
+    if (clase) elemento.className = clase;
+    if (texto) elemento.textContent = texto;
+    return elemento;
+  }
+
+  function botonCompra(texto, alTocar, clase = "ruleta-boton") {
+    const boton = crear("button", clase, texto);
+    boton.type = "button";
+    boton.addEventListener("click", alTocar);
+    return boton;
+  }
+
+  const sinMovimiento = () =>
+    matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+
+  // ====================================================
+  // PAPELITOS AL GANAR
+  // ====================================================
+
+  function papelitos(caja) {
+    if (sinMovimiento()) return;
+    const colores = ["#FFD54A", "#00C96A", "#3B8BFF", "#FF8A2B", "#E8327F", "#fff"];
+    for (let i = 0; i < 46; i++) {
+      const pieza = crear("i", "ruleta-papelito");
+      pieza.style.left = `${Math.random() * 100}%`;
+      pieza.style.background = colores[i % colores.length];
+      pieza.style.animationDelay = `${Math.random() * 0.5}s`;
+      pieza.style.setProperty("--giro", `${Math.random() * 720 - 360}deg`);
+      caja.appendChild(pieza);
+      setTimeout(() => pieza.remove(), 2600);
+    }
+  }
+
 
   // ====================================================
   // USAR UN PREMIO
@@ -50,24 +94,19 @@
     window.abrirModalPromo(chances, precio, codigo);
   }
 
-  function botonCompra(texto, alTocar) {
-    const boton = document.createElement("button");
-    boton.type = "button";
-    boton.className = "ruleta-boton";
-    boton.textContent = texto;
-    boton.addEventListener("click", alTocar);
-    return boton;
-  }
-
-  function mostrarPremio(contenedor, premio) {
+  function mostrarPremio(contenedor, premio, recienGanado) {
 
     contenedor.innerHTML = "";
 
-    const titulo = document.createElement("h3");
-    titulo.textContent = `🎉 ${premio.nombre}`;
-    contenedor.appendChild(titulo);
+    contenedor.appendChild(crear("div", "ruleta-trofeo", recienGanado ? "🏆" : "🎁"));
 
-    const detalle = document.createElement("p");
+    contenedor.appendChild(
+      crear("p", "ruleta-chapita", recienGanado ? "¡GANASTE!" : "TENÉS UN PREMIO GUARDADO")
+    );
+
+    contenedor.appendChild(crear("h3", "ruleta-premio", premio.nombre));
+
+    const detalle = crear("p");
     contenedor.appendChild(detalle);
 
     if (premio.id === "gratis") {
@@ -115,19 +154,25 @@
 
     const colores =
       PORCIONES.map(
-        (p, i) => `${p.color} ${i * GRADOS}deg ${(i + 1) * GRADOS}deg`
+        (p, i) =>
+          `${p.color} ${i * GRADOS}deg, ${p.color2} ${(i + 0.5) * GRADOS}deg, ${p.color} ${(i + 1) * GRADOS}deg`
       ).join(", ");
 
-    const rueda = document.createElement("div");
-    rueda.className = "ruleta-rueda";
+    const rueda = crear("div", "ruleta-rueda");
     rueda.style.background = `conic-gradient(${colores})`;
 
+    // Líneas doradas entre porciones
     PORCIONES.forEach((porcion, i) => {
-      const texto = document.createElement("span");
-      texto.textContent = porcion.texto;
+      const linea = crear("b", "ruleta-separador");
+      linea.style.transform = `rotate(${i * GRADOS}deg)`;
+      rueda.appendChild(linea);
+    });
+
+    PORCIONES.forEach((porcion, i) => {
+      const texto = crear("span", "", porcion.texto);
       // El texto se apoya en la mitad de su porción
       texto.style.transform =
-        `rotate(${(i + 0.5) * GRADOS - 90}deg) translateX(34px)`;
+        `rotate(${(i + 0.5) * GRADOS - 90}deg) translateX(30px)`;
       rueda.appendChild(texto);
     });
 
@@ -135,51 +180,65 @@
 
   }
 
-  function abrir(dni, premiosPendientes, alTerminar) {
+  function crearMarco(rueda) {
 
-    overlay = document.createElement("div");
+    const marco = crear("div", "ruleta-marco");
+    const aro = crear("div", "ruleta-aro");
+
+    for (let i = 0; i < LUCES; i++) {
+      const luz = crear("i", "ruleta-luz");
+      // Repartidas sobre el aro dorado
+      const angulo = (2 * Math.PI * i) / LUCES;
+      luz.style.left = `${50 + 47 * Math.sin(angulo)}%`;
+      luz.style.top = `${50 - 47 * Math.cos(angulo)}%`;
+      if (i % 2) luz.classList.add("par");
+      aro.appendChild(luz);
+    }
+
+    aro.appendChild(rueda);
+    aro.appendChild(crear("div", "ruleta-centro", "🍀"));
+    marco.append(crear("div", "ruleta-flecha"), aro);
+
+    return marco;
+
+  }
+
+  // girosLibres: cuántos giros tiene. premioGuardado: premio sin usar.
+  function abrir(dni, girosLibres, premioGuardado, alTerminar) {
+
+    cerrar();
+
+    overlay = crear("div", "ruleta-overlay activo");
     overlay.id = "ruletaOverlay";
-    overlay.className = "ruleta-overlay activo";
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
-    overlay.setAttribute("aria-label", "Ruleta de premios");
+    overlay.setAttribute("aria-label", "Ruleta de la Suerte");
 
-    const caja = document.createElement("div");
-    caja.className = "ruleta-caja";
+    const caja = crear("div", "ruleta-caja ruleta-show");
 
-    const cerrarBoton = document.createElement("button");
-    cerrarBoton.type = "button";
-    cerrarBoton.className = "ruleta-cerrar";
+    const cerrarBoton = botonCompra("✕", cerrar, "ruleta-cerrar");
     cerrarBoton.setAttribute("aria-label", "Cerrar");
-    cerrarBoton.textContent = "✕";
-    cerrarBoton.addEventListener("click", cerrar);
 
-    const contenido = document.createElement("div");
-    contenido.className = "ruleta-contenido";
+    const contenido = crear("div", "ruleta-contenido");
 
     caja.append(cerrarBoton, contenido);
     overlay.appendChild(caja);
     document.body.appendChild(overlay);
 
-    // Ya giró antes: mostrar directamente el premio guardado
-    if (premiosPendientes) {
-      mostrarPremio(contenido, premiosPendientes);
+    // Sin giros: mostrar directamente el premio guardado
+    if (!girosLibres) {
+      mostrarPremio(contenido, premioGuardado, false);
       return;
     }
 
-    const titulo = document.createElement("h3");
-    titulo.textContent = "🎡 Girá la ruleta";
-
-    const marco = document.createElement("div");
-    marco.className = "ruleta-marco";
-
     const rueda = crearRueda();
-    marco.appendChild(rueda);
+    const marco = crearMarco(rueda);
 
-    const girar = botonCompra("¡GIRAR!", async () => {
+    const girar = botonCompra("🎡 ¡GIRAR LA RULETA!", async () => {
 
       girar.disabled = true;
       girar.textContent = "Girando...";
+      marco.classList.add("girando");
 
       try {
 
@@ -190,69 +249,93 @@
 
         // Termina con la porción ganadora debajo de la flecha de arriba
         const final =
-          360 * 6 - (indice + 0.5) * GRADOS;
+          360 * 7 - (indice + 0.5) * GRADOS;
 
         rueda.style.transform = `rotate(${final}deg)`;
 
-        const sinMovimiento =
-          matchMedia("(prefers-reduced-motion: reduce)").matches;
-
         setTimeout(() => {
-          mostrarPremio(contenido, premio);
-          alTerminar();
-        }, sinMovimiento ? 300 : 4800);
+          marco.classList.remove("girando");
+          mostrarPremio(contenido, premio, true);
+          papelitos(caja);
+          alTerminar(contenido);
+        }, sinMovimiento() ? 300 : 5200);
 
       } catch (error) {
         console.warn("No se pudo girar la ruleta:", error);
+        marco.classList.remove("girando");
         girar.textContent = "No se pudo girar. Probá de nuevo más tarde.";
       }
 
-    });
+    }, "ruleta-boton ruleta-girar");
 
-    const aviso = document.createElement("a");
+    const aviso = crear("a", "ruleta-aviso", "Ver probabilidades y condiciones");
     aviso.href = "terminos.html";
     aviso.target = "_blank";
-    aviso.className = "ruleta-aviso";
-    aviso.textContent = "Ver probabilidades y condiciones";
 
-    contenido.append(titulo, marco, girar, aviso);
+    contenido.append(
+      crear("p", "ruleta-chapita", "🔓 RULETA DESBLOQUEADA"),
+      crear("h3", "", "¡Como ya compraste, desbloqueaste la Ruleta de la Suerte!"),
+      crear(
+        "p",
+        "",
+        girosLibres > 1
+          ? `Tenés ${girosLibres} giros. Girá y llevate un premio.`
+          : "Tenés 1 giro. Girá y llevate un premio."
+      ),
+      marco,
+      girar,
+      aviso
+    );
 
   }
 
 
   // ====================================================
-  // BOTÓN DEBAJO DE LOS NÚMEROS
+  // CARTEL QUE SALE SOLO AL VER LOS NÚMEROS
   // ====================================================
 
-  async function mostrarBoton(dni, contenedor) {
+  let pendienteDe = "";
+
+  async function ofrecer(dni, contenedor) {
 
     const estado = await pedir("estado", dni);
-
-    contenedor.querySelector(".ruleta-llamada")?.remove();
-
     const pendiente = estado.pendientes?.[0];
 
     if (!estado.disponibles && !pendiente) {
       return;
     }
 
-    const boton = document.createElement("button");
-    boton.type = "button";
-    boton.className = "ruleta-llamada";
-    boton.textContent =
-      estado.disponibles
-        ? "🎡 ¡Desbloqueaste la ruleta! Hacé clic"
-        : `🎁 Tenés un premio de la ruleta: ${pendiente.nombre}`;
+    pendienteDe = dni;
 
-    boton.addEventListener("click", () => {
-      abrir(
-        dni,
-        estado.disponibles ? null : pendiente,
-        () => mostrarBoton(dni, contenedor).catch(() => {})
-      );
-    });
+    setTimeout(() => {
 
-    contenedor.appendChild(boton);
+      // Si mientras tanto buscó otro DNI o se fue de la sección, no sale
+      if (pendienteDe !== dni || !document.body.contains(contenedor)) return;
+
+      // ¿Le quedan más giros? Botón para girar de nuevo
+      const despuesDeGirar = (contenido) => {
+        pedir("estado", dni).then((nuevo) => {
+          if (!nuevo.disponibles || !overlay) return;
+          contenido.appendChild(
+            botonCompra(
+              `🎡 Tenés ${nuevo.disponibles === 1 ? "otro giro" : `${nuevo.disponibles} giros más`}: girar de nuevo`,
+              () => abrir(dni, nuevo.disponibles, null, despuesDeGirar),
+              "ruleta-boton ruleta-otra"
+            )
+          );
+        }).catch(() => {});
+      };
+
+      const mostrar = () =>
+        abrir(dni, estado.disponibles, pendiente, despuesDeGirar);
+
+      if (window.Carteles) {
+        window.Carteles.cuandoLibre(mostrar);
+      } else {
+        mostrar();
+      }
+
+    }, ESPERA_CARTEL);
 
   }
 
@@ -260,7 +343,7 @@
   window.Ruleta = {
     // Si falla, los números se siguen viendo: la ruleta simplemente no aparece
     mostrar(dni, contenedor) {
-      mostrarBoton(dni, contenedor).catch((error) => {
+      ofrecer(dni, contenedor).catch((error) => {
         console.warn("Ruleta no disponible:", error);
       });
     }
